@@ -16,15 +16,18 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="nav-container">
+        {/* Logo Section - Left */}
         <Link to="/" className="nav-logo">
-          <span className="logo-icon">⚕️</span>
-          Medical Sheba
+          <img src="/logo.png" alt="Medi Sheba" className="logo-image" />
+          <span className="logo-text">Medical Sheba</span>
         </Link>
 
+        {/* Mobile Toggle */}
         <button className="nav-toggle" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
+        {/* Center Menu */}
         <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
           <li className="nav-item">
             <Link to="/" className="nav-link">
@@ -53,27 +56,29 @@ export default function Navbar() {
               </Link>
             </li>
           )}
-          <li className="nav-item">
-            {user ? (
-              <div className="user-section">
-                <span className="user-name">{user.name || user.email}</span>
-                <button onClick={handleLogout} className="btn-logout">
-                  <LogOut size={18} />
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <>
-                <Link to="/login" className="btn-link login">
-                  Login
-                </Link>
-                <Link to="/register" className="btn-link register">
-                  Register
-                </Link>
-              </>
-            )}
-          </li>
         </ul>
+
+        {/* Auth Section - Right */}
+        <div className="nav-auth">
+          {user ? (
+            <div className="user-section">
+              <span className="user-name">{user.name || user.email}</span>
+              <button onClick={handleLogout} className="btn-logout">
+                <LogOut size={18} />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="auth-buttons">
+              <Link to="/login" className="btn-login">
+                Login
+              </Link>
+              <Link to="/register" className="btn-register">
+                Register
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
