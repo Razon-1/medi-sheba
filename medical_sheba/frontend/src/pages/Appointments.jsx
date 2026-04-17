@@ -1,4 +1,5 @@
 import { Calendar, Clock, MapPin, User, Phone } from 'lucide-react';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Appointments.css';
 
 const sampleAppointments = [
@@ -49,6 +50,9 @@ const sampleAppointments = [
 ];
 
 export default function Appointments() {
+  // Set SEO metadata for this page
+  useSEO(pageMetadata.appointments);
+  
   return (
     <div className="appointments-page">
       <div className="page-header">

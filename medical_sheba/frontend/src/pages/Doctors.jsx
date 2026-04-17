@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, MapPin, Phone, Star, Award } from 'lucide-react';
 import DoctorCard from '../components/DoctorCard';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Doctors.css';
 
 const sampleDoctors = [
@@ -79,6 +80,9 @@ const sampleDoctors = [
 ];
 
 export default function Doctors() {
+  // Set SEO metadata for this page
+  useSEO(pageMetadata.doctors);
+  
   const [doctors] = useState(sampleDoctors);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredDoctors, setFilteredDoctors] = useState(sampleDoctors);

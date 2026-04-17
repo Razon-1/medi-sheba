@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, Plus, MapPin, Phone } from 'lucide-react';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Blood.css';
 
 const sampleBloodDonors = [
@@ -14,6 +15,9 @@ const sampleBloodDonors = [
 ];
 
 export default function BloodBank() {
+  // Set SEO metadata for this page
+  useSEO(pageMetadata.blood);
+  
   const [bloodDonors] = useState(sampleBloodDonors);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredDonors, setFilteredDonors] = useState(sampleBloodDonors);

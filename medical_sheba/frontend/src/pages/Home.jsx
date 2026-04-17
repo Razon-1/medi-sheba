@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award } from 'lucide-react';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Home.css';
 
 export default function Home() {
+  // Set SEO metadata for this page
+  useSEO(pageMetadata.home);
   const stats = [
     { icon: Users, label: 'Active Users', value: '50K+' },
     { icon: Building2, label: 'Hospitals', value: '500+' },

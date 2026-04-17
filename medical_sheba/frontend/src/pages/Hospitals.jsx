@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import HospitalCard from '../components/HospitalCard';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Hospitals.css';
 
 const sampleHospitals = [
@@ -79,6 +80,9 @@ const sampleHospitals = [
 ];
 
 export default function Hospitals() {
+  // Set SEO metadata for this page
+  useSEO(pageMetadata.hospitals);
+  
   const [hospitals] = useState(sampleHospitals);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredHospitals, setFilteredHospitals] = useState(sampleHospitals);

@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 import useAuthStore from '../context/authStore';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Auth.css';
 
 export default function Register() {
+  // Set SEO metadata for this page
+  useSEO(pageMetadata.register);
+  
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { register } = useAuthStore();
