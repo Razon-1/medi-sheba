@@ -126,9 +126,25 @@
     padding: 2rem 0 0 0;
   }
 
+  .footer-section {
+    text-align: center;
+  }
+
   .footer-section h3,
   .footer-section h4 {
     font-size: 1rem;
+  }
+
+  .footer-section ul {
+    justify-content: center;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
+
+  .contact-item {
+    justify-content: center;
   }
 }
 
@@ -137,5 +153,21 @@
     grid-template-columns: 1fr;
     gap: 1.5rem;
     padding: 1.5rem;
+  }
+
+  .footer-section {
+    text-align: center;
+  }
+
+  .footer-section ul {
+    justify-content: center;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
+
+  .contact-item {
+    justify-content: center;
   }
 }

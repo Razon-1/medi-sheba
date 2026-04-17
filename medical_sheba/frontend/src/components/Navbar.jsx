@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useAuthStore from '../context/authStore';
 import '../styles/components/Navbar.css';
 
@@ -8,13 +8,31 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuthStore();
 
+  // Close menu when window is resized to desktop size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close menu when route changes
   const handleLogout = async () => {
     await logout();
+    setIsOpen(false);
     window.location.href = '/';
   };
 
   const closeMenu = () => {
     setIsOpen(false);
+  };
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
   };
 
   return (
@@ -27,7 +45,12 @@ export default function Navbar() {
         </Link>
 
         {/* Mobile Toggle */}
-        <button className="nav-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Menu">
+        <button 
+          className="nav-toggle" 
+          onClick={toggleMenu} 
+          aria-label="Toggle Menu"
+          aria-expanded={isOpen}
+        >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
@@ -66,7 +89,12 @@ export default function Navbar() {
             {user ? (
               <div className="user-section-mobile">
                 <span className="user-name-mobile">{user.name || user.email}</span>
-                <button onClick={() => { handleLogout(); closeMenu(); }} className="btn-logout-mobile">
+                <button 
+                  onClick={() => { 
+                    handleLogout(); 
+                  }} 
+                  className="btn-logout-mobile"
+                >
                   <LogOut size={18} />
                   Logout
                 </button>
