@@ -19,7 +19,7 @@ export default function Navbar() {
         {/* Logo Section - Left */}
         <Link to="/" className="nav-logo">
           <img src="/logo.png" alt="Medi Sheba" className="logo-image" />
-          <span className="logo-text">Medical Sheba</span>
+          <span className="logo-text">Medi Sheba</span>
         </Link>
 
         {/* Mobile Toggle */}

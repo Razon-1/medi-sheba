@@ -27,7 +27,7 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-container">
         <div className="auth-box">
-          <h2>Login to Medical Sheba</h2>
+          <h2>Login to Medi Sheba</h2>
           {error && <div className="error-message">{error}</div>}
           <AuthForm type="login" onSubmit={handleLogin} loading={loading} />
           <p className="auth-link">

@@ -8,7 +8,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>Medical Sheba</h3>
+          <h3>Medi Sheba</h3>
           <p>Professional healthcare management platform for Bangladesh</p>
           <div className="social-links">
             <a href="#" aria-label="Facebook"><Facebook size={20} /></a>
@@ -51,7 +51,7 @@ export default function Footer() {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; {currentYear} Medical Sheba. All rights reserved.</p>
+        <p>&copy; {currentYear} Medi Sheba. All rights reserved.</p>
       </div>
     </footer>
   );

@@ -51,7 +51,7 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-text">
             <h1>Your Trusted Healthcare Partner</h1>
-            <p>Connect with experienced doctors, find the best hospitals, and manage your health with Medical Sheba</p>
+            <p>Connect with experienced doctors, find the best hospitals, and manage your health with Medi Sheba</p>
             <div className="hero-buttons">
               <button className="btn-primary">
                 <Link to="/doctors">Book Appointment Now</Link>
@@ -113,7 +113,7 @@ export default function Home() {
 
       {/* Why Choose Us */}
       <section className="why-us">
-        <h2 className="section-title">Why Choose Medical Sheba?</h2>
+        <h2 className="section-title">Why Choose Medi Sheba?</h2>
         <div className="benefits-grid">
           {benefits.map((benefit, idx) => {
             const Icon = benefit.icon;
@@ -131,7 +131,7 @@ export default function Home() {
       <section className="cta-section">
         <div className="cta-content">
           <h2>Ready to Get Started?</h2>
-          <p>Join thousands of patients who trust Medical Sheba for their healthcare needs</p>
+          <p>Join thousands of patients who trust Medi Sheba for their healthcare needs</p>
           <button className="btn-primary">
             <Link to="/doctors">Get Started Today</Link>
           </button>
