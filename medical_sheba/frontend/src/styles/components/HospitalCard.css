@@ -1,24 +1,27 @@
 .hospital-card {
-  background-color: var(--bg-white);
-  border-radius: 0.75rem;
+  background: white;
+  border-radius: 1rem;
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 2px solid transparent;
 }
 
 .hospital-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--primary-blue);
 }
 
 .hospital-image {
   width: 100%;
-  height: 250px;
+  height: 280px;
   overflow: hidden;
-  background-color: var(--bg-light);
+  background: linear-gradient(135deg, var(--primary-light), rgba(0, 102, 204, 0.1));
+  position: relative;
 }
 
 .hospital-image img {
@@ -29,27 +32,67 @@
 }
 
 .hospital-card:hover .hospital-image img {
-  transform: scale(1.05);
+  transform: scale(1.08);
+}
+
+.hospital-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, var(--warning-orange), var(--accent-coral));
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
 }
 
 .hospital-info {
-  padding: 1.5rem;
+  padding: 1.75rem;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .hospital-info h3 {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  margin-bottom: 0.35rem;
   color: var(--text-dark);
+  font-weight: 700;
 }
 
 .type {
-  color: var(--primary-color);
-  font-weight: 600;
+  color: var(--primary-blue);
+  font-weight: 700;
   font-size: 0.9rem;
   margin-bottom: 1rem;
+  letter-spacing: 0.3px;
+}
+
+.quick-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--bg-lighter);
+  border-radius: 0.6rem;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.stat svg {
+  color: var(--primary-blue);
+  width: 18px;
+  height: 18px;
 }
 
 .contact-info {
@@ -57,46 +100,94 @@
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1rem;
-  flex: 1;
 }
 
 .info-item {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  color: var(--text-light);
-  font-size: 0.9rem;
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .info-item svg {
-  color: var(--primary-color);
+  color: var(--primary-blue);
   flex-shrink: 0;
   margin-top: 2px;
+  width: 16px;
+  height: 16px;
+}
+
+.services-section {
+  margin-bottom: 1rem;
+}
+
+.services-section h4 {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.services-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.service-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, var(--primary-light), rgba(0, 102, 204, 0.1));
+  color: var(--primary-blue);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.service-tag svg {
+  width: 12px;
+  height: 12px;
+  color: var(--accent-teal);
 }
 
 .btn-view {
-  background-color: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
   color: white;
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
   border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
+  border-radius: 0.6rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.25);
+  letter-spacing: 0.3px;
 }
 
 .btn-view:hover {
-  background-color: var(--secondary-color);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.35);
 }
 
 @media (max-width: 768px) {
   .hospital-image {
-    height: 200px;
+    height: 220px;
   }
 
   .hospital-info h3 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+
+  .hospital-info {
+    padding: 1.35rem;
+  }
+
+  .quick-stats {
+    grid-template-columns: 1fr;
   }
 }

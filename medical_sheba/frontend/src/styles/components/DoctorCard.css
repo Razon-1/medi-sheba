@@ -1,24 +1,27 @@
 .doctor-card {
-  background-color: var(--bg-white);
-  border-radius: 0.75rem;
+  background: white;
+  border-radius: 1rem;
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 2px solid transparent;
 }
 
 .doctor-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--primary-blue);
 }
 
 .doctor-image {
   width: 100%;
-  height: 250px;
+  height: 280px;
   overflow: hidden;
-  background-color: var(--bg-light);
+  background: linear-gradient(135deg, var(--primary-light), rgba(0, 102, 204, 0.1));
+  position: relative;
 }
 
 .doctor-image img {
@@ -29,47 +32,100 @@
 }
 
 .doctor-card:hover .doctor-image img {
-  transform: scale(1.05);
+  transform: scale(1.08);
+}
+
+.badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, var(--accent-teal), var(--primary-blue));
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 169, 145, 0.3);
 }
 
 .doctor-info {
-  padding: 1.5rem;
+  padding: 1.75rem;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .doctor-info h3 {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  margin-bottom: 0.35rem;
   color: var(--text-dark);
+  font-weight: 700;
 }
 
 .specialty {
-  color: var(--primary-color);
-  font-weight: 600;
+  color: var(--primary-blue);
+  font-weight: 700;
   font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.3px;
+}
+
+.qualification {
+  color: var(--text-gray);
+  font-size: 0.85rem;
   margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.rating-section {
+  margin-bottom: 0.75rem;
 }
 
 .rating {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-dark);
 }
 
 .star-filled {
   color: #fbbf24;
+  width: 18px;
+  height: 18px;
+}
+
+.rating-value {
+  color: var(--primary-blue);
+  font-size: 0.95rem;
+}
+
+.reviews {
+  color: var(--text-light);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.experience {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.experience svg {
+  color: var(--accent-teal);
 }
 
 .contact-info {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   flex: 1;
 }
 
@@ -77,39 +133,48 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  color: var(--text-light);
-  font-size: 0.9rem;
+  color: var(--text-gray);
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .info-item svg {
-  color: var(--primary-color);
+  color: var(--primary-blue);
   flex-shrink: 0;
   margin-top: 2px;
+  width: 16px;
+  height: 16px;
 }
 
 .btn-appointment {
-  background-color: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
   color: white;
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
   border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
+  border-radius: 0.6rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.25);
+  letter-spacing: 0.3px;
 }
 
 .btn-appointment:hover {
-  background-color: var(--secondary-color);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.35);
 }
 
 @media (max-width: 768px) {
   .doctor-image {
-    height: 200px;
+    height: 220px;
   }
 
   .doctor-info h3 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+
+  .doctor-info {
+    padding: 1.35rem;
   }
 }
