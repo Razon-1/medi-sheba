@@ -25,15 +25,54 @@ export default function Register() {
         return;
       }
 
-      await register({
+      // Split full name into first_name and last_name
+      const nameParts = formData.name.trim().split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ') || nameParts[0];
+
+      const payload = {
         email: formData.email,
         password: formData.password,
-        name: formData.name,
+        first_name: firstName,
+        last_name: lastName,
         phone: formData.phone,
-      });
+      };
+
+      console.log('Registration payload:', payload);
+
+      await register(payload);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      console.error('Error response:', err.response?.data);
+      
+      // Extract error message from various possible response formats
+      let errorMsg = 'Registration failed. Please try again.';
+      
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMsg = err.response.data;
+        } else if (err.response.data.detail) {
+          errorMsg = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errorMsg = err.response.data.message;
+        } else if (typeof err.response.data === 'object') {
+          // Handle field-specific errors
+          const errors = [];
+          for (const [field, messages] of Object.entries(err.response.data)) {
+            if (Array.isArray(messages)) {
+              errors.push(`${field}: ${messages.join(', ')}`);
+            } else if (typeof messages === 'string') {
+              errors.push(`${field}: ${messages}`);
+            }
+          }
+          if (errors.length > 0) {
+            errorMsg = errors.join(' | ');
+          }
+        }
+      }
+      
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }

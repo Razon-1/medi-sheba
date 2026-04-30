@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.search.apps.SearchConfig',
     'apps.ambulance.apps.AmbulanceConfig',
     'apps.emedicine.apps.EmedicineConfig',
+    'apps.edoctor.apps.EdoctorConfig',
 ]
 
 MIDDLEWARE = [

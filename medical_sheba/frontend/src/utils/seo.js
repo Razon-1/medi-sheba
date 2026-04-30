@@ -129,6 +129,12 @@ export const pageMetadata = {
     keywords: 'e-medicine, online pharmacy, medicine delivery, healthcare, Bangladesh',
     ogUrl: 'https://medisheba.bd/emedicine'
   },
+  edoctor: {
+    title: 'E-Doctor | Medi Sheba - Healthcare Platform',
+    description: 'Consult with experienced doctors online. Schedule video consultations with qualified medical professionals.',
+    keywords: 'e-doctor, online doctor, telemedicine, doctor consultation, healthcare, Bangladesh',
+    ogUrl: 'https://medisheba.bd/edoctor'
+  },
   login: {
     title: 'Login | Medi Sheba - Healthcare Platform',
     description: 'Sign in to your Medi Sheba account. Access your healthcare information and appointments.',

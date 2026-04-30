@@ -18,10 +18,36 @@ export default function Login() {
     try {
       setLoading(true);
       setError(null);
+      
+      if (!formData.email || !formData.password) {
+        setError('Email and password are required');
+        setLoading(false);
+        return;
+      }
+      
       await login(formData.email, formData.password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+      console.error('Error response:', err.response?.data);
+      
+      let errorMsg = 'Login failed. Please try again.';
+      
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMsg = err.response.data;
+        } else if (err.response.data.detail) {
+          errorMsg = err.response.data.detail;
+        } else if (err.response.data.message) {
+          errorMsg = err.response.data.message;
+        }
+      }
+      
+      if (err.response?.status === 401) {
+        errorMsg = 'Invalid email or password. Please check and try again.';
+      }
+      
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
