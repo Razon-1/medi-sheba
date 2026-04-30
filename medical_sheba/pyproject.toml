@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 
 dependencies = [
     # Django & Framework
-    "Django>=5.1,<6.0",
+    "Django>=4.2,<5.0",
     "djangorestframework>=3.14.0",
     "django-cors-headers>=4.3.0",
     "django-extensions>=3.2.0",
