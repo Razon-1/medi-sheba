@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/location/', include('apps.location.urls')),
     path('api/search/', include('apps.search.urls')),
     path('api/ambulance/', include('apps.ambulance.urls')),
+    path('api/emedicine/', include('apps.emedicine.urls')),
 ]
 
 # Debug Toolbar URLs (development only)

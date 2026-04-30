@@ -81,6 +81,11 @@ export default function Navbar() {
               Ambulance
             </Link>
           </li>
+          <li className="nav-item">
+            <Link to="/emedicine" className="nav-link" onClick={closeMenu}>
+              E-Medicine
+            </Link>
+          </li>
           {user && (
             <li className="nav-item">
               <Link to="/appointments" className="nav-link" onClick={closeMenu}>

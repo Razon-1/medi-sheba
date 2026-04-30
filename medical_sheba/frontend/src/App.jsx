@@ -10,6 +10,7 @@ import Doctors from './pages/Doctors';
 import Hospitals from './pages/Hospitals';
 import Blood from './pages/Blood';
 import Ambulance from './pages/Ambulance';
+import EMedicine from './pages/EMedicine';
 import Appointments from './pages/Appointments';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -34,6 +35,7 @@ function App() {
             <Route path="/hospitals" element={<Hospitals />} />
             <Route path="/blood" element={<Blood />} />
             <Route path="/ambulance" element={<Ambulance />} />
+            <Route path="/emedicine" element={<EMedicine />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

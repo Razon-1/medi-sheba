@@ -123,6 +123,12 @@ export const pageMetadata = {
     keywords: 'ambulance, emergency services, medical transport, healthcare, Bangladesh',
     ogUrl: 'https://medisheba.bd/ambulance'
   },
+  emedicine: {
+    title: 'E-Medicine | Medi Sheba - Healthcare Platform',
+    description: 'Order medicines online with home delivery. Access trusted online pharmacies in Bangladesh.',
+    keywords: 'e-medicine, online pharmacy, medicine delivery, healthcare, Bangladesh',
+    ogUrl: 'https://medisheba.bd/emedicine'
+  },
   login: {
     title: 'Login | Medi Sheba - Healthcare Platform',
     description: 'Sign in to your Medi Sheba account. Access your healthcare information and appointments.',
