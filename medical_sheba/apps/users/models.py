@@ -90,3 +90,11 @@ class User(AbstractBaseUser):
     
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+    
+    def has_perm(self, perm, obj=None):
+        """Check if user has permission"""
+        return self.is_superuser or self.is_staff
+    
+    def has_module_perms(self, app_label):
+        """Check if user has any permissions in app_label"""
+        return self.is_superuser or self.is_staff
