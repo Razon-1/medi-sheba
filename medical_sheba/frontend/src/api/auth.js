@@ -2,17 +2,12 @@ import client from './client';
 
 export const authAPI = {
   login: (email, password) =>
-    client.post('/auth/login/', { email, password }),
+    client.post('/users/login/', { email, password }),
   
   register: (userData) =>
-    client.post('/auth/register/', userData),
-  
-  logout: () =>
-    client.post('/auth/logout/'),
+    client.post('/users/register/', userData),
   
   getCurrentUser: () =>
-    client.get('/auth/user/'),
-  
-  refreshToken: () =>
-    client.post('/auth/token/refresh/'),
+    client.get('/users/me/'),
 };
+
