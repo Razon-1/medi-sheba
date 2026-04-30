@@ -1,0 +1,10 @@
+pyproject.toml
+config/__init__.py
+config/asgi.py
+config/urls.py
+config/wsgi.py
+medical_sheba.egg-info/PKG-INFO
+medical_sheba.egg-info/SOURCES.txt
+medical_sheba.egg-info/dependency_links.txt
+medical_sheba.egg-info/requires.txt
+medical_sheba.egg-info/top_level.txt

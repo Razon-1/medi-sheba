@@ -1,0 +1,32 @@
+Metadata-Version: 2.4
+Name: medical-sheba
+Version: 1.0.0
+Summary: Professional healthcare management platform for Bangladesh
+Requires-Python: >=3.11
+Requires-Dist: Django<6.0,>=5.1
+Requires-Dist: djangorestframework>=3.14.0
+Requires-Dist: django-cors-headers>=4.3.0
+Requires-Dist: django-extensions>=3.2.0
+Requires-Dist: django-filter>=24.1
+Requires-Dist: drf-spectacular>=0.27.0
+Requires-Dist: djangorestframework-simplejwt>=5.3.0
+Requires-Dist: mysqlclient>=2.2.0
+Requires-Dist: celery>=5.3.0
+Requires-Dist: redis>=5.0.0
+Requires-Dist: requests>=2.31.0
+Requires-Dist: firebase-admin>=6.2.0
+Requires-Dist: boto3>=1.33.0
+Requires-Dist: django-storages>=1.14.0
+Requires-Dist: python-decouple>=3.8
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: psycopg2-binary>=2.9.0
+Requires-Dist: gunicorn>=21.2.0
+Requires-Dist: django-debug-toolbar>=4.2.0
+Requires-Dist: black>=23.12.0
+Requires-Dist: flake8>=6.1.0
+Requires-Dist: isort>=5.13.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4.0; extra == "dev"
+Requires-Dist: pytest-django>=4.7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.1.0; extra == "dev"
+Requires-Dist: factory-boy>=3.3.0; extra == "dev"

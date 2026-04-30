@@ -6,8 +6,7 @@ from .base import *
 DEBUG = True
 
 INSTALLED_APPS += [
-    'django_extensions',
-    'debug_toolbar',
+    uv python list    'debug_toolbar',
 ]
 
 MIDDLEWARE += [
