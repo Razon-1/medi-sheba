@@ -1,41 +1,61 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, MapPin, Phone } from 'lucide-react';
+import { bloodAPI } from '../api/blood';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Blood.css';
-
-const sampleBloodDonors = [
-  { id: 1, name: 'Ahmed Hassan', blood_type: 'O+', location: 'Dhaka', phone: '+880-1700-100001', lastDonated: '2 months ago' },
-  { id: 2, name: 'Fatima Rahman', blood_type: 'B+', location: 'Dhaka', phone: '+880-1700-100002', lastDonated: '1 month ago' },
-  { id: 3, name: 'Mohammad Karim', blood_type: 'AB+', location: 'Chittagong', phone: '+880-1700-100003', lastDonated: '3 months ago' },
-  { id: 4, name: 'Samina Begum', blood_type: 'A+', location: 'Dhaka', phone: '+880-1700-100004', lastDonated: '2 weeks ago' },
-  { id: 5, name: 'Rajesh Kumar', blood_type: 'O-', location: 'Dhaka', phone: '+880-1700-100005', lastDonated: '1 month ago' },
-  { id: 6, name: 'Hafiza Aisha', blood_type: 'B-', location: 'Sylhet', phone: '+880-1700-100006', lastDonated: '6 months ago' },
-  { id: 7, name: 'Hasan Ali', blood_type: 'A-', location: 'Dhaka', phone: '+880-1700-100007', lastDonated: '3 weeks ago' },
-  { id: 8, name: 'Sara Khan', blood_type: 'AB-', location: 'Khulna', phone: '+880-1700-100008', lastDonated: '4 months ago' },
-];
 
 export default function BloodBank() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.blood);
   
-  const [bloodDonors] = useState(sampleBloodDonors);
+  const [bloodDonors, setBloodDonors] = useState([]);
+  const [filteredDonors, setFilteredDonors] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredDonors, setFilteredDonors] = useState(sampleBloodDonors);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDonors();
+  }, []);
+
+  const fetchDonors = async () => {
+    try {
+      setLoading(true);
+      const response = await bloodAPI.listDonors();
+      const data = response.data.results || response.data;
+      setBloodDonors(data);
+      setFilteredDonors(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching blood donors:', err);
+      setError('Failed to load blood donors');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
       setFilteredDonors(bloodDonors);
       return;
     }
-    const filtered = bloodDonors.filter(donor =>
-      donor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      donor.blood_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      donor.location.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = bloodDonors.filter(donor => {
+      const donorName = `${donor.user?.first_name || ''} ${donor.user?.last_name || ''}`.toLowerCase();
+      return (
+        donorName.includes(searchQuery.toLowerCase()) ||
+        donor.blood_group.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        donor.district.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
     setFilteredDonors(filtered);
   };
 
   const bloodTypes = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+
+  const filterByBloodType = (type) => {
+    const filtered = bloodDonors.filter(donor => donor.blood_group === type);
+    setFilteredDonors(filtered);
+  };
 
   return (
     <div className="blood-page">
@@ -70,36 +90,60 @@ export default function BloodBank() {
         <h3>Quick Filter by Blood Type:</h3>
         <div className="blood-type-buttons">
           {bloodTypes.map(type => (
-            <button key={type} className="blood-type-btn">{type}</button>
+            <button 
+              key={type} 
+              className="blood-type-btn"
+              onClick={() => filterByBloodType(type)}
+            >
+              {type}
+            </button>
           ))}
         </div>
       </div>
 
       <div className="donors-container">
-        {filteredDonors.length > 0 ? (
+        {loading ? (
+          <div className="no-results">
+            <h3>Loading blood donors...</h3>
+          </div>
+        ) : error ? (
+          <div className="no-results">
+            <h3>Error</h3>
+            <p>{error}</p>
+            <button onClick={fetchDonors} className="btn-search">Retry</button>
+          </div>
+        ) : filteredDonors.length > 0 ? (
           <div className="donors-grid">
-            {filteredDonors.map(donor => (
-              <div key={donor.id} className="donor-card">
-                <div className="donor-header">
-                  <h3>{donor.name}</h3>
-                  <div className="blood-badge">{donor.blood_type}</div>
+            {filteredDonors.map(donor => {
+              const donorName = donor.user ? `${donor.user.first_name} ${donor.user.last_name}` : donor.name;
+              const phone = donor.user?.phone;
+              const location = `${donor.district}${donor.upazila ? ', ' + donor.upazila : ''}`;
+              
+              return (
+                <div key={donor.id} className="donor-card">
+                  <div className="donor-header">
+                    <h3>{donorName}</h3>
+                    <div className="blood-badge">{donor.blood_group}</div>
+                  </div>
+                  <div className="donor-details">
+                    <div className="detail-item">
+                      <MapPin size={16} />
+                      <span>{location}</span>
+                    </div>
+                    <div className="detail-item">
+                      <Phone size={16} />
+                      <span>{phone}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="last-donated">
+                        Total donations: {donor.total_donations}
+                      </span>
+                    </div>
+                  </div>
+                  <button className="btn-contact">Contact Donor</button>
                 </div>
-                <div className="donor-details">
-                  <div className="detail-item">
-                    <MapPin size={16} />
-                    <span>{donor.location}</span>
-                  </div>
-                  <div className="detail-item">
-                    <Phone size={16} />
-                    <span>{donor.phone}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="last-donated">Last donated: {donor.lastDonated}</span>
-                  </div>
-                </div>
-                <button className="btn-contact">Contact Donor</button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="no-results">

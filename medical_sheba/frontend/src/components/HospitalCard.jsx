@@ -1,48 +1,58 @@
-import { MapPin, Phone, Users, Bed, CheckCircle } from 'lucide-react';
+import { MapPin, Phone, Users, Bed, CheckCircle, Star } from 'lucide-react';
 import '../styles/components/HospitalCard.css';
 
 export default function HospitalCard({ hospital }) {
+  const getHospitalTypeLabel = (type) => {
+    const labels = {
+      'government': 'Government Hospital',
+      'private': 'Private Hospital',
+      'clinic': 'Clinic'
+    };
+    return labels[type] || type;
+  };
+
   return (
     <div className="hospital-card">
       <div className="hospital-image">
-        <img src={hospital.image} alt={hospital.name} />
-        <div className="hospital-badge">Premium</div>
+        <img 
+          src="https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop" 
+          alt={hospital.name} 
+        />
+        {hospital.emergency_available && <div className="hospital-badge">Emergency</div>}
       </div>
       <div className="hospital-info">
         <h3>{hospital.name}</h3>
-        <p className="type">{hospital.type}</p>
+        <p className="type">{getHospitalTypeLabel(hospital.type)}</p>
         
+        <div className="rating-info">
+          <div className="stars">
+            {[...Array(5)].map((_, i) => (
+              <Star 
+                key={i} 
+                size={14} 
+                fill={i < Math.round(hospital.rating) ? '#FFA500' : '#ddd'} 
+                color={i < Math.round(hospital.rating) ? '#FFA500' : '#ddd'}
+              />
+            ))}
+          </div>
+          <span className="rating">{hospital.rating} ({hospital.review_count} reviews)</span>
+        </div>
+
         <div className="quick-stats">
           <div className="stat">
-            <Users size={16} />
-            <span>{hospital.doctors_count} Doctors</span>
-          </div>
-          <div className="stat">
             <Bed size={16} />
-            <span>{hospital.beds} Beds</span>
+            <span>{hospital.beds_available}/{hospital.beds_total} Beds</span>
           </div>
         </div>
 
         <div className="contact-info">
           <div className="info-item">
             <MapPin size={14} />
-            <span>{hospital.address}</span>
+            <span>{hospital.address}, {hospital.district}</span>
           </div>
           <div className="info-item">
             <Phone size={14} />
-            <span>{hospital.phone}</span>
-          </div>
-        </div>
-
-        <div className="services-section">
-          <h4>Services</h4>
-          <div className="services-list">
-            {hospital.services?.slice(0, 3).map((service, idx) => (
-              <span key={idx} className="service-tag">
-                <CheckCircle size={12} />
-                {service}
-              </span>
-            ))}
+            <span>{hospital.phone_primary}</span>
           </div>
         </div>
 

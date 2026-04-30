@@ -1,91 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import HospitalCard from '../components/HospitalCard';
+import { hospitalsAPI } from '../api/hospitals';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Hospitals.css';
-
-const sampleHospitals = [
-  {
-    id: 1,
-    name: 'Apollo Hospital',
-    type: 'Multi-specialty Hospital',
-    address: 'Gulshan, Dhaka',
-    location: 'Dhaka',
-    phone: '+880-2-9881188',
-    image: 'https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop',
-    doctors_count: 250,
-    beds: 500,
-    services: ['Emergency', 'ICU', 'Surgery', 'Cardiology'],
-  },
-  {
-    id: 2,
-    name: 'Square Hospital',
-    type: 'Advanced Medical Center',
-    address: 'Panthapath, Dhaka',
-    location: 'Dhaka',
-    phone: '+880-2-8633333',
-    image: 'https://images.unsplash.com/photo-1631217314831-ffe75acf0b7b?w=400&h=300&fit=crop',
-    doctors_count: 180,
-    beds: 350,
-    services: ['Emergency', 'Orthopedics', 'Neurology', 'Pediatrics'],
-  },
-  {
-    id: 3,
-    name: 'National Hospital',
-    type: 'Tertiary Medical Institution',
-    address: 'Mirpur, Dhaka',
-    location: 'Dhaka',
-    phone: '+880-2-9001001',
-    image: 'https://images.unsplash.com/photo-1576091160550-112173e7d7cb?w=400&h=300&fit=crop',
-    doctors_count: 320,
-    beds: 600,
-    services: ['Emergency', 'Trauma Center', 'Burn Unit', 'Surgery'],
-  },
-  {
-    id: 4,
-    name: 'Labaid Hospital',
-    type: 'Comprehensive Care Center',
-    address: 'Dhanmondi, Dhaka',
-    location: 'Dhaka',
-    phone: '+880-2-8148999',
-    image: 'https://images.unsplash.com/photo-1631217314831-ffe75acf0b7b?w=400&h=300&fit=crop',
-    doctors_count: 200,
-    beds: 450,
-    services: ['Emergency', 'Oncology', 'Gastroenterology', 'Cardiology'],
-  },
-  {
-    id: 5,
-    name: 'Evercare Hospital',
-    type: 'Private Specialized Hospital',
-    address: 'Bashundhara, Dhaka',
-    location: 'Dhaka',
-    phone: '+880-2-8883939',
-    image: 'https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop',
-    doctors_count: 150,
-    beds: 300,
-    services: ['Orthopedics', 'Dermatology', 'Dental', 'Gynecology'],
-  },
-  {
-    id: 6,
-    name: 'Ibn Sina Hospital',
-    type: 'Modern Medical Facility',
-    address: 'Kawran Bazar, Dhaka',
-    location: 'Dhaka',
-    phone: '+880-2-9611050',
-    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=300&fit=crop',
-    doctors_count: 220,
-    beds: 380,
-    services: ['Emergency', 'Pediatrics', 'Obstetrics', 'Neurology'],
-  },
-];
 
 export default function Hospitals() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.hospitals);
   
-  const [hospitals] = useState(sampleHospitals);
+  const [hospitals, setHospitals] = useState([]);
+  const [filteredHospitals, setFilteredHospitals] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredHospitals, setFilteredHospitals] = useState(sampleHospitals);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchHospitals();
+  }, []);
+
+  const fetchHospitals = async () => {
+    try {
+      setLoading(true);
+      const response = await hospitalsAPI.list();
+      const data = response.data.results || response.data;
+      setHospitals(data);
+      setFilteredHospitals(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching hospitals:', err);
+      setError('Failed to load hospitals');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
@@ -94,7 +42,7 @@ export default function Hospitals() {
     }
     const filtered = hospitals.filter(hospital =>
       hospital.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      hospital.location.toLowerCase().includes(searchQuery.toLowerCase())
+      hospital.district.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredHospitals(filtered);
   };
@@ -127,7 +75,17 @@ export default function Hospitals() {
       </div>
 
       <div className="hospitals-grid">
-        {filteredHospitals.length > 0 ? (
+        {loading ? (
+          <div className="no-results">
+            <h3>Loading hospitals...</h3>
+          </div>
+        ) : error ? (
+          <div className="no-results">
+            <h3>Error</h3>
+            <p>{error}</p>
+            <button onClick={fetchHospitals} className="btn-search">Retry</button>
+          </div>
+        ) : filteredHospitals.length > 0 ? (
           filteredHospitals.map(hospital => (
             <HospitalCard key={hospital.id} hospital={hospital} />
           ))
