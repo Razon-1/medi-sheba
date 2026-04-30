@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from apps.users.models import CustomUser
 from apps.location.models import District, Upazila
 
 
@@ -105,8 +104,10 @@ class AmbulanceRequest(models.Model):
     def save(self, *args, **kwargs):
         if not self.request_id:
             from datetime import datetime
+            import random
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            self.request_id = f"AMB{timestamp}{self.id or 0}"
+            random_suffix = f"{random.randint(1000, 9999)}"
+            self.request_id = f"AMB{timestamp}{random_suffix}"
         super().save(*args, **kwargs)
     
     def __str__(self):

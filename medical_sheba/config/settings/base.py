@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'apps.notifications.apps.NotificationsConfig',
     'apps.location.apps.LocationConfig',
     'apps.search.apps.SearchConfig',
+    'apps.ambulance.apps.AmbulanceConfig',
 ]
 
 MIDDLEWARE = [

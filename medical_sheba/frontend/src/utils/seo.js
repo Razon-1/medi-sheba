@@ -117,6 +117,12 @@ export const pageMetadata = {
     keywords: 'blood donation, blood bank, blood request, healthcare, Bangladesh',
     ogUrl: 'https://medisheba.bd/blood'
   },
+  ambulance: {
+    title: 'Ambulance Services | Medi Sheba - Healthcare Platform',
+    description: 'Emergency ambulance services available 24/7 in Bangladesh. Request ambulance for medical emergencies.',
+    keywords: 'ambulance, emergency services, medical transport, healthcare, Bangladesh',
+    ogUrl: 'https://medisheba.bd/ambulance'
+  },
   login: {
     title: 'Login | Medi Sheba - Healthcare Platform',
     description: 'Sign in to your Medi Sheba account. Access your healthcare information and appointments.',

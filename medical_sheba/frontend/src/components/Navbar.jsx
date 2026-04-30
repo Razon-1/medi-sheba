@@ -76,6 +76,11 @@ export default function Navbar() {
               Blood Bank
             </Link>
           </li>
+          <li className="nav-item">
+            <Link to="/ambulance" className="nav-link" onClick={closeMenu}>
+              Ambulance
+            </Link>
+          </li>
           {user && (
             <li className="nav-item">
               <Link to="/appointments" className="nav-link" onClick={closeMenu}>

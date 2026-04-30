@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/notifications/', include('apps.notifications.urls')),
     path('api/location/', include('apps.location.urls')),
     path('api/search/', include('apps.search.urls')),
+    path('api/ambulance/', include('apps.ambulance.urls')),
 ]
 
 # Debug Toolbar URLs (development only)
