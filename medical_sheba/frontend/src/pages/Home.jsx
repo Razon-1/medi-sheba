@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award } from 'lucide-react';
+import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Home.css';
 
@@ -15,7 +15,7 @@ export default function Home() {
 
   const features = [
     {
-      icon: Users,
+      icon: Stethoscope,
       title: 'Find Expert Doctors',
       description: 'Browse and connect with qualified doctors across all specialties',
       link: '/doctors'
@@ -37,6 +37,24 @@ export default function Home() {
       title: 'Book Appointments',
       description: 'Schedule appointments with just a few clicks',
       link: '/appointments'
+    },
+    {
+      icon: Truck,
+      title: 'Emergency Ambulance',
+      description: 'Get immediate ambulance service with real-time tracking',
+      link: '/ambulance'
+    },
+    {
+      icon: Stethoscope,
+      title: 'E-Doctor (Telemedicine)',
+      description: 'Consult with doctors online from the comfort of your home',
+      link: '/edoctor'
+    },
+    {
+      icon: Pill,
+      title: 'E-Medicine (Pharmacy)',
+      description: 'Order medicines online and get them delivered to your doorstep',
+      link: '/emedicine'
     },
   ];
 
