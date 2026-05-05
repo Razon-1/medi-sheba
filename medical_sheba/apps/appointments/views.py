@@ -32,6 +32,53 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return AppointmentListSerializer
         return AppointmentSerializer
     
+    def create(self, request, *args, **kwargs):
+        """Create an appointment with automatic appointment number generation"""
+        # Create a copy of request data to modify
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        
+        # Auto-assign patient if not provided
+        if 'patient_id' not in data and request.user.is_authenticated:
+            data['patient_id'] = request.user.id
+        
+        # Create serializer with modified data
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Ensure patient is set in validated data
+        if 'patient' not in serializer.validated_data:
+            serializer.validated_data['patient'] = request.user
+        
+        # Generate unique appointment number within 20 character limit
+        from django.utils.timezone import now
+        import random
+        import string
+        
+        appointment_date = serializer.validated_data.get('appointment_date')
+        now_obj = now()
+        
+        # Format: APT + YYMMDD + HHMM + 2 random digits
+        # Total: 3 + 6 + 4 + 2 = 15 characters (well within 20 limit)
+        date_str = now_obj.strftime('%y%m%d')  # YYMMDD - 6 chars
+        time_str = now_obj.strftime('%H%M')     # HHMM - 4 chars
+        random_suffix = ''.join(random.choices(string.digits, k=2))  # 2 random digits
+        
+        appointment_no = f"APT{date_str}{time_str}{random_suffix}"
+        
+        # Ensure unique appointment number
+        counter = 0
+        original_appointment_no = appointment_no
+        while Appointment.objects.filter(appointment_no=appointment_no).exists() and counter < 100:
+            random_suffix = ''.join(random.choices(string.digits, k=2))
+            appointment_no = f"APT{date_str}{time_str}{random_suffix}"
+            counter += 1
+        
+        serializer.validated_data['appointment_no'] = appointment_no
+        
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
     @action(detail=False, methods=['get'])
     def my_appointments(self, request):
         """Get user's appointments"""

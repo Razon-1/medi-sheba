@@ -103,7 +103,11 @@ export default function Navbar() {
           <li className="nav-auth-mobile">
             {user ? (
               <div className="user-section-mobile">
-                <span className="user-name-mobile">{user.name || user.email}</span>
+                <span className="user-name-mobile">
+                  {user.first_name && user.last_name 
+                    ? `${user.first_name} ${user.last_name}`
+                    : user.email}
+                </span>
                 <button 
                   onClick={() => { 
                     handleLogout(); 
@@ -131,7 +135,11 @@ export default function Navbar() {
         <div className="nav-auth">
           {user ? (
             <div className="user-section">
-              <span className="user-name">{user.name || user.email}</span>
+              <span className="user-name">
+                {user.first_name && user.last_name 
+                  ? `${user.first_name} ${user.last_name}`
+                  : user.email}
+              </span>
               <button onClick={handleLogout} className="btn-logout">
                 <LogOut size={18} />
                 Logout
