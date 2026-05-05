@@ -74,30 +74,38 @@ export default function Contact() {
             
             <div className="contact-card">
               <Mail size={32} />
-              <h3>Email</h3>
-              <p>support_medisheba@gmail.com</p>
-              <small>We'll respond within 24 hours</small>
+              <div className="contact-card-content">
+                <h3>Email</h3>
+                <p>support_medisheba@gmail.com</p>
+                <small>We'll respond within 24 hours</small>
+              </div>
             </div>
 
             <div className="contact-card">
               <Phone size={32} />
-              <h3>Phone</h3>
-              <p>+880 1322458732</p>
-              <small>Available 24/7 for emergencies</small>
+              <div className="contact-card-content">
+                <h3>Phone</h3>
+                <p>+880 1322458732</p>
+                <small>Available 24/7 for emergencies</small>
+              </div>
             </div>
 
             <div className="contact-card">
               <MessageCircle size={32} />
-              <h3>WhatsApp</h3>
-              <p>+880 1322458732</p>
-              <small>Quick support via WhatsApp</small>
+              <div className="contact-card-content">
+                <h3>WhatsApp</h3>
+                <p>+880 1322458732</p>
+                <small>Quick support via WhatsApp</small>
+              </div>
             </div>
 
             <div className="contact-card">
               <MapPin size={32} />
-              <h3>Location</h3>
-              <p>Dhaka, Bangladesh</p>
-              <small>Nationwide service coverage</small>
+              <div className="contact-card-content">
+                <h3>Location</h3>
+                <p>Dhaka, Bangladesh</p>
+                <small>Nationwide service coverage</small>
+              </div>
             </div>
           </div>
 

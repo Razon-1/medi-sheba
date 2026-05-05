@@ -191,23 +191,33 @@
   border-radius: 0.75rem;
   border-left: 4px solid var(--primary-blue);
   margin-bottom: 1.5rem;
-  text-align: center;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  text-align: left;
 }
 
 .contact-card svg {
   color: var(--primary-blue);
-  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-top: 0.25rem;
 }
 
 .contact-card h3 {
   font-size: 1.1rem;
   color: var(--text-dark);
-  margin: 0.75rem 0 0.5rem 0;
+  margin: 0 0 0.5rem 0;
   font-weight: 700;
 }
 
+.contact-card-content {
+  flex: 1;
+}
+
 .contact-card p {
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
   color: var(--text-dark);
   font-weight: 600;
   font-size: 0.95rem;
@@ -218,6 +228,7 @@
   display: block;
   font-size: 0.8rem;
   margin-top: 0.5rem;
+  font-weight: 500;
 }
 
 .contact-form {
@@ -370,5 +381,53 @@
   .contact-card {
     padding: 1rem;
     margin-bottom: 1rem;
+    gap: 1rem;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .contact-card svg {
+    width: 28px;
+    height: 28px;
+    margin-top: 0;
+    flex-shrink: 0;
+  }
+
+  .contact-card h3 {
+    font-size: 1rem;
+    margin: 0 0 0.25rem 0;
+  }
+
+  .contact-card p {
+    font-size: 0.85rem;
+    margin: 0.1rem 0;
+  }
+
+  .contact-card small {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+}
+
+/* Desktop and Large Screens */
+@media (min-width: 769px) {
+  .contact-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .contact-card svg {
+    margin-bottom: 0.75rem;
+    margin-top: 0;
+  }
+
+  .contact-card h3,
+  .contact-card p {
+    text-align: center;
+  }
+
+  .contact-card-content {
+    width: 100%;
   }
 }
