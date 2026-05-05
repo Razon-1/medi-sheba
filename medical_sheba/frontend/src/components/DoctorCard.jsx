@@ -1,14 +1,20 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Star, MapPin, Phone, Award, Clock } from 'lucide-react';
 import BookAppointmentModal from './BookAppointmentModal';
 import '../styles/components/DoctorCard.css';
 
 export default function DoctorCard({ doctor, onAppointmentBooked }) {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const doctorName = doctor.user_name ? `Dr. ${doctor.user_name}` : (doctor.user ? `Dr. ${doctor.user.first_name} ${doctor.user.last_name}` : doctor.name);
   const phone = doctor.user?.phone || doctor.phone || 'N/A';
   const hospitalName = doctor.hospital?.name || doctor.hospital_name || 'Multi-specialty Hospital';
+  
+  const handleViewDetails = () => {
+    navigate(`/doctors/${doctor.id}`);
+  };
   
   return (
     <>
@@ -60,12 +66,20 @@ export default function DoctorCard({ doctor, onAppointmentBooked }) {
             <strong>Fee: BDT {doctor.consultation_fee}</strong>
           </div>
 
-          <button 
-            className="btn-appointment"
-            onClick={() => setIsModalOpen(true)}
-          >
-            Book Appointment
-          </button>
+          <div className="doctor-card-actions">
+            <button 
+              className="btn-details"
+              onClick={handleViewDetails}
+            >
+              View Details & Reviews
+            </button>
+            <button 
+              className="btn-appointment"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Book Appointment
+            </button>
+          </div>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 
 import Home from './pages/Home';
 import Doctors from './pages/Doctors';
+import DoctorDetail from './pages/DoctorDetail';
 import Hospitals from './pages/Hospitals';
 import HospitalDetail from './pages/HospitalDetail';
 import Blood from './pages/Blood';
@@ -38,6 +39,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/doctors" element={<Doctors />} />
+            <Route path="/doctors/:id" element={<DoctorDetail />} />
             <Route path="/hospitals" element={<Hospitals />} />
             <Route path="/hospitals/:id" element={<HospitalDetail />} />
             <Route path="/blood" element={<Blood />} />

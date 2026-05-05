@@ -51,7 +51,6 @@ class User(AbstractBaseUser):
     id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True, db_index=True)
     phone = models.CharField(max_length=20, unique=True)
-    password_hash = models.CharField(max_length=255)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')

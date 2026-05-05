@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Doctor
+from .models import Doctor, DoctorReview
 from apps.users.serializers import UserSerializer
 
 
@@ -35,3 +35,25 @@ class DoctorListSerializer(serializers.ModelSerializer):
     
     def get_hospital_name(self, obj):
         return obj.hospital.name if obj.hospital else "Private Practice"
+
+
+class DoctorReviewSerializer(serializers.ModelSerializer):
+    patient_name = serializers.SerializerMethodField()
+    doctor_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = DoctorReview
+        fields = [
+            'id', 'doctor', 'doctor_id', 'patient', 'patient_name', 'rating', 
+            'title', 'review_text', 'is_verified_patient', 'helpful_count',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'doctor', 'patient', 'patient_name', 'helpful_count', 'created_at', 'updated_at']
+    
+    def get_patient_name(self, obj):
+        return f"{obj.patient.first_name} {obj.patient.last_name}"
+    
+    def create(self, validated_data):
+        validated_data['patient'] = self.context['request'].user
+        validated_data['doctor_id'] = validated_data.pop('doctor_id')
+        return super().create(validated_data)

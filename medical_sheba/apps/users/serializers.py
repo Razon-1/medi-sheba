@@ -4,19 +4,20 @@ from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=6)
+    full_name = serializers.CharField(write_only=True, required=False, allow_blank=False)
     
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'phone', 'first_name', 'last_name', 'password',
+            'id', 'email', 'phone', 'first_name', 'last_name', 'password', 'full_name',
             'role', 'blood_group', 'date_of_birth', 'gender', 'profile_image',
             'address', 'district', 'upazila', 'is_active', 'is_verified',
             'last_login', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'last_login', 'created_at', 'updated_at']
         extra_kwargs = {
-            'first_name': {'required': True, 'allow_blank': False},
-            'last_name': {'required': True, 'allow_blank': False},
+            'first_name': {'required': False, 'allow_blank': True},
+            'last_name': {'required': False, 'allow_blank': True},
             'email': {'required': True},
             'phone': {'required': True},
         }
@@ -32,6 +33,24 @@ class UserSerializer(serializers.ModelSerializer):
         if User.objects.filter(phone=value).exists():
             raise serializers.ValidationError('This phone number is already registered.')
         return value
+    
+    def validate(self, data):
+        """Handle full_name splitting and validate required fields"""
+        full_name = data.pop('full_name', '').strip()
+        
+        # If full_name is provided, split it into first_name and last_name
+        if full_name:
+            name_parts = full_name.split(maxsplit=1)
+            data['first_name'] = name_parts[0]
+            data['last_name'] = name_parts[1] if len(name_parts) > 1 else name_parts[0]
+        
+        # Ensure first_name and last_name are not empty
+        if not data.get('first_name'):
+            raise serializers.ValidationError({'first_name': 'This field is required.'})
+        if not data.get('last_name'):
+            raise serializers.ValidationError({'last_name': 'This field is required.'})
+        
+        return data
     
     def create(self, validated_data):
         password = validated_data.pop('password', None)

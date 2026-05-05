@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/users/', include('apps.users.urls')),
     path('api/hospitals/', include('apps.hospitals.urls')),
     path('api/doctors/', include('apps.doctors.urls')),
+    path('api/reviews/', include('apps.doctors.reviews_urls')),
     path('api/appointments/', include('apps.appointments.urls')),
     path('api/blood/', include('apps.blood.urls')),
     path('api/payments/', include('apps.payments.urls')),

@@ -146,6 +146,32 @@
   height: 16px;
 }
 
+.doctor-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btn-details {
+  background: white;
+  color: var(--primary-blue);
+  border: 2px solid var(--primary-blue);
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.btn-details:hover {
+  background: var(--primary-blue);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.25);
+}
+
 .btn-appointment {
   background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
   color: white;

@@ -1,0 +1,354 @@
+.doctor-detail {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 2rem 0;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #0066CC;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin: 2rem;
+  margin-bottom: 1rem;
+  transition: color 0.3s;
+}
+
+.btn-back:hover {
+  color: #0052A3;
+}
+
+.detail-header {
+  background: white;
+  padding: 2rem;
+  margin: 0 2rem 2rem 2rem;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-left .doctor-avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.header-left .doctor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.header-right h1 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  color: #1a1a1a;
+}
+
+.specialty {
+  font-size: 1.1rem;
+  color: #0066CC;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.subspecialty {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+}
+
+.rating-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.stars {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.rating-text {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.badges {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.badge.verified {
+  background: #D4EDDA;
+  color: #155724;
+}
+
+.badge.available {
+  background: #CCE5FF;
+  color: #0066CC;
+}
+
+.detail-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.quick-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.info-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.info-card svg {
+  color: #0066CC;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.info-card h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.info-card .time {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: normal;
+  margin-top: 0.25rem;
+}
+
+.bio-section,
+.qualifications-section,
+.chamber-section,
+.languages-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bio-section h2,
+.qualifications-section h2,
+.chamber-section h2,
+.languages-section h2 {
+  margin: 0 0 1rem 0;
+  color: #1a1a1a;
+}
+
+.bio-section p,
+.qualifications-section p,
+.languages-section p {
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.chamber-info {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.chamber-info svg {
+  color: #0066CC;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.reviews-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reviews-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.reviews-header h2 {
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.no-reviews {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+
+.cta-section {
+  background: linear-gradient(135deg, #0066CC 0%, #004499 100%);
+  color: white;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  text-align: center;
+  margin: 2rem;
+}
+
+.cta-section h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+}
+
+.cta-section p {
+  margin: 0 0 1.5rem 0;
+  opacity: 0.9;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  text-align: center;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #ddd;
+  border-top: 4px solid #0066CC;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container h2 {
+  color: #DC3545;
+  margin: 1rem 0;
+}
+
+.error-container p {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.btn-primary {
+  background: #0066CC;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-primary:hover {
+  background: #0052A3;
+}
+
+@media (max-width: 768px) {
+  .detail-header {
+    grid-template-columns: 1fr;
+    margin: 0 1rem 1rem 1rem;
+  }
+
+  .header-left .doctor-avatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .header-right h1 {
+    font-size: 1.5rem;
+  }
+
+  .quick-info {
+    grid-template-columns: 1fr;
+  }
+
+  .reviews-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detail-content {
+    padding: 0 1rem;
+  }
+
+  .btn-back,
+  .bio-section,
+  .qualifications-section,
+  .chamber-section,
+  .languages-section,
+  .reviews-section {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  .cta-section {
+    margin: 1rem;
+  }
+}
