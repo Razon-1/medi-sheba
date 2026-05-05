@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Clock, Calendar, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { appointmentsAPI } from '../api/appointments';
 import useAuthStore from '../context/authStore';
@@ -9,11 +9,8 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    appointment_date: '',
-    appointment_time: '',
     type: 'new',
-    symptoms: '',
-    notes: '',
+    message: '', // Patient's preferred time or symptoms
   });
   
   const [loading, setLoading] = useState(false);
@@ -48,9 +45,9 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
       return;
     }
 
-    // Validate required fields
-    if (!formData.appointment_date || !formData.appointment_time) {
-      setError('Please select both date and time for your appointment');
+    // Validate message
+    if (!formData.message || !formData.message.trim()) {
+      setError('Please provide your preferred appointment time or describe your medical concern');
       return;
     }
 
@@ -59,48 +56,37 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
       
       const appointmentData = {
         doctor_id: doctor.id,
-        appointment_date: formData.appointment_date,
-        appointment_time: formData.appointment_time,
         type: formData.type,
+        symptoms: formData.message, // Store message in symptoms field
+        notes: 'Pending phone confirmation - patient request',
         fee_amount: parseFloat(doctor.consultation_fee) || 0,
       };
 
-      // Add optional fields if they have values
-      if (formData.symptoms && formData.symptoms.trim()) {
-        appointmentData.symptoms = formData.symptoms;
-      }
-      if (formData.notes && formData.notes.trim()) {
-        appointmentData.notes = formData.notes;
-      }
-
-      console.log('Booking appointment with data:', appointmentData);
+      console.log('Submitting appointment request:', appointmentData);
       
       const response = await appointmentsAPI.create(appointmentData);
       
-      console.log('Appointment created successfully:', response.data);
+      console.log('Appointment created successfully:', response);
       
       setSuccess(true);
       setFormData({
-        appointment_date: '',
-        appointment_time: '',
         type: 'new',
-        symptoms: '',
-        notes: '',
+        message: '',
       });
 
-      // Close modal after 2 seconds
+      // Close modal after 3 seconds
       setTimeout(() => {
         onClose();
         if (onSuccess) {
-          onSuccess(response.data);
+          onSuccess(response);
         }
-      }, 2000);
+      }, 3000);
 
     } catch (err) {
       console.error('Error booking appointment:', err);
       console.error('Error response:', err.response?.data);
       
-      let errorMessage = 'Failed to book appointment. Please try again.';
+      let errorMessage = 'Failed to submit appointment request. Please try again.';
       
       if (err.response?.data) {
         if (typeof err.response.data === 'string') {
@@ -112,7 +98,6 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
         } else if (err.response.data.non_field_errors) {
           errorMessage = err.response.data.non_field_errors[0] || errorMessage;
         } else if (typeof err.response.data === 'object') {
-          // Try to extract first error message from object
           const firstKey = Object.keys(err.response.data)[0];
           if (firstKey && err.response.data[firstKey]) {
             const fieldError = err.response.data[firstKey];
@@ -138,7 +123,7 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h2>Book Appointment</h2>
+          <h2>Request Appointment</h2>
           <button className="modal-close" onClick={onClose}>
             <X size={24} />
           </button>
@@ -148,8 +133,11 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
           {success ? (
             <div className="success-message">
               <CheckCircle size={48} color="#10B981" />
-              <h3>Appointment Booked Successfully!</h3>
-              <p>Your appointment has been scheduled. You will receive a confirmation shortly.</p>
+              <h3>Request Submitted Successfully! 🎉</h3>
+              <p>Thank you for your appointment request!</p>
+              <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: '#666' }}>
+                We will call you to confirm the exact date and time that works best for you.
+              </p>
             </div>
           ) : (
             <>
@@ -162,7 +150,34 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
                 <div className="doctor-summary-info">
                   <h4>Dr. {doctor.user_name || doctor.name}</h4>
                   <p className="specialty">{doctor.specialty}</p>
-                  <p className="fee">Fee: BDT {doctor.consultation_fee}</p>
+                  <p className="fee">Consultation Fee: BDT {doctor.consultation_fee}</p>
+                </div>
+              </div>
+
+              {/* Doctor Availability Section */}
+              <div className="availability-section">
+                <div className="availability-card">
+                  <Calendar size={20} className="icon" />
+                  <div className="availability-info">
+                    <strong>Available Days:</strong>
+                    <p>{doctor.available_days ? doctor.available_days.split(',').map(d => d.trim()).join(', ') : 'Check with hospital'}</p>
+                  </div>
+                </div>
+                <div className="availability-card">
+                  <Clock size={20} className="icon" />
+                  <div className="availability-info">
+                    <strong>Available Time:</strong>
+                    <p>{doctor.available_time_start && doctor.available_time_end ? `${doctor.available_time_start.substring(0, 5)} - ${doctor.available_time_end.substring(0, 5)}` : 'Check with hospital'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone Confirmation Notice */}
+              <div className="phone-notice">
+                <Phone size={18} className="icon" />
+                <div>
+                  <strong>How it works:</strong>
+                  <p>Share your preferred time or medical concern, and our team will call you to confirm the appointment.</p>
                 </div>
               </div>
 
@@ -187,31 +202,6 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
               {user && (
                 <form onSubmit={handleSubmit} className="appointment-form">
                   <div className="form-group">
-                    <label htmlFor="appointment_date">Appointment Date *</label>
-                    <input
-                      type="date"
-                      id="appointment_date"
-                      name="appointment_date"
-                      value={formData.appointment_date}
-                      onChange={handleInputChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="appointment_time">Appointment Time *</label>
-                    <input
-                      type="time"
-                      id="appointment_time"
-                      name="appointment_time"
-                      value={formData.appointment_time}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
                     <label htmlFor="type">Appointment Type *</label>
                     <select
                       id="type"
@@ -227,27 +217,17 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="symptoms">Symptoms</label>
+                    <label htmlFor="message">Your Message *</label>
                     <textarea
-                      id="symptoms"
-                      name="symptoms"
-                      value={formData.symptoms}
+                      id="message"
+                      name="message"
+                      value={formData.message}
                       onChange={handleInputChange}
-                      placeholder="Describe your symptoms..."
-                      rows="3"
+                      placeholder="Tell us your preferred time (e.g., 'Monday 10 AM' or 'Afternoon') or describe your medical concern and symptoms..."
+                      rows="4"
+                      required
                     />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="notes">Additional Notes</label>
-                    <textarea
-                      id="notes"
-                      name="notes"
-                      value={formData.notes}
-                      onChange={handleInputChange}
-                      placeholder="Any additional information for the doctor..."
-                      rows="3"
-                    />
+                    <small>Please mention your preferred time or describe your symptoms so we can schedule appropriately.</small>
                   </div>
 
                   <div className="form-actions">
@@ -264,7 +244,7 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
                       className="btn-confirm" 
                       disabled={loading}
                     >
-                      {loading ? 'Booking...' : 'Confirm Appointment'}
+                      {loading ? 'Submitting...' : 'Request Appointment'}
                     </button>
                   </div>
                 </form>
