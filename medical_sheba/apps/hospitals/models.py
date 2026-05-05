@@ -29,6 +29,11 @@ class Hospital(models.Model):
     image_url = models.CharField(max_length=500, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    description = models.TextField(null=True, blank=True, help_text="About the hospital")
+    services = models.TextField(null=True, blank=True, help_text="Comma-separated list of services")
+    special_facilities = models.TextField(null=True, blank=True, help_text="Comma-separated list of special facilities")
+    visiting_hours_start = models.TimeField(null=True, blank=True)
+    visiting_hours_end = models.TimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

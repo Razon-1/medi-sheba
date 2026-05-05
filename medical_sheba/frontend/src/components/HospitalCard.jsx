@@ -1,7 +1,10 @@
 import { MapPin, Phone, Users, Bed, CheckCircle, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/components/HospitalCard.css';
 
 export default function HospitalCard({ hospital }) {
+  const navigate = useNavigate();
+
   const getHospitalTypeLabel = (type) => {
     const labels = {
       'government': 'Government Hospital',
@@ -9,6 +12,10 @@ export default function HospitalCard({ hospital }) {
       'clinic': 'Clinic'
     };
     return labels[type] || type;
+  };
+
+  const handleViewDetails = () => {
+    navigate(`/hospitals/${hospital.id}`);
   };
 
   return (
@@ -56,7 +63,7 @@ export default function HospitalCard({ hospital }) {
           </div>
         </div>
 
-        <button className="btn-view">View Details</button>
+        <button className="btn-view" onClick={handleViewDetails}>View Details</button>
       </div>
     </div>
   );

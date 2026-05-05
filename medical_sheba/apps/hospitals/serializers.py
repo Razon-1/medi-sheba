@@ -10,6 +10,8 @@ class HospitalSerializer(serializers.ModelSerializer):
             'latitude', 'longitude', 'phone_primary', 'phone_secondary',
             'email', 'website', 'emergency_available', 'beds_total',
             'beds_available', 'rating', 'review_count', 'image_url',
+            'description', 'services', 'special_facilities',
+            'visiting_hours_start', 'visiting_hours_end',
             'is_verified', 'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'rating', 'review_count', 'created_at', 'updated_at']
