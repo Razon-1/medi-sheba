@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart } from 'lucide-react';
+import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart, Phone } from 'lucide-react';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
 import OrderMedicinesModal from '../components/OrderMedicinesModal';
@@ -105,6 +105,31 @@ export default function EMedicine() {
   const handleOrderMedicines = (pharmacy) => {
     setSelectedPharmacy(pharmacy);
     setIsOrderModalOpen(true);
+  };
+
+  const handleCallNow = (pharmacy) => {
+    if (!pharmacy || !pharmacy.phone_number) {
+      alert('Phone number not available for this pharmacy');
+      return;
+    }
+
+    const phoneNumber = pharmacy.phone_number.replace(/\s+/g, '');
+    
+    // Try to detect if device is mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile, use tel: protocol to initiate call
+      window.location.href = `tel:${phoneNumber}`;
+    } else {
+      // On desktop, copy to clipboard and show alert
+      navigator.clipboard.writeText(phoneNumber).then(() => {
+        alert(`Phone number copied to clipboard: ${phoneNumber}\n\nYou can now dial it manually.`);
+      }).catch(() => {
+        // Fallback if clipboard API fails
+        alert(`Call this number: ${phoneNumber}`);
+      });
+    }
   };
 
   const closeOrderModal = () => {
@@ -289,7 +314,8 @@ export default function EMedicine() {
                   </div>
 
                   <div className="action-buttons">
-                    <button className="btn-call" onClick={() => window.location.href = `tel:${pharmacy.phone_number}`}>
+                    <button className="btn-call" onClick={() => handleCallNow(pharmacy)} title={`Call ${pharmacy.phone_number}`}>
+                      <Phone size={18} style={{ marginRight: '8px' }} />
                       Call Now
                     </button>
                     <button className="btn-order" onClick={() => handleOrderMedicines(pharmacy)}>Order Medicines</button>

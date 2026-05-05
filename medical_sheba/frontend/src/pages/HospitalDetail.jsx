@@ -65,6 +65,31 @@ export default function HospitalDetail() {
     return labels[type] || type;
   };
 
+  const handleCallNow = (phoneNumber) => {
+    if (!phoneNumber) {
+      alert('Phone number not available for this hospital');
+      return;
+    }
+
+    const cleanedNumber = phoneNumber.replace(/\s+/g, '');
+    
+    // Try to detect if device is mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile, use tel: protocol to initiate call
+      window.location.href = `tel:${cleanedNumber}`;
+    } else {
+      // On desktop, copy to clipboard and show alert
+      navigator.clipboard.writeText(cleanedNumber).then(() => {
+        alert(`Phone number copied to clipboard: ${cleanedNumber}\n\nYou can now dial it manually.`);
+      }).catch(() => {
+        // Fallback if clipboard API fails
+        alert(`Call this number: ${cleanedNumber}`);
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="hospital-detail">
@@ -297,7 +322,7 @@ export default function HospitalDetail() {
             Find Doctors
           </button>
           <button 
-            onClick={() => window.location.href = `tel:${hospital.phone_primary}`}
+            onClick={() => handleCallNow(hospital.phone_primary)}
             className="btn-secondary"
           >
             <Phone size={18} />

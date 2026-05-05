@@ -354,6 +354,9 @@
   gap: 10px;
   justify-content: flex-end;
   flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
 }
 
 .btn-call,
@@ -365,26 +368,44 @@
   font-weight: 600;
   font-size: 0.95rem;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-call {
   background: #27ae60;
   color: white;
+  flex: 1;
+  min-width: 150px;
 }
 
 .btn-call:hover {
   background: #229954;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.btn-call:active {
+  transform: translateY(0);
 }
 
 .btn-order {
   background: #e74c3c;
   color: white;
+  flex: 1;
+  min-width: 150px;
 }
 
 .btn-order:hover {
   background: #c0392b;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-order:active {
+  transform: translateY(0);
 }
 
 /* Medicines Section */
