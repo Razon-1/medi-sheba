@@ -33,6 +33,11 @@ export default function EDoctor() {
     scheduled_time: '',
     urgency: 'routine'
   });
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [bookingConfirmation, setBookingConfirmation] = useState(null);
 
   useEffect(() => {
     fetchDoctors();
@@ -63,6 +68,60 @@ export default function EDoctor() {
     } catch (err) {
       console.error('Error fetching consultations:', err);
     }
+  };
+
+  const fetchAvailableSlots = async (doctorId) => {
+    try {
+      setSlotsLoading(true);
+      const response = await edoctorAPI.listSlots({ doctor: doctorId });
+      const slots = response.data.results || response.data;
+      setAvailableSlots(slots);
+
+      // Extract unique dates from slots
+      const datesSet = new Set();
+      slots.forEach(slot => {
+        const date = new Date(slot.start_time).toISOString().split('T')[0];
+        if (date) datesSet.add(date);
+      });
+      
+      const sortedDates = Array.from(datesSet).sort();
+      setAvailableDates(sortedDates);
+      setBookingData(prev => ({ ...prev, scheduled_date: '', scheduled_time: '' }));
+      setAvailableTimes([]);
+    } catch (err) {
+      console.error('Error fetching slots:', err);
+      setAvailableSlots([]);
+      setAvailableDates([]);
+      setAvailableTimes([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const handleDateChange = (selectedDate) => {
+    setBookingData(prev => ({ ...prev, scheduled_date: selectedDate, scheduled_time: '' }));
+
+    // Filter times for selected date
+    const timesForDate = availableSlots
+      .filter(slot => {
+        const slotDate = new Date(slot.start_time).toISOString().split('T')[0];
+        return slotDate === selectedDate && slot.status === 'available';
+      })
+      .map(slot => {
+        const startTime = new Date(slot.start_time);
+        const endTime = new Date(slot.end_time);
+        const hours = String(startTime.getHours()).padStart(2, '0');
+        const minutes = String(startTime.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+        return {
+          time: timeStr,
+          slotId: slot.id,
+          startTime: slot.start_time,
+          endTime: slot.end_time
+        };
+      });
+
+    setAvailableTimes(timesForDate);
   };
 
   const handleSearch = () => {
@@ -138,29 +197,30 @@ export default function EDoctor() {
   };
 
   const handleBookConsultation = async () => {
-    if (!selectedDoctor || !bookingData.patient_name || !bookingData.chief_complaint) {
+    if (!selectedDoctor || !bookingData.patient_name || !bookingData.chief_complaint || !bookingData.scheduled_date || !bookingData.scheduled_time) {
       alert('Please fill in all required fields');
       return;
     }
 
     try {
-      await edoctorAPI.createConsultation({
+      const response = await edoctorAPI.createConsultation({
         ...bookingData,
         doctor: selectedDoctor.id
       });
-      alert('Consultation booked successfully!');
-      setShowBookingForm(false);
-      setBookingData({
-        patient_name: '',
-        patient_email: '',
-        patient_phone: '',
-        patient_age: '',
-        chief_complaint: '',
-        medical_history: '',
-        scheduled_date: '',
-        scheduled_time: '',
-        urgency: 'routine'
+      
+      // Show confirmation with booking details
+      setBookingConfirmation({
+        id: response.data.id,
+        consultation_id: response.data.consultation_id,
+        doctor_name: selectedDoctor.name,
+        patient_name: bookingData.patient_name,
+        scheduled_date: bookingData.scheduled_date,
+        scheduled_time: bookingData.scheduled_time,
+        chief_complaint: bookingData.chief_complaint,
+        fee: selectedDoctor.consultation_fee,
+        status: 'confirmed'
       });
+      
       fetchConsultations();
     } catch (err) {
       console.error('Error booking consultation:', err);
@@ -329,6 +389,7 @@ export default function EDoctor() {
                       onClick={() => {
                         setSelectedDoctor(doctor);
                         setShowBookingForm(true);
+                        fetchAvailableSlots(doctor.id);
                       }}
                     >
                       Book Consultation
@@ -455,19 +516,48 @@ export default function EDoctor() {
               <div className="form-row">
                 <div className="form-group">
                   <label>Preferred Date *</label>
-                  <input
-                    type="date"
-                    value={bookingData.scheduled_date}
-                    onChange={(e) => setBookingData({...bookingData, scheduled_date: e.target.value})}
-                  />
+                  {slotsLoading ? (
+                    <p style={{ color: '#999', fontSize: '14px' }}>Loading available dates...</p>
+                  ) : availableDates.length > 0 ? (
+                    <select
+                      value={bookingData.scheduled_date}
+                      onChange={(e) => handleDateChange(e.target.value)}
+                    >
+                      <option value="">Select a date</option>
+                      {availableDates.map(date => (
+                        <option key={date} value={date}>
+                          {new Date(date).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p style={{ color: '#e74c3c', fontSize: '14px' }}>No available dates</p>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Preferred Time *</label>
-                  <input
-                    type="time"
-                    value={bookingData.scheduled_time}
-                    onChange={(e) => setBookingData({...bookingData, scheduled_time: e.target.value})}
-                  />
+                  {bookingData.scheduled_date && availableTimes.length > 0 ? (
+                    <select
+                      value={bookingData.scheduled_time}
+                      onChange={(e) => setBookingData({...bookingData, scheduled_time: e.target.value})}
+                    >
+                      <option value="">Select a time</option>
+                      {availableTimes.map(timeSlot => (
+                        <option key={timeSlot.slotId} value={timeSlot.time}>
+                          {timeSlot.time}
+                        </option>
+                      ))}
+                    </select>
+                  ) : bookingData.scheduled_date ? (
+                    <p style={{ color: '#e74c3c', fontSize: '14px' }}>No available times for this date</p>
+                  ) : (
+                    <p style={{ color: '#999', fontSize: '14px' }}>Select a date first</p>
+                  )}
                 </div>
               </div>
 
@@ -497,6 +587,104 @@ export default function EDoctor() {
                   Book Consultation
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Booking Confirmation Modal */}
+      {bookingConfirmation && (
+        <div className="booking-modal-overlay" onClick={() => {
+          setBookingConfirmation(null);
+          setShowBookingForm(false);
+          setBookingData({
+            patient_name: '',
+            patient_email: '',
+            patient_phone: '',
+            patient_age: '',
+            chief_complaint: '',
+            medical_history: '',
+            scheduled_date: '',
+            scheduled_time: '',
+            urgency: 'routine'
+          });
+        }}>
+          <div className="booking-modal confirmation-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="confirmation-icon">✓</div>
+            <h2 style={{ color: '#27ae60', textAlign: 'center' }}>Consultation Booked Successfully!</h2>
+            
+            <div className="confirmation-details">
+              <div className="detail-item">
+                <span className="label">Consultation ID:</span>
+                <span className="value">{bookingConfirmation.consultation_id}</span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="label">Doctor:</span>
+                <span className="value">{bookingConfirmation.doctor_name}</span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="label">Patient Name:</span>
+                <span className="value">{bookingConfirmation.patient_name}</span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="label">Scheduled Date:</span>
+                <span className="value">
+                  {new Date(bookingConfirmation.scheduled_date).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="label">Scheduled Time:</span>
+                <span className="value">{bookingConfirmation.scheduled_time}</span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="label">Chief Complaint:</span>
+                <span className="value">{bookingConfirmation.chief_complaint}</span>
+              </div>
+              
+              <div className="detail-item">
+                <span className="label">Consultation Fee:</span>
+                <span className="value">BDT {parseFloat(bookingConfirmation.fee).toFixed(2)}</span>
+              </div>
+
+              <div className="detail-item">
+                <span className="label">Status:</span>
+                <span className="value" style={{ color: '#27ae60', fontWeight: 'bold' }}>
+                  {bookingConfirmation.status.charAt(0).toUpperCase() + bookingConfirmation.status.slice(1)}
+                </span>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button 
+                className="btn-submit"
+                onClick={() => {
+                  setBookingConfirmation(null);
+                  setShowBookingForm(false);
+                  setBookingData({
+                    patient_name: '',
+                    patient_email: '',
+                    patient_phone: '',
+                    patient_age: '',
+                    chief_complaint: '',
+                    medical_history: '',
+                    scheduled_date: '',
+                    scheduled_time: '',
+                    urgency: 'routine'
+                  });
+                }}
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
