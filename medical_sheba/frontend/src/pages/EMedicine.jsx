@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart } from 'lucide-react';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
+import OrderMedicinesModal from '../components/OrderMedicinesModal';
 import '../styles/pages/EMedicine.css';
 
 export default function EMedicine() {
@@ -20,6 +21,8 @@ export default function EMedicine() {
   const [searchQuery, setSearchQuery] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [activeTab, setActiveTab] = useState('pharmacies');
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [selectedPharmacy, setSelectedPharmacy] = useState(null);
 
   useEffect(() => {
     fetchPharmacies();
@@ -97,6 +100,16 @@ export default function EMedicine() {
       'hospital': '#e74c3c'
     };
     return colors[type] || '#333';
+  };
+
+  const handleOrderMedicines = (pharmacy) => {
+    setSelectedPharmacy(pharmacy);
+    setIsOrderModalOpen(true);
+  };
+
+  const closeOrderModal = () => {
+    setIsOrderModalOpen(false);
+    setSelectedPharmacy(null);
   };
 
   return (
@@ -279,7 +292,7 @@ export default function EMedicine() {
                     <button className="btn-call" onClick={() => window.location.href = `tel:${pharmacy.phone_number}`}>
                       Call Now
                     </button>
-                    <button className="btn-order">Order Medicines</button>
+                    <button className="btn-order" onClick={() => handleOrderMedicines(pharmacy)}>Order Medicines</button>
                   </div>
                 </div>
               ))
@@ -322,6 +335,18 @@ export default function EMedicine() {
           </div>
         </div>
       )}
+
+      {/* Order Medicines Modal */}
+      <OrderMedicinesModal
+        pharmacy={selectedPharmacy}
+        medicines={medicines}
+        isOpen={isOrderModalOpen}
+        onClose={closeOrderModal}
+        onSuccess={() => {
+          // Refresh the page or show success message
+          console.log('Order placed successfully');
+        }}
+      />
     </div>
   );
 }
