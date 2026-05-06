@@ -55,7 +55,6 @@ export default function Doctors() {
       <div className="page-header">
         <div className="header-content">
           <h1>Find Expert Doctors</h1>
-          <p>Browse and connect with qualified healthcare professionals</p>
         </div>
       </div>
 
