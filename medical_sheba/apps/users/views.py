@@ -14,7 +14,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['role', 'district', 'is_active', 'is_verified']
+    filterset_fields = ['district', 'is_active', 'is_verified']
     search_fields = ['email', 'phone', 'first_name', 'last_name']
     ordering_fields = ['created_at', 'first_name']
     ordering = ['-created_at']

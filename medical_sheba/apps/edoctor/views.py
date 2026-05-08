@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import EDoctorProfile, ConsultationSlot, EDoctorConsultation
@@ -15,20 +15,69 @@ from .serializers import (
 )
 
 
-class EDoctorProfileViewSet(viewsets.ReadOnlyModelViewSet):
-    """Read-only viewset for doctor profiles"""
+class IsHospitalAdminOrReadOnly(BasePermission):
+    """Allow hospital admins to manage their hospital's e-doctors, others can only read"""
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        return request.user and request.user.is_authenticated and 'hospital_admin' in request.user.roles
+    
+    def has_object_permission(self, request, view, obj):
+        # Read permission for any request
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        # Write permission only for hospital admin of that edoctor's hospital
+        if 'hospital_admin' in request.user.roles and obj.hospital:
+            return obj.hospital.admin_user == request.user
+        return False
+
+
+class EDoctorProfileViewSet(viewsets.ModelViewSet):
+    """ViewSet for doctor profiles with hospital admin management"""
     queryset = EDoctorProfile.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsHospitalAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['specialization', 'is_available', 'is_verified']
+    filterset_fields = ['specialization', 'is_available', 'is_verified', 'hospital']
     search_fields = ['name', 'registration_number', 'phone_number', 'hospital_name', 'specialties']
     ordering_fields = ['is_verified', 'rating', 'experience_years', 'consultation_fee']
     ordering = ['-is_verified', '-rating']
+
+    def get_queryset(self):
+        user = self.request.user
+        # Hospital admins only see e-doctors from their hospital
+        if user.is_authenticated and 'hospital_admin' in user.roles:
+            try:
+                hospital = user.hospital_admin
+                return EDoctorProfile.objects.filter(hospital=hospital)
+            except:
+                return EDoctorProfile.objects.none()
+        # Others see all available e-doctors
+        return EDoctorProfile.objects.all()
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return EDoctorProfileDetailSerializer
         return EDoctorProfileListSerializer
+
+    @action(detail=False, methods=['get'])
+    def my_edoctors(self, request):
+        """Get e-doctors for hospital admin's hospital"""
+        if 'hospital_admin' not in request.user.roles:
+            return Response(
+                {'error': 'Only hospital admins can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            hospital = request.user.hospital_admin
+            edoctors = EDoctorProfile.objects.filter(hospital=hospital)
+            serializer = EDoctorProfileListSerializer(edoctors, many=True)
+            return Response(serializer.data)
+        except:
+            return Response(
+                {'error': 'No hospital found for this admin'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
     @action(detail=False, methods=['get'])
     def by_specialization(self, request):
@@ -39,7 +88,7 @@ class EDoctorProfileViewSet(viewsets.ReadOnlyModelViewSet):
                 {'error': 'specialization parameter required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        doctors = EDoctorProfile.objects.filter(
+        doctors = self.get_queryset().filter(
             specialization=specialization,
             is_available=True
         )

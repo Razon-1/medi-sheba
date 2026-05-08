@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from apps.location.models import District, Upazila
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class AmbulanceService(models.Model):
@@ -10,6 +13,7 @@ class AmbulanceService(models.Model):
         ('icu', 'ICU Ambulance'),
     ]
 
+    hospital = models.ForeignKey('hospitals.Hospital', on_delete=models.SET_NULL, null=True, blank=True, related_name='ambulances')
     name = models.CharField(max_length=200)
     vehicle_type = models.CharField(max_length=20, choices=VEHICLE_TYPE_CHOICES)
     driver_name = models.CharField(max_length=100)

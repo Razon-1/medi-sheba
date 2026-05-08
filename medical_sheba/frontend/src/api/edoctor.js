@@ -57,6 +57,26 @@ export const edoctorAPI = {
   
   updateConsultationStatus: (id, status) =>
     apiClient.patch(`/edoctor/consultations/${id}/`, { status }),
+
+  // Hospital admin methods
+  myEdoctors: () =>
+    apiClient.get('/edoctor/doctors/my_edoctors/'),
+  
+  createEdoctor: (data) =>
+    apiClient.post('/edoctor/doctors/', data),
+  
+  updateEdoctor: (id, data) =>
+    apiClient.put(`/edoctor/doctors/${id}/`, data),
+  
+  deleteEdoctor: (id) =>
+    apiClient.delete(`/edoctor/doctors/${id}/`),
 };
+
+// Convenience functions for hospital admin
+export const getMyEdoctors = () => edoctorAPI.myEdoctors();
+export const addEdoctor = (data) => edoctorAPI.createEdoctor(data);
+export const updateEdoctor = (id, data) => edoctorAPI.updateEdoctor(id, data);
+export const deleteEdoctor = (id) => edoctorAPI.deleteEdoctor(id);
+export const getEdoctors = () => edoctorAPI.listDoctors();
 
 export default edoctorAPI;

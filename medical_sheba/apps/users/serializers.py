@@ -5,12 +5,13 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=6)
     full_name = serializers.CharField(write_only=True, required=False, allow_blank=False)
+    roles = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=False)
     
     class Meta:
         model = User
         fields = [
             'id', 'email', 'phone', 'first_name', 'last_name', 'password', 'full_name',
-            'role', 'blood_group', 'date_of_birth', 'gender', 'profile_image',
+            'roles', 'blood_group', 'date_of_birth', 'gender', 'profile_image',
             'address', 'district', 'upazila', 'is_active', 'is_verified',
             'last_login', 'created_at', 'updated_at'
         ]
@@ -49,6 +50,17 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'first_name': 'This field is required.'})
         if not data.get('last_name'):
             raise serializers.ValidationError({'last_name': 'This field is required.'})
+        
+        # Handle roles - ensure at least one role is provided during registration
+        roles = data.get('roles')
+        if not roles:
+            data['roles'] = ['patient']  # Default to patient role
+        else:
+            # Validate that all provided roles are valid
+            valid_roles = [choice[0] for choice in User.ROLE_CHOICES]
+            for role in roles:
+                if role not in valid_roles:
+                    raise serializers.ValidationError({'roles': f'Invalid role: {role}'})
         
         return data
     

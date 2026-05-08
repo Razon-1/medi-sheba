@@ -1,27 +1,76 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models
 from .models import Doctor, DoctorReview
 from .serializers import DoctorSerializer, DoctorListSerializer, DoctorReviewSerializer
 
 
+class IsHospitalAdminOrReadOnly(BasePermission):
+    """Allow hospital admins to manage their hospital's doctors, others can only read"""
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        return request.user and request.user.is_authenticated and 'hospital_admin' in request.user.roles
+    
+    def has_object_permission(self, request, view, obj):
+        # Read permission for any request
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        # Write permission only for hospital admin of that doctor's hospital
+        if 'hospital_admin' in request.user.roles and obj.hospital:
+            return obj.hospital.admin_user == request.user
+        return False
+
+
 class DoctorViewSet(viewsets.ModelViewSet):
     queryset = Doctor.objects.filter(is_available=True)
     serializer_class = DoctorSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsHospitalAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['specialty', 'is_verified', 'is_available']
+    filterset_fields = ['specialty', 'is_verified', 'is_available', 'hospital']
     search_fields = ['user__first_name', 'user__last_name', 'specialty', 'bmdc_number']
     ordering_fields = ['rating', 'consultation_fee', 'experience_years']
     ordering = ['-rating']
+    
+    def get_queryset(self):
+        user = self.request.user
+        # Hospital admins only see doctors from their hospital
+        if user.is_authenticated and 'hospital_admin' in user.roles:
+            try:
+                hospital = user.hospital_admin
+                return Doctor.objects.filter(hospital=hospital)
+            except:
+                return Doctor.objects.none()
+        # Others see all available doctors
+        return Doctor.objects.filter(is_available=True)
     
     def get_serializer_class(self):
         if self.action == 'list':
             return DoctorListSerializer
         return DoctorSerializer
+    
+    @action(detail=False, methods=['get'])
+    def my_doctors(self, request):
+        """Get doctors for hospital admin's hospital"""
+        if 'hospital_admin' not in request.user.roles:
+            return Response(
+                {'error': 'Only hospital admins can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            hospital = request.user.hospital_admin
+            doctors = Doctor.objects.filter(hospital=hospital)
+            serializer = DoctorListSerializer(doctors, many=True)
+            return Response(serializer.data)
+        except:
+            return Response(
+                {'error': 'No hospital found for this admin'},
+                status=status.HTTP_404_NOT_FOUND
+            )
     
     @action(detail=False, methods=['get'])
     def by_specialty(self, request):
@@ -32,7 +81,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
                 {'detail': 'specialty parameter required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        doctors = self.queryset.filter(specialty__icontains=specialty)
+        doctors = self.get_queryset().filter(specialty__icontains=specialty)
         serializer = DoctorListSerializer(doctors, many=True)
         return Response(serializer.data)
     
@@ -45,7 +94,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
                 {'detail': 'hospital_id parameter required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        doctors = self.queryset.filter(hospital_id=hospital_id)
+        doctors = self.get_queryset().filter(hospital_id=hospital_id)
         serializer = DoctorListSerializer(doctors, many=True)
         return Response(serializer.data)
 

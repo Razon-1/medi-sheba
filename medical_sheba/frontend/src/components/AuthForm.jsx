@@ -9,12 +9,38 @@ export default function AuthForm({ type = 'login', onSubmit, loading = false }) 
     confirmPassword: '',
     name: '',
     phone: '',
+    roles: ['patient'],
   });
   const [showPassword, setShowPassword] = useState(false);
+
+  const roleOptions = [
+    { value: 'patient', label: 'Patient' },
+    { value: 'pharmacy_admin', label: 'Pharmacy Admin' },
+    { value: 'hospital_admin', label: 'Hospital Admin' },
+  ];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleRoleChange = (roleValue) => {
+    setFormData(prev => {
+      const currentRoles = prev.roles || [];
+      if (currentRoles.includes(roleValue)) {
+        // Remove role if it exists
+        return {
+          ...prev,
+          roles: currentRoles.filter(r => r !== roleValue)
+        };
+      } else {
+        // Add role if it doesn't exist
+        return {
+          ...prev,
+          roles: [...currentRoles, roleValue]
+        };
+      }
+    });
   };
 
   const handleSubmit = (e) => {
@@ -48,6 +74,23 @@ export default function AuthForm({ type = 'login', onSubmit, loading = false }) 
               onChange={handleChange}
               placeholder="Enter your phone number"
             />
+          </div>
+          <div className="form-group">
+            <label>User Type(s) - Select one or more</label>
+            <div className="roles-container">
+              {roleOptions.map(option => (
+                <div key={option.value} className="role-checkbox">
+                  <input
+                    type="checkbox"
+                    id={`role-${option.value}`}
+                    name={option.value}
+                    checked={(formData.roles || []).includes(option.value)}
+                    onChange={() => handleRoleChange(option.value)}
+                  />
+                  <label htmlFor={`role-${option.value}`}>{option.label}</label>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}

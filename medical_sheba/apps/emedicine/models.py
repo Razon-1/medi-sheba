@@ -1,7 +1,10 @@
 from django.db import models
 from apps.location.models import District, Upazila
+from django.contrib.auth import get_user_model
 import random
 import time
+
+User = get_user_model()
 
 
 class EMedicinePharmacy(models.Model):
@@ -13,6 +16,7 @@ class EMedicinePharmacy(models.Model):
         ('hospital', 'Hospital Pharmacy'),
     ]
     
+    admin_user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pharmacy_admin', null=True, blank=True)
     name = models.CharField(max_length=200)
     pharmacy_type = models.CharField(max_length=20, choices=PHARMACY_CHOICES, default='independent')
     license_number = models.CharField(max_length=100, unique=True)
@@ -75,6 +79,7 @@ class MedicineItem(models.Model):
         ('powder', 'Powder'),
     ]
     
+    pharmacy = models.ForeignKey(EMedicinePharmacy, on_delete=models.CASCADE, related_name='medicines')
     name = models.CharField(max_length=200)
     generic_name = models.CharField(max_length=200, help_text="Generic/Scientific name")
     manufacturer = models.CharField(max_length=200)

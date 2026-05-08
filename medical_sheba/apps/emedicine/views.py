@@ -1,7 +1,7 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
@@ -16,11 +16,32 @@ from .serializers import (
 )
 
 
-class EMedicinePharmacyViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet for e-medicine pharmacies - read only"""
+class IsPharmacyAdmin(BasePermission):
+    """Permission check for pharmacy admin"""
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and 'pharmacy_admin' in request.user.roles
+
+
+class IsPharmacyAdminOrReadOnly(BasePermission):
+    """Allow pharmacy admins to manage their pharmacy, others can only read"""
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        return request.user and request.user.is_authenticated and 'pharmacy_admin' in request.user.roles
+    
+    def has_object_permission(self, request, view, obj):
+        # Read permission for any request
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        # Write permission only for the pharmacy admin of that pharmacy
+        return obj.admin_user == request.user
+
+
+class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
+    """ViewSet for e-medicine pharmacies - with admin management"""
     
     queryset = EMedicinePharmacy.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsPharmacyAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['pharmacy_type', 'district', 'is_available', 'is_verified']
     search_fields = ['name', 'license_number', 'phone_number', 'address', 'district__name']
@@ -32,6 +53,33 @@ class EMedicinePharmacyViewSet(viewsets.ReadOnlyModelViewSet):
             return EMedicinePharmacyDetailSerializer
         return EMedicinePharmacyListSerializer
     
+    def get_queryset(self):
+        user = self.request.user
+        # Pharmacy admins only see their own pharmacy
+        if user.is_authenticated and 'pharmacy_admin' in user.roles:
+            return EMedicinePharmacy.objects.filter(admin_user=user)
+        # Others see all available pharmacies
+        return EMedicinePharmacy.objects.all()
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my_pharmacy(self, request):
+        """Get the current user's pharmacy (for pharmacy admin)"""
+        if 'pharmacy_admin' not in request.user.roles:
+            return Response(
+                {'error': 'Only pharmacy admins can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            pharmacy = EMedicinePharmacy.objects.get(admin_user=request.user)
+            serializer = EMedicinePharmacyDetailSerializer(pharmacy)
+            return Response(serializer.data)
+        except EMedicinePharmacy.DoesNotExist:
+            return Response(
+                {'error': 'No pharmacy found for this admin'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
     @action(detail=False, methods=['get'])
     def by_district(self, request):
         """Filter pharmacies by district"""
@@ -42,7 +90,7 @@ class EMedicinePharmacyViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        pharmacies = self.queryset.filter(district_id=district_id)
+        pharmacies = self.get_queryset().filter(district_id=district_id)
         serializer = self.get_serializer(pharmacies, many=True)
         return Response(serializer.data)
     
@@ -56,29 +104,66 @@ class EMedicinePharmacyViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        pharmacies = self.queryset.filter(pharmacy_type=pharmacy_type)
+        pharmacies = self.get_queryset().filter(pharmacy_type=pharmacy_type)
         serializer = self.get_serializer(pharmacies, many=True)
         return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def verified_only(self, request):
         """Get only verified pharmacies"""
-        pharmacies = self.queryset.filter(is_verified=True)
+        pharmacies = self.get_queryset().filter(is_verified=True)
         serializer = self.get_serializer(pharmacies, many=True)
         return Response(serializer.data)
 
 
-class MedicineItemViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet for medicine items - read only"""
+class MedicineItemViewSet(viewsets.ModelViewSet):
+    """ViewSet for medicine items - admins can manage, others read"""
     
     queryset = MedicineItem.objects.all()
     serializer_class = MedicineItemSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsPharmacyAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['medicine_type', 'is_available']
+    filterset_fields = ['pharmacy', 'medicine_type', 'is_available']
     search_fields = ['name', 'generic_name', 'manufacturer']
     ordering_fields = ['price', 'created_at']
     ordering = ['-created_at']
+    
+    def get_queryset(self):
+        user = self.request.user
+        # Pharmacy admins only see medicines from their pharmacy
+        if user.is_authenticated and 'pharmacy_admin' in user.roles:
+            try:
+                pharmacy = EMedicinePharmacy.objects.get(admin_user=user)
+                return MedicineItem.objects.filter(pharmacy=pharmacy)
+            except EMedicinePharmacy.DoesNotExist:
+                return MedicineItem.objects.none()
+        # Others see all medicines
+        return MedicineItem.objects.all()
+    
+    def perform_create(self, serializer):
+        """Auto-assign pharmacy to pharmacy admin's pharmacy"""
+        user = self.request.user
+        if 'pharmacy_admin' in user.roles:
+            try:
+                pharmacy = EMedicinePharmacy.objects.get(admin_user=user)
+                serializer.save(pharmacy=pharmacy)
+            except EMedicinePharmacy.DoesNotExist:
+                raise serializers.ValidationError("No pharmacy found for this admin")
+        else:
+            raise serializers.ValidationError("Only pharmacy admins can add medicines")
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my_medicines(self, request):
+        """Get all medicines for the current pharmacy admin"""
+        if 'pharmacy_admin' not in request.user.roles:
+            return Response(
+                {'error': 'Only pharmacy admins can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        medicines = self.get_queryset()
+        serializer = self.get_serializer(medicines, many=True)
+        return Response(serializer.data)
 
 
 class EMedicineOrderViewSet(viewsets.ModelViewSet):

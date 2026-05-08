@@ -1,11 +1,18 @@
 from rest_framework import serializers
 from .models import Doctor, DoctorReview
+from apps.users.models import User
 from apps.users.serializers import UserSerializer
 
 
 class DoctorSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    user_id = serializers.IntegerField(write_only=True)
+    user_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    
+    # User fields for creating/updating users
+    first_name = serializers.CharField(write_only=True, required=False)
+    last_name = serializers.CharField(write_only=True, required=False)
+    email = serializers.EmailField(write_only=True, required=False)
+    phone_number = serializers.CharField(write_only=True, required=False)
     
     class Meta:
         model = Doctor
@@ -14,9 +21,64 @@ class DoctorSerializer(serializers.ModelSerializer):
             'subspecialty', 'qualifications', 'experience_years', 'consultation_fee',
             'follow_up_fee', 'chamber_address', 'available_days', 'available_time_start',
             'available_time_end', 'bio', 'languages', 'rating', 'review_count',
-            'is_verified', 'is_available', 'created_at', 'updated_at'
+            'is_verified', 'is_available', 'created_at', 'updated_at',
+            'first_name', 'last_name', 'email', 'phone_number'
         ]
         read_only_fields = ['id', 'rating', 'review_count', 'created_at', 'updated_at']
+    
+    def create(self, validated_data):
+        # Extract user-related fields
+        first_name = validated_data.pop('first_name', '')
+        last_name = validated_data.pop('last_name', '')
+        email = validated_data.pop('email', '')
+        phone_number = validated_data.pop('phone_number', '')
+        user_id = validated_data.pop('user_id', None)
+        
+        # Either use provided user_id or create a new user
+        if user_id:
+            user = User.objects.get(id=user_id)
+        else:
+            if not email or not phone_number:
+                raise serializers.ValidationError("Email and phone_number are required to create a new doctor")
+            
+            # Create a new user with the provided information
+            user = User.objects.create_user(
+                email=email,
+                phone=phone_number,
+                first_name=first_name,
+                last_name=last_name,
+                roles=['doctor']
+            )
+        
+        validated_data['user'] = user
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        # Extract user-related fields
+        first_name = validated_data.pop('first_name', None)
+        last_name = validated_data.pop('last_name', None)
+        email = validated_data.pop('email', None)
+        phone_number = validated_data.pop('phone_number', None)
+        user_id = validated_data.pop('user_id', None)
+        
+        # Update user if provided
+        if user_id:
+            user = User.objects.get(id=user_id)
+            instance.user = user
+        elif any([first_name, last_name, email, phone_number]):
+            # Update existing user with provided fields
+            user = instance.user
+            if first_name:
+                user.first_name = first_name
+            if last_name:
+                user.last_name = last_name
+            if email:
+                user.email = email
+            if phone_number:
+                user.phone = phone_number
+            user.save()
+        
+        return super().update(instance, validated_data)
 
 
 class DoctorListSerializer(serializers.ModelSerializer):

@@ -99,6 +99,22 @@ export default function Navbar() {
             </li>
           )}
 
+          {user && user.roles && user.roles.includes('pharmacy_admin') && (
+            <li className="nav-item">
+              <Link to="/pharmacy-admin" className="nav-link pharmacy-admin-link" onClick={closeMenu}>
+                💊 My Pharmacy
+              </Link>
+            </li>
+          )}
+
+          {user && user.roles && user.roles.includes('hospital_admin') && (
+            <li className="nav-item">
+              <Link to="/hospital-admin" className="nav-link hospital-admin-link" onClick={closeMenu}>
+                🏥 My Hospital
+              </Link>
+            </li>
+          )}
+
           {/* Mobile Auth Section - Inside Menu */}
           <li className="nav-auth-mobile">
             {user ? (

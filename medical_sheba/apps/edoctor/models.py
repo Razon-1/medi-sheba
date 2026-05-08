@@ -33,6 +33,9 @@ class EDoctorProfile(models.Model):
         ('dm', 'DM'),
     ]
 
+    # Hospital relationship
+    hospital = models.ForeignKey('hospitals.Hospital', on_delete=models.SET_NULL, null=True, blank=True, related_name='edoctors')
+    
     # Basic Info
     doctor_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=255)

@@ -36,6 +36,7 @@ export default function Register() {
         first_name: firstName,
         last_name: lastName,
         phone: formData.phone,
+        roles: formData.roles || ['patient'],
       };
 
       console.log('Registration payload:', payload);

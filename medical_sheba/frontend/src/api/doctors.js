@@ -18,4 +18,14 @@ export const doctorsAPI = {
   
   search: (query) =>
     client.get('/doctors/search/', { params: { q: query } }),
+  
+  myDoctors: () =>
+    client.get('/doctors/my_doctors/'),
 };
+
+// Convenience functions for hospital admin
+export const getMyDoctors = () => doctorsAPI.myDoctors();
+export const addDoctor = (data) => doctorsAPI.create(data);
+export const updateDoctor = (id, data) => doctorsAPI.update(id, data);
+export const deleteDoctor = (id) => doctorsAPI.delete(id);
+export const getDoctors = () => doctorsAPI.list();

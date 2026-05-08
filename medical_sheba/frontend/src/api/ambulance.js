@@ -60,4 +60,24 @@ export const ambulanceAPI = {
   acceptRequest: async (id, ambulanceId) => {
     return apiClient.post(`/ambulance/requests/${id}/accept/`, { ambulance_id: ambulanceId });
   },
+
+  // Hospital admin methods
+  myAmbulances: () =>
+    apiClient.get('/ambulance/services/my_ambulances/'),
+  
+  createAmbulance: (data) =>
+    apiClient.post('/ambulance/services/', data),
+  
+  updateAmbulance: (id, data) =>
+    apiClient.put(`/ambulance/services/${id}/`, data),
+  
+  deleteAmbulance: (id) =>
+    apiClient.delete(`/ambulance/services/${id}/`),
 };
+
+// Convenience functions for hospital admin
+export const getMyAmbulances = () => ambulanceAPI.myAmbulances();
+export const addAmbulance = (data) => ambulanceAPI.createAmbulance(data);
+export const updateAmbulance = (id, data) => ambulanceAPI.updateAmbulance(id, data);
+export const deleteAmbulance = (id) => ambulanceAPI.deleteAmbulance(id);
+export const getAmbulances = () => ambulanceAPI.listServices();

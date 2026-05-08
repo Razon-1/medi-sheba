@@ -19,13 +19,15 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, phone, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', 'admin')
+        extra_fields.setdefault('roles', ['admin'])
         return self.create_user(email, phone, password, **extra_fields)
 
 
 class User(AbstractBaseUser):
     ROLE_CHOICES = [
         ('patient', 'Patient'),
+        ('pharmacy_admin', 'Pharmacy Admin'),
+        ('hospital_admin', 'Hospital Admin'),
         ('doctor', 'Doctor'),
         ('admin', 'Admin'),
         ('donor', 'Donor'),
@@ -53,7 +55,7 @@ class User(AbstractBaseUser):
     phone = models.CharField(max_length=20, unique=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='patient')
+    roles = models.JSONField(default=list, help_text='List of roles for this user')
     blood_group = models.CharField(max_length=10, choices=BLOOD_GROUP_CHOICES, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, null=True, blank=True)
@@ -81,7 +83,6 @@ class User(AbstractBaseUser):
             models.Index(fields=['email']),
             models.Index(fields=['phone']),
             models.Index(fields=['district']),
-            models.Index(fields=['role']),
         ]
     
     def __str__(self):
@@ -89,6 +90,39 @@ class User(AbstractBaseUser):
     
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+    
+    @property
+    def role(self):
+        """Backward compatibility: returns primary role (first role)"""
+        return self.roles[0] if self.roles else 'patient'
+    
+    @role.setter
+    def role(self, value):
+        """Backward compatibility: set as primary role"""
+        if value not in [choice[0] for choice in self.ROLE_CHOICES]:
+            raise ValueError(f"Invalid role: {value}")
+        if value not in self.roles:
+            self.roles = [value] + [r for r in self.roles if r != value]
+    
+    def has_role(self, role):
+        """Check if user has a specific role"""
+        return role in self.roles
+    
+    def add_role(self, role):
+        """Add a role to the user"""
+        if role not in [choice[0] for choice in self.ROLE_CHOICES]:
+            raise ValueError(f"Invalid role: {role}")
+        if role not in self.roles:
+            self.roles.append(role)
+            self.save()
+        return self
+    
+    def remove_role(self, role):
+        """Remove a role from the user"""
+        if role in self.roles:
+            self.roles.remove(role)
+            self.save()
+        return self
     
     def has_perm(self, perm, obj=None):
         """Check if user has permission"""

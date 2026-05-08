@@ -49,7 +49,6 @@ export default function Appointments() {
       <div className="page-header">
         <div className="header-content">
           <h1>My Appointments</h1>
-          <p>Manage and track your medical appointments</p>
         </div>
       </div>
 
