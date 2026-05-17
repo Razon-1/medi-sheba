@@ -22,8 +22,9 @@ export default function HospitalCard({ hospital }) {
     <div className="hospital-card">
       <div className="hospital-image">
         <img 
-          src="https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop" 
-          alt={hospital.name} 
+          src={hospital.image_url || "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop"} 
+          alt={hospital.name}
+          onError={(e) => e.target.src = "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop"}
         />
         {hospital.emergency_available && <div className="hospital-badge">Emergency</div>}
       </div>

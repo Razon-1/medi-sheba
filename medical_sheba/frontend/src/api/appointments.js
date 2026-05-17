@@ -18,4 +18,20 @@ export const appointmentsAPI = {
   
   delete: (id) =>
     client.delete(`/appointments/${id}/`),
+
+  // Hospital admin functions
+  hospitalAppointments: (status = null) => {
+    let url = '/appointments/hospital_appointments/';
+    if (status) {
+      url += `?status=${status}`;
+    }
+    return client.get(url);
+  },
+
+  confirm: (id, appointmentDate = null, appointmentTime = null) => {
+    const data = {};
+    if (appointmentDate) data.appointment_date = appointmentDate;
+    if (appointmentTime) data.appointment_time = appointmentTime;
+    return client.post(`/appointments/${id}/confirm/`, data);
+  },
 };

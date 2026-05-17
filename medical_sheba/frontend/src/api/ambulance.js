@@ -7,6 +7,7 @@ export const ambulanceAPI = {
     if (filters.vehicle_type) params.append('vehicle_type', filters.vehicle_type);
     if (filters.district) params.append('district', filters.district);
     if (filters.search) params.append('search', filters.search);
+    if (filters.page) params.append('page', filters.page);
     
     return apiClient.get(`/ambulance/services/?${params.toString()}`);
   },
@@ -65,6 +66,12 @@ export const ambulanceAPI = {
   myAmbulances: () =>
     apiClient.get('/ambulance/services/my_ambulances/'),
   
+  getHospitalAmbulanceRequests: (status) => {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    return apiClient.get(`/ambulance/requests/hospital_requests/?${params.toString()}`);
+  },
+  
   createAmbulance: (data) =>
     apiClient.post('/ambulance/services/', data),
   
@@ -77,6 +84,7 @@ export const ambulanceAPI = {
 
 // Convenience functions for hospital admin
 export const getMyAmbulances = () => ambulanceAPI.myAmbulances();
+export const getHospitalAmbulanceRequests = (status) => ambulanceAPI.getHospitalAmbulanceRequests(status);
 export const addAmbulance = (data) => ambulanceAPI.createAmbulance(data);
 export const updateAmbulance = (id, data) => ambulanceAPI.updateAmbulance(id, data);
 export const deleteAmbulance = (id) => ambulanceAPI.deleteAmbulance(id);

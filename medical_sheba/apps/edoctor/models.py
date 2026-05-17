@@ -60,6 +60,7 @@ class EDoctorProfile(models.Model):
     available_start_time = models.TimeField(default='09:00')
     available_end_time = models.TimeField(default='18:00')
     is_available = models.BooleanField(default=True)
+    requires_authentication = models.BooleanField(default=False, help_text="Patient must be logged in to book consultation")
 
     # Verification & Rating
     is_verified = models.BooleanField(default=False)
@@ -69,6 +70,9 @@ class EDoctorProfile(models.Model):
     # Bio and qualifications
     bio = models.TextField(blank=True)
     specialties = models.TextField(blank=True)  # Comma-separated specialties
+    
+    # Image
+    image_url = models.CharField(max_length=500, null=True, blank=True)
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)

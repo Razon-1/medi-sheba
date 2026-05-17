@@ -17,7 +17,8 @@ export const getMyDoctors = async () => {
     throw new Error(errorData.detail || errorData.message || 'Failed to fetch doctors');
   }
   const data = await response.json();
-  return { data };
+  // Handle both paginated and non-paginated responses
+  return Array.isArray(data) ? data : (data.results || data);
 };
 
 export const addDoctor = async (data) => {

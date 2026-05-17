@@ -17,7 +17,8 @@ export const getMyEdoctors = async () => {
     throw new Error(errorData.detail || errorData.message || 'Failed to fetch edoctors');
   }
   const data = await response.json();
-  return { data };
+  // Handle both paginated and non-paginated responses
+  return Array.isArray(data) ? data : (data.results || data);
 };
 
 export const addEdoctor = async (data) => {

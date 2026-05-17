@@ -70,6 +70,14 @@ export const edoctorAPI = {
   
   deleteEdoctor: (id) =>
     apiClient.delete(`/edoctor/doctors/${id}/`),
+  
+  hospitalConsultations: (status = null) => {
+    let url = '/edoctor/consultations/hospital_consultations/';
+    if (status) {
+      url += `?status=${status}`;
+    }
+    return apiClient.get(url);
+  },
 };
 
 // Convenience functions for hospital admin

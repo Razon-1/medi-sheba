@@ -21,9 +21,18 @@ export const hospitalsAPI = {
   
   myHospital: () =>
     client.get('/hospitals/my_hospital/'),
+  
+  uploadImage: (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    return client.post('/hospitals/upload_image/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  }
 };
 
 // Convenience functions for hospital admin
 export const getMyHospital = () => hospitalsAPI.myHospital();
 export const updateHospital = (id, data) => hospitalsAPI.update(id, data);
 export const getHospitals = () => hospitalsAPI.list();
+export const createHospital = (data) => hospitalsAPI.create(data);

@@ -4,6 +4,7 @@ export const emedicineAPI = {
   // Pharmacies
   listPharmacies: async (filters = {}) => {
     const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page);
     if (filters.pharmacy_type) params.append('pharmacy_type', filters.pharmacy_type);
     if (filters.district) params.append('district', filters.district);
     if (filters.is_verified) params.append('is_verified', filters.is_verified);

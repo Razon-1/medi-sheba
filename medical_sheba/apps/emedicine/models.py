@@ -43,6 +43,9 @@ class EMedicinePharmacy(models.Model):
     rating = models.FloatField(default=4.5, help_text="Rating from 0 to 5")
     review_count = models.IntegerField(default=0)
     
+    # Image
+    image_url = models.CharField(max_length=500, null=True, blank=True)
+    
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

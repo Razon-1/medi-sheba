@@ -8,6 +8,7 @@ from .models import EDoctorProfile, ConsultationSlot, EDoctorConsultation
 from .serializers import (
     EDoctorProfileListSerializer,
     EDoctorProfileDetailSerializer,
+    EDoctorProfileWriteSerializer,
     ConsultationSlotSerializer,
     EDoctorConsultationListSerializer,
     EDoctorConsultationDetailSerializer,
@@ -57,6 +58,8 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return EDoctorProfileDetailSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return EDoctorProfileWriteSerializer
         return EDoctorProfileListSerializer
 
     @action(detail=False, methods=['get'])
@@ -136,15 +139,42 @@ class ConsultationSlotViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['start_time']
 
 
+class IsPatientOrReadOnly(BasePermission):
+    """Allow patients to view/create their consultations, others can only read"""
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        return request.user and request.user.is_authenticated
+    
+    def has_object_permission(self, request, view, obj):
+        # Read permission for any request
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        # Write permission only for the patient who booked the consultation
+        return obj.patient_email == request.user.email if request.user.is_authenticated else False
+
+
 class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     """Consultation booking viewset"""
     queryset = EDoctorConsultation.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsPatientOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'urgency', 'doctor', 'is_paid']
     search_fields = ['patient_name', 'consultation_id', 'patient_phone']
     ordering_fields = ['scheduled_date', 'created_at', 'fee_amount']
     ordering = ['-scheduled_date']
+
+    def get_queryset(self):
+        user = self.request.user
+        # Hospital admins see consultations for their e-doctors
+        if user.is_authenticated and 'hospital_admin' in user.roles:
+            try:
+                hospital = user.hospital_admin
+                return EDoctorConsultation.objects.filter(doctor__hospital=hospital).order_by('-created_at')
+            except:
+                return EDoctorConsultation.objects.none()
+        # Others see all consultations
+        return EDoctorConsultation.objects.all()
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -157,6 +187,32 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
         """Create consultation and set fee"""
         doctor = serializer.validated_data['doctor']
         serializer.save(fee_amount=doctor.consultation_fee)
+
+    @action(detail=False, methods=['get'])
+    def hospital_consultations(self, request):
+        """Get all consultations for hospital admin's e-doctors"""
+        if 'hospital_admin' not in request.user.roles:
+            return Response(
+                {'error': 'Only hospital admins can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            hospital = request.user.hospital_admin
+            consultations = EDoctorConsultation.objects.filter(doctor__hospital=hospital).order_by('-created_at')
+            
+            # Filter by status if provided
+            status_filter = request.query_params.get('status')
+            if status_filter:
+                consultations = consultations.filter(status=status_filter)
+            
+            serializer = EDoctorConsultationListSerializer(consultations, many=True)
+            return Response(serializer.data)
+        except:
+            return Response(
+                {'error': 'No hospital found for this admin'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):

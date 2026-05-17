@@ -5,7 +5,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import AmbulanceService, AmbulanceRequest
 from .serializers import (
-    AmbulanceServiceListSerializer, AmbulanceServiceDetailSerializer,
+    AmbulanceServiceListSerializer, AmbulanceServiceDetailSerializer, 
+    AmbulanceServiceCreateSerializer,
     AmbulanceRequestListSerializer, AmbulanceRequestDetailSerializer,
     AmbulanceRequestCreateSerializer
 )
@@ -50,7 +51,9 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
         return AmbulanceService.objects.filter(is_available=True)
     
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action in ['create', 'update', 'partial_update']:
+            return AmbulanceServiceCreateSerializer
+        elif self.action == 'retrieve':
             return AmbulanceServiceDetailSerializer
         return AmbulanceServiceListSerializer
     
@@ -112,7 +115,43 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
         return AmbulanceRequestListSerializer
     
     def get_queryset(self):
+        user = self.request.user
+        # Hospital admins see requests for their ambulances
+        if 'hospital_admin' in user.roles:
+            try:
+                hospital = user.hospital_admin
+                return AmbulanceRequest.objects.filter(ambulance__hospital=hospital).order_by('-created_at')
+            except:
+                return AmbulanceRequest.objects.none()
+        # Others see all requests
         return AmbulanceRequest.objects.all()
+    
+    @action(detail=False, methods=['get'])
+    def hospital_requests(self, request):
+        """Get all ambulance requests for hospital admin's hospital"""
+        if 'hospital_admin' not in request.user.roles:
+            return Response(
+                {'error': 'Only hospital admins can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            hospital = request.user.hospital_admin
+            requests = AmbulanceRequest.objects.filter(ambulance__hospital=hospital).order_by('-created_at')
+            
+            # Filter by status if provided
+            status_filter = request.query_params.get('status')
+            if status_filter:
+                requests = requests.filter(status=status_filter)
+            
+            serializer = AmbulanceRequestListSerializer(requests, many=True)
+            return Response(serializer.data)
+        except:
+            return Response(
+                {'error': 'No hospital found for this admin'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
     
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):

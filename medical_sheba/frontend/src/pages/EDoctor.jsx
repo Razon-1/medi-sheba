@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Star, Clock, MapPin, Phone, AlertCircle } from 'lucide-react';
+import Pagination from '../components/Pagination';
 import { edoctorAPI } from '../api/edoctor';
 import { useSEO, pageMetadata } from '../utils/seo';
+import useAuthStore from '../context/authStore';
 import '../styles/pages/EDoctor.css';
 
 export default function EDoctor() {
@@ -11,6 +13,8 @@ export default function EDoctor() {
     description: 'Consult with qualified doctors online' 
   });
   
+  const { user } = useAuthStore();
+  
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [consultations, setConsultations] = useState([]);
@@ -19,6 +23,8 @@ export default function EDoctor() {
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 21;
   const [activeTab, setActiveTab] = useState('doctors');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -41,16 +47,40 @@ export default function EDoctor() {
 
   useEffect(() => {
     fetchDoctors();
-    fetchConsultations();
-  }, []);
+    // Only fetch consultations if user is authenticated
+    if (user) {
+      fetchConsultations();
+    }
+  }, [user]);
 
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const response = await edoctorAPI.listDoctors();
-      const data = response.data.results || response.data;
-      setDoctors(data);
-      setFilteredDoctors(data);
+      let allDoctors = [];
+      let page = 1;
+      let hasMore = true;
+
+      // Fetch all pages from backend API (which uses 20-item pagination)
+      while (hasMore) {
+        const response = await edoctorAPI.listDoctors({ page });
+        const data = response.data;
+        
+        if (data.results) {
+          allDoctors = [...allDoctors, ...data.results];
+          // Check if there are more pages
+          hasMore = !!data.next;
+          page++;
+        } else if (Array.isArray(data)) {
+          allDoctors = data;
+          hasMore = false;
+        } else {
+          allDoctors = data;
+          hasMore = false;
+        }
+      }
+      
+      setDoctors(allDoctors);
+      setFilteredDoctors(allDoctors);
       setError(null);
     } catch (err) {
       console.error('Error fetching doctors:', err);
@@ -147,6 +177,7 @@ export default function EDoctor() {
     }
 
     setFilteredDoctors(filtered);
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -328,14 +359,23 @@ export default function EDoctor() {
             </div>
           ) : filteredDoctors.length > 0 ? (
             <div className="doctors-list">
-              {filteredDoctors.map(doctor => (
+              {filteredDoctors
+                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .map(doctor => (
                 <div key={doctor.id} className="doctor-card">
+                  <div className="doctor-image">
+                    <img 
+                      src={doctor.image_url || "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"} 
+                      alt={doctor.name}
+                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"}
+                    />
+                    {doctor.is_verified && <div className="badge">Verified</div>}
+                  </div>
                   <div className="doctor-header">
                     <div className="doctor-basic">
                       <h3>{doctor.name}</h3>
                       <span className="specialization">{getSpecializationLabel(doctor.specialization)}</span>
                     </div>
-                    {doctor.is_verified && <span className="verified-badge">✓ Verified</span>}
                   </div>
 
                   <div className="doctor-details">
@@ -365,6 +405,17 @@ export default function EDoctor() {
                         <span><strong>Address:</strong> {doctor.consultation_address}</span>
                       </div>
                     )}
+
+                    <div className="availability-info">
+                      <div className="availability-times">
+                        <strong>⏰ Available Time:</strong>
+                        <span>{doctor.available_start_time && doctor.available_end_time ? `${doctor.available_start_time} - ${doctor.available_end_time}` : 'Check with hospital'}</span>
+                      </div>
+                      <div className="contact-for-serial">
+                        <strong>📞 How it works:</strong>
+                        <p>Contact for serial at {doctor.phone_number || 'N/A'}</p>
+                      </div>
+                    </div>
 
                     <div className="rating-section">
                       <div className="stars">
@@ -402,6 +453,16 @@ export default function EDoctor() {
             <div className="no-results">
               <p>No doctors found matching your criteria</p>
             </div>
+          )}
+
+          {filteredDoctors.length > ITEMS_PER_PAGE && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredDoctors.length / ITEMS_PER_PAGE)}
+              totalItems={filteredDoctors.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setCurrentPage}
+            />
           )}
         </div>
       )}

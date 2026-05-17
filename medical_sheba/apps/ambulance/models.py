@@ -31,11 +31,15 @@ class AmbulanceService(models.Model):
     cost_per_km = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     is_available = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
+    requires_authentication = models.BooleanField(default=False, help_text="Patient must be logged in to request")
     
     # Ratings
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=5.0, 
                                  validators=[MinValueValidator(0), MaxValueValidator(5)])
     review_count = models.IntegerField(default=0)
+    
+    # Image
+    image_url = models.CharField(max_length=500, null=True, blank=True)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)

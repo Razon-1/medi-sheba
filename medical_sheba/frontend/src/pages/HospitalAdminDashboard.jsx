@@ -6,6 +6,7 @@ import * as hospitalApi from '../api/hospitals';
 import * as doctorApi from '../api/doctors';
 import * as ambulanceApi from '../api/ambulance';
 import * as edoctorApi from '../api/edoctor';
+import { appointmentsAPI } from '../api/appointments';
 
 const HospitalAdminDashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +16,9 @@ const HospitalAdminDashboard = () => {
   const [doctors, setDoctors] = useState([]);
   const [ambulances, setAmbulances] = useState([]);
   const [edoctors, setEdoctors] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [consultations, setConsultations] = useState([]);
+  const [ambulanceRequests, setAmbulanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -29,8 +33,10 @@ const HospitalAdminDashboard = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    loadHospitalData();
-  }, [activeTab]);
+    if (user && user.roles.includes('hospital_admin')) {
+      loadHospitalData();
+    }
+  }, [activeTab, user]);
 
   const loadHospitalData = async () => {
     try {
@@ -39,20 +45,47 @@ const HospitalAdminDashboard = () => {
 
       // Load hospital info
       const hospitalRes = await hospitalApi.getMyHospital();
-      setHospital(hospitalRes.data);
+      // Handle both direct object and wrapped response
+      const hospitalData = hospitalRes.data || hospitalRes;
+      setHospital(hospitalData);
 
       // Load data based on active tab
       if (activeTab === 'doctors') {
         const doctorsRes = await doctorApi.getMyDoctors();
-        setDoctors(doctorsRes.data);
+        // API returns array directly, not wrapped in {data: ...}
+        const doctorsData = Array.isArray(doctorsRes.data) ? doctorsRes.data : (Array.isArray(doctorsRes) ? doctorsRes : []);
+        setDoctors(doctorsData);
       } else if (activeTab === 'ambulances') {
         const ambulancesRes = await ambulanceApi.getMyAmbulances();
-        setAmbulances(ambulancesRes.data);
+        const ambulancesData = Array.isArray(ambulancesRes.data) ? ambulancesRes.data : (Array.isArray(ambulancesRes) ? ambulancesRes : []);
+        setAmbulances(ambulancesData);
       } else if (activeTab === 'edoctors') {
         const edoctorsRes = await edoctorApi.getMyEdoctors();
-        setEdoctors(edoctorsRes.data);
+        const edoctorsData = Array.isArray(edoctorsRes.data) ? edoctorsRes.data : (Array.isArray(edoctorsRes) ? edoctorsRes : []);
+        setEdoctors(edoctorsData);
+      } else if (activeTab === 'appointments') {
+        const appointmentsRes = await appointmentsAPI.hospitalAppointments();
+        const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : (Array.isArray(appointmentsRes) ? appointmentsRes : []);
+        setAppointments(appointmentsData);
+      } else if (activeTab === 'consultations') {
+        const consultationsRes = await edoctorApi.edoctorAPI.hospitalConsultations();
+        const consultationsData = Array.isArray(consultationsRes.data) ? consultationsRes.data : (Array.isArray(consultationsRes) ? consultationsRes : []);
+        setConsultations(consultationsData);
+      } else if (activeTab === 'ambulance_requests') {
+        const requestsRes = await ambulanceApi.getHospitalAmbulanceRequests();
+        const requestsData = Array.isArray(requestsRes.data) ? requestsRes.data : (Array.isArray(requestsRes) ? requestsRes : []);
+        setAmbulanceRequests(requestsData);
       }
     } catch (err) {
+      console.error('Error loading data:', err);
+      
+      // Check if it's a 404 error (no hospital found)
+      if (err.response?.status === 404 || err.message?.includes('404')) {
+        console.log('No hospital assigned to admin. Redirecting to hospital creation page...');
+        navigate('/hospital-create');
+        return;
+      }
+      
       setError(err.message || 'Failed to load data');
     } finally {
       setLoading(false);
@@ -69,6 +102,84 @@ const HospitalAdminDashboard = () => {
     setEditingItem(item);
     setFormData(item);
     setShowForm(true);
+  };
+
+  const handleConfirmAppointment = async (appointment) => {
+    try {
+      const appointmentDate = window.prompt('Enter appointment date (YYYY-MM-DD):', appointment.appointment_date || '');
+      if (!appointmentDate) return;
+      
+      const appointmentTime = window.prompt('Enter appointment time (HH:MM):', appointment.appointment_time || '');
+      if (!appointmentTime) return;
+      
+      await appointmentsAPI.confirm(appointment.id, appointmentDate, appointmentTime);
+      // Reload appointments
+      const appointmentsRes = await appointmentsAPI.hospitalAppointments();
+      const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : (Array.isArray(appointmentsRes) ? appointmentsRes : []);
+      setAppointments(appointmentsData);
+      alert('Appointment confirmed successfully!');
+    } catch (err) {
+      alert('Failed to confirm appointment: ' + err.message);
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId) => {
+    if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
+    
+    try {
+      const reason = window.prompt('Enter cancellation reason:');
+      await appointmentsAPI.cancel(appointmentId);
+      // Reload appointments
+      const appointmentsRes = await appointmentsAPI.hospitalAppointments();
+      const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : (Array.isArray(appointmentsRes) ? appointmentsRes : []);
+      setAppointments(appointmentsData);
+      alert('Appointment cancelled successfully!');
+    } catch (err) {
+      alert('Failed to cancel appointment: ' + err.message);
+    }
+  };
+
+  const handleConfirmConsultation = async (consultation) => {
+    try {
+      await edoctorApi.edoctorAPI.confirmConsultation(consultation.id);
+      // Reload consultations
+      const consultationsRes = await edoctorApi.edoctorAPI.hospitalConsultations();
+      const consultationsData = Array.isArray(consultationsRes.data) ? consultationsRes.data : (Array.isArray(consultationsRes) ? consultationsRes : []);
+      setConsultations(consultationsData);
+      alert('Consultation confirmed successfully!');
+    } catch (err) {
+      alert('Failed to confirm consultation: ' + err.message);
+    }
+  };
+
+  const handleCancelConsultation = async (consultationId) => {
+    if (!window.confirm('Are you sure you want to cancel this consultation?')) return;
+    
+    try {
+      await edoctorApi.edoctorAPI.cancelConsultation(consultationId);
+      // Reload consultations
+      const consultationsRes = await edoctorApi.edoctorAPI.hospitalConsultations();
+      const consultationsData = Array.isArray(consultationsRes.data) ? consultationsRes.data : (Array.isArray(consultationsRes) ? consultationsRes : []);
+      setConsultations(consultationsData);
+      alert('Consultation cancelled successfully!');
+    } catch (err) {
+      alert('Failed to cancel consultation: ' + err.message);
+    }
+  };
+
+  const handleUpdateAmbulanceStatus = async (requestId, newStatus) => {
+    if (!newStatus) return;
+    
+    try {
+      await ambulanceApi.updateAmbulanceRequestStatus(requestId, newStatus);
+      // Reload requests
+      const requestsRes = await ambulanceApi.getHospitalAmbulanceRequests();
+      const requestsData = Array.isArray(requestsRes.data) ? requestsRes.data : (Array.isArray(requestsRes) ? requestsRes : []);
+      setAmbulanceRequests(requestsData);
+      alert('Ambulance request status updated successfully!');
+    } catch (err) {
+      alert('Failed to update ambulance request: ' + err.message);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -95,38 +206,160 @@ const HospitalAdminDashboard = () => {
     try {
       if (editingHospital) {
         // Handle hospital info update
-        const res = await hospitalApi.updateHospital(hospital.id, formData);
+        let submitData = { ...formData };
+        
+        // Upload image files if provided and convert to URLs
+        if (formData.hospital_image_file) {
+          try {
+            const res = await hospitalApi.uploadImage(formData.hospital_image_file);
+            submitData.image_url = res.data.image_url;
+          } catch (err) {
+            console.error('Hospital image upload failed:', err);
+          }
+        } else if (formData.hospital_image_url) {
+          submitData.image_url = formData.hospital_image_url;
+        }
+        
+        if (formData.doctor_image_file) {
+          try {
+            const res = await hospitalApi.uploadImage(formData.doctor_image_file);
+            submitData.doctor_image_url = res.data.image_url;
+          } catch (err) {
+            console.error('Doctor image upload failed:', err);
+          }
+        } else if (formData.doctor_image_url) {
+          submitData.doctor_image_url = formData.doctor_image_url;
+        }
+        
+        if (formData.ambulance_image_file) {
+          try {
+            const res = await hospitalApi.uploadImage(formData.ambulance_image_file);
+            submitData.ambulance_image_url = res.data.image_url;
+          } catch (err) {
+            console.error('Ambulance image upload failed:', err);
+          }
+        } else if (formData.ambulance_image_url) {
+          submitData.ambulance_image_url = formData.ambulance_image_url;
+        }
+        
+        if (formData.edoctor_image_file) {
+          try {
+            const res = await hospitalApi.uploadImage(formData.edoctor_image_file);
+            submitData.edoctor_image_url = res.data.image_url;
+          } catch (err) {
+            console.error('E-Doctor image upload failed:', err);
+          }
+        } else if (formData.edoctor_image_url) {
+          submitData.edoctor_image_url = formData.edoctor_image_url;
+        }
+        
+        // Remove the temporary image file fields
+        delete submitData.hospital_image_file;
+        delete submitData.doctor_image_file;
+        delete submitData.ambulance_image_file;
+        delete submitData.edoctor_image_file;
+        delete submitData.hospital_image_url;
+        
+        const res = await hospitalApi.updateHospital(hospital.id, submitData);
         setHospital(res.data);
         setEditingHospital(false);
         setFormData({});
         setError(null);
       } else if (activeTab === 'doctors') {
+        let submitData = {...formData, hospital: hospital.id};
+        
+        // Upload doctor image if file provided
+        if (formData.image_file) {
+          try {
+            const res = await hospitalApi.uploadImage(formData.image_file);
+            submitData.image_url = res.data.image_url;
+          } catch (err) {
+            console.error('Image upload failed:', err);
+            // Fall back to hospital default or provided URL
+            if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.doctor_image_url) {
+              submitData.image_url = hospital.doctor_image_url;
+            }
+          }
+        } else if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.doctor_image_url) {
+          // Use hospital's default doctor image if no specific image provided
+          submitData.image_url = hospital.doctor_image_url;
+        }
+        
+        delete submitData.image_file;
+        
         if (editingItem) {
-          const res = await doctorApi.updateDoctor(editingItem.id, formData);
+          const res = await doctorApi.updateDoctor(editingItem.id, submitData);
           const updated = res.data;
           setDoctors(doctors.map(d => d.id === updated.id ? updated : d));
         } else {
-          const res = await doctorApi.addDoctor({...formData, hospital: hospital.id});
+          const res = await doctorApi.addDoctor(submitData);
           const newDoctor = res.data;
           setDoctors([...doctors, newDoctor]);
         }
       } else if (activeTab === 'ambulances') {
+        let submitData = {
+          ...formData,
+          hospital: hospital.id,
+          cost_per_km: parseFloat(formData.cost_per_km),
+          district: formData.district ? parseInt(formData.district) : null
+        };
+        
+        // Upload ambulance image if file provided
+        if (formData.image_file) {
+          try {
+            const res = await hospitalApi.uploadImage(formData.image_file);
+            submitData.image_url = res.data.image_url;
+          } catch (err) {
+            console.error('Image upload failed:', err);
+            // Fall back to hospital default or provided URL
+            if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.ambulance_image_url) {
+              submitData.image_url = hospital.ambulance_image_url;
+            }
+          }
+        } else if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.ambulance_image_url) {
+          // Use hospital's default ambulance image if no specific image provided
+          submitData.image_url = hospital.ambulance_image_url;
+        }
+        
+        delete submitData.image_file;
+        
         if (editingItem) {
-          const res = await ambulanceApi.updateAmbulance(editingItem.id, formData);
+          const res = await ambulanceApi.updateAmbulance(editingItem.id, submitData);
           const updated = res.data;
           setAmbulances(ambulances.map(a => a.id === updated.id ? updated : a));
         } else {
-          const res = await ambulanceApi.addAmbulance({...formData, hospital: hospital.id});
+          const res = await ambulanceApi.addAmbulance(submitData);
           const newAmbulance = res.data;
           setAmbulances([...ambulances, newAmbulance]);
         }
       } else if (activeTab === 'edoctors') {
+        let submitData = {...formData};
+        
+        // Upload e-doctor image if file provided
+        if (formData.image_file) {
+          try {
+            const res = await hospitalApi.uploadImage(formData.image_file);
+            submitData.image_url = res.data.image_url;
+          } catch (err) {
+            console.error('Image upload failed:', err);
+            // Fall back to hospital default or provided URL
+            if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.edoctor_image_url) {
+              submitData.image_url = hospital.edoctor_image_url;
+            }
+          }
+        } else if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.edoctor_image_url) {
+          // Use hospital's default e-doctor image if no specific image provided
+          submitData.image_url = hospital.edoctor_image_url;
+        }
+        
+        delete submitData.image_file;
+        
         if (editingItem) {
-          const res = await edoctorApi.updateEdoctor(editingItem.id, formData);
+          const res = await edoctorApi.updateEdoctor(editingItem.id, submitData);
           const updated = res.data;
           setEdoctors(edoctors.map(e => e.id === updated.id ? updated : e));
         } else {
-          const res = await edoctorApi.addEdoctor({...formData, hospital: hospital.id});
+          const res = await edoctorApi.addEdoctor({...submitData, hospital: hospital.id});
           const newEdoctor = res.data;
           setEdoctors([...edoctors, newEdoctor]);
         }
@@ -150,16 +383,20 @@ const HospitalAdminDashboard = () => {
             <th>Specialization</th>
             <th>Qualification</th>
             <th>Phone</th>
+            <th>Public</th>
+            <th>Verified</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {doctors.map(doctor => (
             <tr key={doctor.id}>
-              <td>{doctor.name}</td>
-              <td>{doctor.specialization}</td>
-              <td>{doctor.qualification}</td>
-              <td>{doctor.phone_number}</td>
+              <td>{doctor.user?.first_name} {doctor.user?.last_name}</td>
+              <td>{doctor.specialty}</td>
+              <td>{doctor.qualifications}</td>
+              <td>{doctor.user?.phone_number}</td>
+              <td>{doctor.is_available ? '✓' : '✗'}</td>
+              <td>{doctor.is_verified ? '✓ Verified' : '✗ Not Verified'}</td>
               <td>
                 <button className="btn-edit" onClick={() => handleEditClick(doctor)}>Edit</button>
                 <button className="btn-delete" onClick={() => handleDelete(doctor.id)}>Delete</button>
@@ -183,6 +420,8 @@ const HospitalAdminDashboard = () => {
             <th>Driver</th>
             <th>Phone</th>
             <th>Cost/KM</th>
+            <th>Public</th>
+            <th>Verified</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -194,6 +433,8 @@ const HospitalAdminDashboard = () => {
               <td>{ambulance.driver_name}</td>
               <td>{ambulance.phone_number}</td>
               <td>৳{parseFloat(ambulance.cost_per_km).toFixed(2)}</td>
+              <td>{ambulance.is_available ? '✓' : '✗'}</td>
+              <td>{ambulance.is_verified ? '✓ Verified' : '✗ Not Verified'}</td>
               <td>
                 <button className="btn-edit" onClick={() => handleEditClick(ambulance)}>Edit</button>
                 <button className="btn-delete" onClick={() => handleDelete(ambulance.id)}>Delete</button>
@@ -216,7 +457,8 @@ const HospitalAdminDashboard = () => {
             <th>Specialization</th>
             <th>Phone</th>
             <th>Consultation Fee</th>
-            <th>Available</th>
+            <th>Public</th>
+            <th>Verified</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -228,6 +470,7 @@ const HospitalAdminDashboard = () => {
               <td>{edoctor.phone_number}</td>
               <td>৳{parseFloat(edoctor.consultation_fee).toFixed(2)}</td>
               <td>{edoctor.is_available ? '✓' : '✗'}</td>
+              <td>{edoctor.is_verified ? '✓ Verified' : '✗ Not Verified'}</td>
               <td>
                 <button className="btn-edit" onClick={() => handleEditClick(edoctor)}>Edit</button>
                 <button className="btn-delete" onClick={() => handleDelete(edoctor.id)}>Delete</button>
@@ -270,6 +513,143 @@ const HospitalAdminDashboard = () => {
     </div>
   );
 
+  const AppointmentsTab = () => (
+    <div className="admin-content">
+      <h2>📅 Patient Appointments</h2>
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Appointment No</th>
+            <th>Patient Name</th>
+            <th>Doctor</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {appointments.length === 0 ? (
+            <tr><td colSpan="9" style={{textAlign: 'center', padding: '20px'}}>No appointments found</td></tr>
+          ) : (
+            appointments.map(appointment => (
+              <tr key={appointment.id}>
+                <td>{appointment.appointment_no}</td>
+                <td>{appointment.patient?.first_name} {appointment.patient?.last_name}</td>
+                <td>Dr. {appointment.doctor?.user?.first_name} {appointment.doctor?.user?.last_name}</td>
+                <td>{appointment.appointment_date || '-'}</td>
+                <td>{appointment.appointment_time || '-'}</td>
+                <td>{appointment.type}</td>
+                <td><span style={{backgroundColor: appointment.status === 'confirmed' ? '#d4edda' : '#fff3cd', padding: '4px 8px', borderRadius: '4px'}}>{appointment.status}</span></td>
+                <td>{appointment.payment_status}</td>
+                <td>
+                  {appointment.status === 'pending' && (
+                    <button className="btn-edit" onClick={() => handleConfirmAppointment(appointment)}>Confirm</button>
+                  )}
+                  <button className="btn-delete" onClick={() => handleCancelAppointment(appointment.id)}>Cancel</button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const ConsultationsTab = () => (
+    <div className="admin-content">
+      <h2>💻 E-Doctor Consultations</h2>
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Consultation ID</th>
+            <th>Patient Name</th>
+            <th>E-Doctor</th>
+            <th>Date</th>
+            <th>Urgency</th>
+            <th>Status</th>
+            <th>Fee</th>
+            <th>Payment</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {consultations.length === 0 ? (
+            <tr><td colSpan="9" style={{textAlign: 'center', padding: '20px'}}>No consultations found</td></tr>
+          ) : (
+            consultations.map(consultation => (
+              <tr key={consultation.id}>
+                <td>{consultation.consultation_id}</td>
+                <td>{consultation.patient_name}</td>
+                <td>Dr. {consultation.doctor?.name}</td>
+                <td>{consultation.scheduled_date || '-'}</td>
+                <td>{consultation.urgency}</td>
+                <td><span style={{backgroundColor: consultation.status === 'confirmed' ? '#d4edda' : '#fff3cd', padding: '4px 8px', borderRadius: '4px'}}>{consultation.status}</span></td>
+                <td>৳{consultation.fee_amount}</td>
+                <td>{consultation.is_paid ? '✓ Paid' : '✗ Unpaid'}</td>
+                <td>
+                  {consultation.status === 'scheduled' && (
+                    <button className="btn-edit" onClick={() => handleConfirmConsultation(consultation)}>Confirm</button>
+                  )}
+                  <button className="btn-delete" onClick={() => handleCancelConsultation(consultation.id)}>Cancel</button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const AmbulanceRequestsTab = () => (
+    <div className="admin-content">
+      <h2>🚑 Ambulance Service Requests</h2>
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Patient Name</th>
+            <th>Contact</th>
+            <th>Vehicle Type</th>
+            <th>Urgency</th>
+            <th>Pickup Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ambulanceRequests.length === 0 ? (
+            <tr><td colSpan="8" style={{textAlign: 'center', padding: '20px'}}>No ambulance requests found</td></tr>
+          ) : (
+            ambulanceRequests.map(request => (
+              <tr key={request.id}>
+                <td>{request.request_id}</td>
+                <td>{request.patient_name}</td>
+                <td>{request.contact_phone}</td>
+                <td>{request.vehicle_type_required}</td>
+                <td><span style={{color: request.urgency === 'critical' ? '#d32f2f' : request.urgency === 'urgent' ? '#f57c00' : '#1976d2'}}>{request.urgency}</span></td>
+                <td>{request.pickup_location}</td>
+                <td><span style={{backgroundColor: request.status === 'completed' ? '#d4edda' : '#fff3cd', padding: '4px 8px', borderRadius: '4px'}}>{request.status}</span></td>
+                <td>
+                  <select value="" onChange={(e) => handleUpdateAmbulanceStatus(request.id, e.target.value)} style={{padding: '4px', marginRight: '5px'}}>
+                    <option value="">Update Status</option>
+                    <option value="accepted">Accept</option>
+                    <option value="on_the_way">On The Way</option>
+                    <option value="arrived">Arrived</option>
+                    <option value="completed">Complete</option>
+                    <option value="cancelled">Cancel</option>
+                  </select>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
   if (loading && !hospital) {
     return <div className="loading">Loading Hospital Dashboard...</div>;
   }
@@ -303,6 +683,24 @@ const HospitalAdminDashboard = () => {
           💻 E-Doctors
         </button>
         <button
+          className={`tab-button ${activeTab === 'appointments' ? 'active' : ''}`}
+          onClick={() => setActiveTab('appointments')}
+        >
+          📅 Appointments
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'consultations' ? 'active' : ''}`}
+          onClick={() => setActiveTab('consultations')}
+        >
+          💬 Consultations
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'ambulance_requests' ? 'active' : ''}`}
+          onClick={() => setActiveTab('ambulance_requests')}
+        >
+          📞 Requests
+        </button>
+        <button
           className={`tab-button ${activeTab === 'info' ? 'active' : ''}`}
           onClick={() => setActiveTab('info')}
         >
@@ -314,6 +712,9 @@ const HospitalAdminDashboard = () => {
         {activeTab === 'doctors' && <DoctorsTab />}
         {activeTab === 'ambulances' && <AmbulancesTab />}
         {activeTab === 'edoctors' && <EdoctorsTab />}
+        {activeTab === 'appointments' && <AppointmentsTab />}
+        {activeTab === 'consultations' && <ConsultationsTab />}
+        {activeTab === 'ambulance_requests' && <AmbulanceRequestsTab />}
         {activeTab === 'info' && <HospitalInfoTab />}
       </div>
 
@@ -327,7 +728,7 @@ const HospitalAdminDashboard = () => {
             <h3>
               {editingHospital ? 'Edit Hospital Information' : (editingItem ? 'Edit Item' : 'Add New Item')}
             </h3>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} encType="multipart/form-data">
               {activeTab === 'doctors' && (
                 <>
                   <input
@@ -438,6 +839,39 @@ const HospitalAdminDashboard = () => {
                     value={formData.bio || ''}
                     onChange={(e) => setFormData({...formData, bio: e.target.value})}
                   />
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.is_available !== false}
+                      onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
+                    />
+                    Make available for public (visible without login)
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.is_verified === true}
+                      onChange={(e) => setFormData({...formData, is_verified: e.target.checked})}
+                    />
+                    Verify this doctor (show verification badge)
+                  </label>
+                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                    <h4 style={{ marginTop: 0 }}>📸 Doctor Image (Optional)</h4>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setFormData({...formData, image_file: e.target.files[0]})}
+                      style={{ padding: '8px', marginBottom: '10px' }}
+                    />
+                    <small style={{ display: 'block', color: '#666', marginBottom: '5px' }}>Or enter image URL:</small>
+                    <input
+                      type="url"
+                      placeholder="Doctor image URL"
+                      value={formData.image_url || ''}
+                      onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                      style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                    />
+                  </div>
                 </>
               )}
               {activeTab === 'ambulances' && (
@@ -481,6 +915,47 @@ const HospitalAdminDashboard = () => {
                     onChange={(e) => setFormData({...formData, cost_per_km: e.target.value})}
                     required
                   />
+                  <select
+                    value={formData.district || ''}
+                    onChange={(e) => setFormData({...formData, district: e.target.value})}
+                    required
+                  >
+                    <option value="">Select District</option>
+                    <option value="1">Dhaka</option>
+                  </select>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.is_available !== false}
+                      onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
+                    />
+                    Make available for public (visible without login)
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.is_verified === true}
+                      onChange={(e) => setFormData({...formData, is_verified: e.target.checked})}
+                    />
+                    Verify this ambulance (show verification badge)
+                  </label>
+                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                    <h4 style={{ marginTop: 0 }}>📸 Ambulance Image (Optional)</h4>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setFormData({...formData, image_file: e.target.files[0]})}
+                      style={{ padding: '8px', marginBottom: '10px' }}
+                    />
+                    <small style={{ display: 'block', color: '#666', marginBottom: '5px' }}>Or enter image URL:</small>
+                    <input
+                      type="url"
+                      placeholder="Ambulance image URL"
+                      value={formData.image_url || ''}
+                      onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                      style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                    />
+                  </div>
                 </>
               )}
               {activeTab === 'edoctors' && (
@@ -502,6 +977,31 @@ const HospitalAdminDashboard = () => {
                     <option value="cardiology">Cardiology</option>
                     <option value="neurology">Neurology</option>
                   </select>
+                  <select
+                    value={formData.qualification || ''}
+                    onChange={(e) => setFormData({...formData, qualification: e.target.value})}
+                    required
+                  >
+                    <option>Select Qualification</option>
+                    <option value="mbbs">MBBS</option>
+                    <option value="md">MD</option>
+                    <option value="ms">MS</option>
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="Years of Experience"
+                    value={formData.experience_years || ''}
+                    onChange={(e) => setFormData({...formData, experience_years: e.target.value})}
+                    required
+                    min="0"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Registration Number"
+                    value={formData.registration_number || ''}
+                    onChange={(e) => setFormData({...formData, registration_number: e.target.value})}
+                    required
+                  />
                   <input
                     type="email"
                     placeholder="Email"
@@ -524,14 +1024,60 @@ const HospitalAdminDashboard = () => {
                     onChange={(e) => setFormData({...formData, consultation_fee: e.target.value})}
                     required
                   />
+                  <input
+                    type="text"
+                    placeholder="Available Days (e.g., Monday, Tuesday, Wednesday)"
+                    value={formData.available_days || ''}
+                    onChange={(e) => setFormData({...formData, available_days: e.target.value})}
+                  />
+                  <label>Consultation Hours</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="time"
+                      placeholder="Start Time"
+                      value={formData.available_start_time || ''}
+                      onChange={(e) => setFormData({...formData, available_start_time: e.target.value})}
+                    />
+                    <input
+                      type="time"
+                      placeholder="End Time"
+                      value={formData.available_end_time || ''}
+                      onChange={(e) => setFormData({...formData, available_end_time: e.target.value})}
+                    />
+                  </div>
                   <label>
                     <input
                       type="checkbox"
-                      checked={formData.is_available || false}
+                      checked={formData.is_available !== false}
                       onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
                     />
-                    Available for consultation
+                    Make available for public (visible without login)
                   </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.is_verified === true}
+                      onChange={(e) => setFormData({...formData, is_verified: e.target.checked})}
+                    />
+                    Verify this E-Doctor (show verification badge)
+                  </label>
+                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                    <h4 style={{ marginTop: 0 }}>📸 E-Doctor Image (Optional)</h4>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setFormData({...formData, image_file: e.target.files[0]})}
+                      style={{ padding: '8px', marginBottom: '10px' }}
+                    />
+                    <small style={{ display: 'block', color: '#666', marginBottom: '5px' }}>Or enter image URL:</small>
+                    <input
+                      type="url"
+                      placeholder="E-Doctor image URL"
+                      value={formData.image_url || ''}
+                      onChange={(e) => setFormData({...formData, image_url: e.target.value})}
+                      style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                    />
+                  </div>
                 </>
               )}
               {editingHospital && (
@@ -640,6 +1186,85 @@ const HospitalAdminDashboard = () => {
                     />
                     Active Status
                   </label>
+                  {editingHospital && (
+                    <>
+                      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                        <h4 style={{ marginTop: 0 }}>📸 Upload Images (Optional)</h4>
+                        
+                        <div style={{ marginBottom: '15px' }}>
+                          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Hospital Image</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setFormData({...formData, hospital_image_file: e.target.files[0]})}
+                            style={{ padding: '8px' }}
+                          />
+                          <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
+                          <input
+                            type="url"
+                            placeholder="Hospital image URL"
+                            value={formData.hospital_image_url || ''}
+                            onChange={(e) => setFormData({...formData, hospital_image_url: e.target.value})}
+                            style={{ marginTop: '5px', padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div style={{ marginBottom: '15px' }}>
+                          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Doctor Image (for doctors added)</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setFormData({...formData, doctor_image_file: e.target.files[0]})}
+                            style={{ padding: '8px' }}
+                          />
+                          <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
+                          <input
+                            type="url"
+                            placeholder="Doctor image URL"
+                            value={formData.doctor_image_url || ''}
+                            onChange={(e) => setFormData({...formData, doctor_image_url: e.target.value})}
+                            style={{ marginTop: '5px', padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div style={{ marginBottom: '15px' }}>
+                          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ambulance Image (for ambulances added)</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setFormData({...formData, ambulance_image_file: e.target.files[0]})}
+                            style={{ padding: '8px' }}
+                          />
+                          <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
+                          <input
+                            type="url"
+                            placeholder="Ambulance image URL"
+                            value={formData.ambulance_image_url || ''}
+                            onChange={(e) => setFormData({...formData, ambulance_image_url: e.target.value})}
+                            style={{ marginTop: '5px', padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        <div style={{ marginBottom: '15px' }}>
+                          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>E-Doctor Image (for e-doctors added)</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setFormData({...formData, edoctor_image_file: e.target.files[0]})}
+                            style={{ padding: '8px' }}
+                          />
+                          <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
+                          <input
+                            type="url"
+                            placeholder="E-Doctor image URL"
+                            value={formData.edoctor_image_url || ''}
+                            onChange={(e) => setFormData({...formData, edoctor_image_url: e.target.value})}
+                            style={{ marginTop: '5px', padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
               <div className="form-actions">

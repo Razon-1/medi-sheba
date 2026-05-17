@@ -23,6 +23,13 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return user.appointments.all()
         elif user.role == 'doctor':
             return Appointment.objects.filter(doctor__user=user)
+        elif 'hospital_admin' in user.roles:
+            # Hospital admins see appointments for their hospital
+            try:
+                hospital = user.hospital_admin
+                return Appointment.objects.filter(hospital=hospital)
+            except:
+                return Appointment.objects.none()
         elif user.role == 'admin':
             return Appointment.objects.all()
         return Appointment.objects.none()
@@ -97,7 +104,68 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         serializer = AppointmentListSerializer(appointments, many=True)
         return Response(serializer.data)
     
+    @action(detail=False, methods=['get'])
+    def hospital_appointments(self, request):
+        """Get all appointments for hospital admin's hospital"""
+        if 'hospital_admin' not in request.user.roles:
+            return Response(
+                {'error': 'Only hospital admins can access this endpoint'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            hospital = request.user.hospital_admin
+            appointments = Appointment.objects.filter(hospital=hospital).order_by('-created_at')
+            
+            # Filter by status if provided
+            status_filter = request.query_params.get('status')
+            if status_filter:
+                appointments = appointments.filter(status=status_filter)
+            
+            serializer = AppointmentListSerializer(appointments, many=True)
+            return Response(serializer.data)
+        except:
+            return Response(
+                {'error': 'No hospital found for this admin'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
     @action(detail=True, methods=['post'])
+    def confirm(self, request, pk=None):
+        """Confirm an appointment (hospital admin or patient)"""
+        appointment = self.get_object()
+        
+        # Check authorization
+        is_hospital_admin = 'hospital_admin' in request.user.roles and appointment.hospital and appointment.hospital.admin_user == request.user
+        is_patient = appointment.patient == request.user
+        
+        if not (is_hospital_admin or is_patient):
+            return Response(
+                {'error': 'You do not have permission to confirm this appointment'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if appointment.status not in ['pending', 'confirmed']:
+            return Response(
+                {'error': f'Cannot confirm appointment with status {appointment.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        appointment.status = 'confirmed'
+        
+        # Hospital admin can set appointment date and time
+        if is_hospital_admin:
+            appointment_date = request.data.get('appointment_date')
+            appointment_time = request.data.get('appointment_time')
+            if appointment_date:
+                appointment.appointment_date = appointment_date
+            if appointment_time:
+                appointment.appointment_time = appointment_time
+        
+        appointment.save()
+        serializer = self.get_serializer(appointment)
+        return Response(serializer.data)
+    
     def cancel(self, request, pk=None):
         """Cancel an appointment"""
         appointment = self.get_object()

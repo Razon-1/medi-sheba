@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart, Phone } from 'lucide-react';
+import Pagination from '../components/Pagination';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
 import OrderMedicinesModal from '../components/OrderMedicinesModal';
@@ -23,6 +24,8 @@ export default function EMedicine() {
   const [activeTab, setActiveTab] = useState('pharmacies');
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 21;
 
   useEffect(() => {
     fetchPharmacies();
@@ -32,10 +35,31 @@ export default function EMedicine() {
   const fetchPharmacies = async () => {
     try {
       setLoading(true);
-      const response = await emedicineAPI.listPharmacies();
-      const data = response.data.results || response.data;
-      setPharmacies(data);
-      setFilteredPharmacies(data);
+      let allPharmacies = [];
+      let page = 1;
+      let hasMore = true;
+
+      // Fetch all pages from backend API (which uses 20-item pagination)
+      while (hasMore) {
+        const response = await emedicineAPI.listPharmacies({ page });
+        const data = response.data;
+        
+        if (data.results) {
+          allPharmacies = [...allPharmacies, ...data.results];
+          // Check if there are more pages
+          hasMore = !!data.next;
+          page++;
+        } else if (Array.isArray(data)) {
+          allPharmacies = data;
+          hasMore = false;
+        } else {
+          allPharmacies = data;
+          hasMore = false;
+        }
+      }
+      
+      setPharmacies(allPharmacies);
+      setFilteredPharmacies(allPharmacies);
       setError(null);
     } catch (err) {
       console.error('Error fetching pharmacies:', err);
@@ -78,6 +102,7 @@ export default function EMedicine() {
     }
 
     setFilteredPharmacies(filtered);
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -240,8 +265,18 @@ export default function EMedicine() {
                 <button onClick={fetchPharmacies} className="btn-search">Retry</button>
               </div>
             ) : filteredPharmacies.length > 0 ? (
-              filteredPharmacies.map(pharmacy => (
+              filteredPharmacies
+                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .map(pharmacy => (
                 <div key={pharmacy.id} className="pharmacy-card">
+                  <div className="pharmacy-image">
+                    <img 
+                      src={pharmacy.image_url || "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"} 
+                      alt={pharmacy.name}
+                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"}
+                    />
+                    {pharmacy.is_verified && <div className="badge">Verified</div>}
+                  </div>
                   <div className="pharmacy-header">
                     <div className="pharmacy-name-section">
                       <h3>{pharmacy.name}</h3>
@@ -330,6 +365,16 @@ export default function EMedicine() {
               </div>
             )}
           </div>
+
+        {filteredPharmacies.length > ITEMS_PER_PAGE && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredPharmacies.length / ITEMS_PER_PAGE)}
+            totalItems={filteredPharmacies.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
+        )}
         </>
       )}
 

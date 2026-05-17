@@ -3,8 +3,8 @@ from .models import AmbulanceService, AmbulanceRequest
 
 
 class AmbulanceServiceListSerializer(serializers.ModelSerializer):
-    district_name = serializers.CharField(source='district.name', read_only=True)
-    upazila_name = serializers.CharField(source='upazila.name', read_only=True)
+    district_name = serializers.CharField(source='district.name', read_only=True, allow_null=True, required=False)
+    upazila_name = serializers.CharField(source='upazila.name', read_only=True, allow_null=True, required=False)
     
     class Meta:
         model = AmbulanceService
@@ -15,9 +15,28 @@ class AmbulanceServiceListSerializer(serializers.ModelSerializer):
         ]
 
 
+class AmbulanceServiceCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating ambulance services with optional district"""
+    class Meta:
+        model = AmbulanceService
+        fields = [
+            'name', 'vehicle_type', 'driver_name', 'phone_number', 'email',
+            'district', 'upazila', 'address', 'latitude', 'longitude',
+            'cost_per_km', 'hospital', 'is_verified', 'image_url', 'requires_authentication'
+        ]
+        extra_kwargs = {
+            'district': {'required': False, 'allow_null': True},
+            'upazila': {'required': False, 'allow_null': True},
+            'email': {'required': False, 'allow_null': True},
+            'address': {'required': False, 'allow_null': True},
+            'latitude': {'required': False, 'allow_null': True},
+            'longitude': {'required': False, 'allow_null': True},
+        }
+
+
 class AmbulanceServiceDetailSerializer(serializers.ModelSerializer):
-    district_name = serializers.CharField(source='district.name', read_only=True)
-    upazila_name = serializers.CharField(source='upazila.name', read_only=True)
+    district_name = serializers.CharField(source='district.name', read_only=True, allow_null=True, required=False)
+    upazila_name = serializers.CharField(source='upazila.name', read_only=True, allow_null=True, required=False)
     
     class Meta:
         model = AmbulanceService

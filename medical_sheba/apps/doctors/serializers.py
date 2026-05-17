@@ -21,7 +21,7 @@ class DoctorSerializer(serializers.ModelSerializer):
             'subspecialty', 'qualifications', 'experience_years', 'consultation_fee',
             'follow_up_fee', 'chamber_address', 'available_days', 'available_time_start',
             'available_time_end', 'bio', 'languages', 'rating', 'review_count',
-            'is_verified', 'is_available', 'created_at', 'updated_at',
+            'is_verified', 'is_available', 'requires_authentication', 'created_at', 'updated_at',
             'first_name', 'last_name', 'email', 'phone_number'
         ]
         read_only_fields = ['id', 'rating', 'review_count', 'created_at', 'updated_at']
@@ -84,13 +84,19 @@ class DoctorSerializer(serializers.ModelSerializer):
 class DoctorListSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     hospital_name = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
     
     class Meta:
         model = Doctor
         fields = [
             'id', 'user_name', 'specialty', 'hospital_name', 'consultation_fee',
-            'rating', 'is_available'
+            'rating', 'is_available', 'is_verified', 'image_url', 'experience_years',
+            'qualifications', 'review_count', 'available_days', 'available_time_start',
+            'available_time_end', 'phone', 'user', 'requires_authentication'
         ]
+    
+    def get_phone(self, obj):
+        return obj.hospital.phone_primary if obj.hospital else 'N/A'
     
     def get_user_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"

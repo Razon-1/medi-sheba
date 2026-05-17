@@ -6,11 +6,12 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=6)
     full_name = serializers.CharField(write_only=True, required=False, allow_blank=False)
     roles = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=False)
+    phone_number = serializers.CharField(source='phone', read_only=True)
     
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'phone', 'first_name', 'last_name', 'password', 'full_name',
+            'id', 'email', 'phone', 'phone_number', 'first_name', 'last_name', 'password', 'full_name',
             'roles', 'blood_group', 'date_of_birth', 'gender', 'profile_image',
             'address', 'district', 'upazila', 'is_active', 'is_verified',
             'last_login', 'created_at', 'updated_at'

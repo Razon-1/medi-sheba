@@ -64,7 +64,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
         try:
             hospital = request.user.hospital_admin
             doctors = Doctor.objects.filter(hospital=hospital)
-            serializer = DoctorListSerializer(doctors, many=True)
+            serializer = DoctorSerializer(doctors, many=True)
             return Response(serializer.data)
         except:
             return Response(

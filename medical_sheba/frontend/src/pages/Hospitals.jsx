@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import HospitalCard from '../components/HospitalCard';
+import Pagination from '../components/Pagination';
 import { hospitalsAPI } from '../api/hospitals';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Hospitals.css';
@@ -14,6 +15,8 @@ export default function Hospitals() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 21;
 
   useEffect(() => {
     fetchHospitals();
@@ -22,10 +25,31 @@ export default function Hospitals() {
   const fetchHospitals = async () => {
     try {
       setLoading(true);
-      const response = await hospitalsAPI.list();
-      const data = response.data.results || response.data;
-      setHospitals(data);
-      setFilteredHospitals(data);
+      let allHospitals = [];
+      let page = 1;
+      let hasMore = true;
+
+      // Fetch all pages from backend API (which uses 20-item pagination)
+      while (hasMore) {
+        const response = await hospitalsAPI.list({ page });
+        const data = response.data;
+        
+        if (data.results) {
+          allHospitals = [...allHospitals, ...data.results];
+          // Check if there are more pages
+          hasMore = !!data.next;
+          page++;
+        } else if (Array.isArray(data)) {
+          allHospitals = data;
+          hasMore = false;
+        } else {
+          allHospitals = data;
+          hasMore = false;
+        }
+      }
+      
+      setHospitals(allHospitals);
+      setFilteredHospitals(allHospitals);
       setError(null);
     } catch (err) {
       console.error('Error fetching hospitals:', err);
@@ -38,6 +62,7 @@ export default function Hospitals() {
   const handleSearch = () => {
     if (!searchQuery.trim()) {
       setFilteredHospitals(hospitals);
+      setCurrentPage(1);
       return;
     }
     const filtered = hospitals.filter(hospital =>
@@ -45,6 +70,7 @@ export default function Hospitals() {
       hospital.district.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredHospitals(filtered);
+    setCurrentPage(1);
   };
 
   return (
@@ -86,9 +112,11 @@ export default function Hospitals() {
             <button onClick={fetchHospitals} className="btn-search">Retry</button>
           </div>
         ) : filteredHospitals.length > 0 ? (
-          filteredHospitals.map(hospital => (
-            <HospitalCard key={hospital.id} hospital={hospital} />
-          ))
+          filteredHospitals
+            .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+            .map(hospital => (
+              <HospitalCard key={hospital.id} hospital={hospital} />
+            ))
         ) : (
           <div className="no-results">
             <h3>No hospitals found</h3>
@@ -96,6 +124,16 @@ export default function Hospitals() {
           </div>
         )}
       </div>
+
+      {filteredHospitals.length > ITEMS_PER_PAGE && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredHospitals.length / ITEMS_PER_PAGE)}
+          totalItems={filteredHospitals.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }

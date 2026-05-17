@@ -17,7 +17,8 @@ export const getMyAmbulances = async () => {
     throw new Error(errorData.detail || errorData.message || 'Failed to fetch ambulances');
   }
   const data = await response.json();
-  return { data };
+  // Handle both paginated and non-paginated responses
+  return Array.isArray(data) ? data : (data.results || data);
 };
 
 export const addAmbulance = async (data) => {
@@ -53,5 +54,60 @@ export const getAmbulances = async () => {
     headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error('Failed to fetch ambulances');
+  return response.json();
+};
+
+// Ambulance Request Management for Hospital Admins
+export const getHospitalAmbulanceRequests = async (status = null) => {
+  let url = `${API_URL}/ambulance/requests/hospital_requests/`;
+  if (status) {
+    url += `?status=${status}`;
+  }
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || errorData.message || 'Failed to fetch ambulance requests');
+  }
+  const data = await response.json();
+  return Array.isArray(data) ? data : (data.results || data);
+};
+
+export const acceptAmbulanceRequest = async (requestId, ambulanceId) => {
+  const response = await fetch(`${API_URL}/ambulance/requests/${requestId}/accept/`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ ambulance_id: ambulanceId }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || errorData.message || 'Failed to accept ambulance request');
+  }
+  return response.json();
+};
+
+export const updateAmbulanceRequestStatus = async (requestId, status) => {
+  const response = await fetch(`${API_URL}/ambulance/requests/${requestId}/update_status/`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || errorData.message || 'Failed to update ambulance request status');
+  }
+  return response.json();
+};
+
+export const cancelAmbulanceRequest = async (requestId) => {
+  const response = await fetch(`${API_URL}/ambulance/requests/${requestId}/cancel/`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || errorData.message || 'Failed to cancel ambulance request');
+  }
   return response.json();
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PhoneCall, MapPin, DollarSign, AlertCircle, Clock, X } from 'lucide-react';
+import Pagination from '../components/Pagination';
 import { ambulanceAPI } from '../api/ambulance';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Ambulance.css';
@@ -14,6 +15,8 @@ export default function Ambulance() {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 21;
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedAmbulance, setSelectedAmbulance] = useState(null);
   const [requestLoading, setRequestLoading] = useState(false);
@@ -38,10 +41,31 @@ export default function Ambulance() {
   const fetchAmbulances = async () => {
     try {
       setLoading(true);
-      const response = await ambulanceAPI.listServices();
-      const data = response.data.results || response.data;
-      setAmbulances(data);
-      setFilteredAmbulances(data);
+      let allAmbulances = [];
+      let page = 1;
+      let hasMore = true;
+
+      // Fetch all pages from backend API (which uses 20-item pagination)
+      while (hasMore) {
+        const response = await ambulanceAPI.listServices({ page });
+        const data = response.data;
+        
+        if (data.results) {
+          allAmbulances = [...allAmbulances, ...data.results];
+          // Check if there are more pages
+          hasMore = !!data.next;
+          page++;
+        } else if (Array.isArray(data)) {
+          allAmbulances = data;
+          hasMore = false;
+        } else {
+          allAmbulances = data;
+          hasMore = false;
+        }
+      }
+      
+      setAmbulances(allAmbulances);
+      setFilteredAmbulances(allAmbulances);
       setError(null);
     } catch (err) {
       console.error('Error fetching ambulances:', err);
@@ -69,6 +93,7 @@ export default function Ambulance() {
     }
 
     setFilteredAmbulances(filtered);
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -272,8 +297,18 @@ export default function Ambulance() {
             <button onClick={fetchAmbulances} className="btn-search">Retry</button>
           </div>
         ) : filteredAmbulances.length > 0 ? (
-          filteredAmbulances.map(ambulance => (
+          filteredAmbulances
+            .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+            .map(ambulance => (
             <div key={ambulance.id} className="ambulance-card">
+              <div className="ambulance-image">
+                <img 
+                  src={ambulance.image_url || "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop"} 
+                  alt={ambulance.name}
+                  onError={(e) => e.target.src = "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop"}
+                />
+                {ambulance.is_verified && <div className="badge">Verified</div>}
+              </div>
               <div className="ambulance-header">
                 <div className="ambulance-name-section">
                   <h3>{ambulance.name}</h3>
@@ -368,6 +403,16 @@ export default function Ambulance() {
           </div>
         )}
       </div>
+
+      {filteredAmbulances.length > ITEMS_PER_PAGE && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredAmbulances.length / ITEMS_PER_PAGE)}
+          totalItems={filteredAmbulances.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+        />
+      )}
 
       {/* Request Ambulance Modal */}
       {showRequestModal && (

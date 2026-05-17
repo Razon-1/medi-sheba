@@ -23,6 +23,7 @@ import TermsOfService from './pages/TermsOfService';
 import Contact from './pages/Contact';
 import PharmacyAdminDashboard from './pages/PharmacyAdminDashboard';
 import HospitalAdminDashboard from './pages/HospitalAdminDashboard';
+import HospitalCreatePage from './pages/HospitalCreatePage';
 
 import './styles/App.css';
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/emedicine" element={<EMedicine />} />
             <Route path="/pharmacy-admin" element={<PharmacyAdminDashboard />} />
             <Route path="/hospital-admin" element={<HospitalAdminDashboard />} />
+            <Route path="/hospital-create" element={<HospitalCreatePage />} />
             <Route path="/edoctor" element={<EDoctor />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/login" element={<Login />} />

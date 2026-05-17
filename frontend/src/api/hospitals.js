@@ -21,7 +21,8 @@ export const getMyHospital = async () => {
     }
   }
   const data = await response.json();
-  return { data };
+  // Handle both single object and paginated responses
+  return Array.isArray(data) ? data[0] : (data.results ? data.results[0] : data);
 };
 
 export const updateHospital = async (id, data) => {
@@ -39,5 +40,18 @@ export const getHospitals = async () => {
     headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error('Failed to fetch hospitals');
+  return response.json();
+};
+
+export const createHospital = async (data) => {
+  const response = await fetch(`${API_URL}/hospitals/`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || errorData.error || 'Failed to create hospital');
+  }
   return response.json();
 };

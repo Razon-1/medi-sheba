@@ -2,6 +2,20 @@ from rest_framework import serializers
 from .models import EDoctorProfile, ConsultationSlot, EDoctorConsultation
 
 
+class EDoctorProfileWriteSerializer(serializers.ModelSerializer):
+    """Doctor profile write serializer - for create/update operations"""
+    class Meta:
+        model = EDoctorProfile
+        fields = [
+            'id', 'name', 'specialization', 'qualification', 'experience_years',
+            'registration_number', 'email', 'phone_number', 'hospital_name',
+            'consultation_address', 'consultation_fee', 'consultation_duration_minutes',
+            'languages_spoken', 'available_days', 'available_start_time', 'available_end_time',
+            'is_available', 'is_verified', 'requires_authentication', 'bio', 'specialties', 'hospital', 'image_url'
+        ]
+        read_only_fields = ['id', 'doctor_id']
+
+
 class EDoctorProfileListSerializer(serializers.ModelSerializer):
     """Doctor profile list view - minimal info"""
     specialization_display = serializers.CharField(source='get_specialization_display', read_only=True)
@@ -11,7 +25,8 @@ class EDoctorProfileListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'doctor_id', 'name', 'specialization', 'specialization_display',
             'qualification', 'experience_years', 'consultation_fee', 'is_verified',
-            'rating', 'review_count', 'is_available', 'hospital_name'
+            'rating', 'review_count', 'is_available', 'hospital_name', 'phone_number',
+            'available_days', 'available_start_time', 'available_end_time', 'image_url'
         ]
 
 

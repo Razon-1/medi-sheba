@@ -25,6 +25,8 @@ class Doctor(models.Model):
     review_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     is_verified = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
+    requires_authentication = models.BooleanField(default=False, help_text="Patient must be logged in to book")
+    image_url = models.CharField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

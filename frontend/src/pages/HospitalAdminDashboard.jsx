@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../context/authStore';
 import '../styles/AdminDashboard.css';
 import * as hospitalApi from '../api/hospitals';
 import * as doctorApi from '../api/doctors';
@@ -8,6 +9,7 @@ import * as edoctorApi from '../api/edoctor';
 
 const HospitalAdminDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('doctors');
   const [hospital, setHospital] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -41,16 +43,16 @@ const HospitalAdminDashboard = () => {
   ];
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    const roles = JSON.parse(localStorage.getItem('roles') || '[]');
-
-    if (!token || !roles.includes('hospital_admin')) {
-      navigate('/login');
+    // Redirect if not hospital admin
+    if (user && !user.roles.includes('hospital_admin')) {
+      navigate('/');
       return;
     }
 
-    loadHospitalData();
-  }, [navigate, activeTab]);
+    if (user && user.roles.includes('hospital_admin')) {
+      loadHospitalData();
+    }
+  }, [navigate, activeTab, user]);
 
   const loadHospitalData = async () => {
     try {
@@ -64,6 +66,7 @@ const HospitalAdminDashboard = () => {
       // Load data based on active tab
       if (activeTab === 'doctors') {
         const doctorsData = await doctorApi.getMyDoctors();
+        console.log('Doctors data:', doctorsData);
         setDoctors(doctorsData);
       } else if (activeTab === 'ambulances') {
         const ambulancesData = await ambulanceApi.getMyAmbulances();
@@ -73,6 +76,15 @@ const HospitalAdminDashboard = () => {
         setEdoctors(edoctorsData);
       }
     } catch (err) {
+      console.error('Error loading data:', err);
+      
+      // Check if it's a 404 error (no hospital found)
+      if (err.message && err.message.includes('404')) {
+        console.log('No hospital assigned to admin. Redirecting to hospital creation page...');
+        navigate('/hospital-create');
+        return;
+      }
+      
       setError(err.message || 'Failed to load data');
     } finally {
       setLoading(false);
@@ -88,7 +100,20 @@ const HospitalAdminDashboard = () => {
 
   const handleEditClick = (item) => {
     setEditingItem(item);
-    setFormData(item);
+    
+    // Flatten user data if it exists (for doctors)
+    let flattenedData = {...item};
+    if (item.user) {
+      flattenedData = {
+        ...flattenedData,
+        first_name: item.user.first_name || '',
+        last_name: item.user.last_name || '',
+        email: item.user.email || '',
+        phone_number: item.user.phone_number || ''
+      };
+    }
+    
+    setFormData(flattenedData);
     setShowForm(true);
   };
 
@@ -124,8 +149,8 @@ const HospitalAdminDashboard = () => {
         delete submitData.customSpecialty;
         
         // Ensure required fields
-        if (!submitData.first_name || !submitData.last_name || !submitData.bmdc_number || !submitData.specialty || !submitData.qualifications || !submitData.consultation_fee) {
-          setError('Please fill in all required fields (marked with *)');
+        if (!submitData.first_name || !submitData.last_name || !submitData.bmdc_number || !submitData.specialty || !submitData.qualifications || !submitData.consultation_fee || !submitData.email) {
+          setError('Please fill in all required fields (marked with *): First Name, Last Name, BMDC Number, Specialty, Qualifications, Consultation Fee, and Email');
           return;
         }
 
@@ -134,21 +159,25 @@ const HospitalAdminDashboard = () => {
           setDoctors(doctors.map(d => d.id === updated.id ? updated : d));
         } else {
           // Create a new doctor with user data
-          const newDoctor = await doctorApi.addDoctor({
+          await doctorApi.addDoctor({
             ...submitData,
             hospital: hospital.id,
             experience_years: parseInt(submitData.experience_years || 0),
             consultation_fee: parseFloat(submitData.consultation_fee)
           });
-          setDoctors([...doctors, newDoctor]);
+          // Refresh doctors list to get the complete data with user info
+          const updatedDoctors = await doctorApi.getMyDoctors();
+          setDoctors(updatedDoctors);
         }
       } else if (activeTab === 'ambulances') {
         if (editingItem) {
           const updated = await ambulanceApi.updateAmbulance(editingItem.id, submitData);
           setAmbulances(ambulances.map(a => a.id === updated.id ? updated : a));
         } else {
-          const newAmbulance = await ambulanceApi.addAmbulance({...submitData, hospital: hospital.id});
-          setAmbulances([...ambulances, newAmbulance]);
+          await ambulanceApi.addAmbulance({...submitData, hospital: hospital.id});
+          // Refresh ambulances list to get complete data
+          const updatedAmbulances = await ambulanceApi.getMyAmbulances();
+          setAmbulances(updatedAmbulances);
         }
       } else if (activeTab === 'edoctors') {
         // Ensure required fields for edoctors
@@ -167,13 +196,15 @@ const HospitalAdminDashboard = () => {
           const updated = await edoctorApi.updateEdoctor(editingItem.id, submitData);
           setEdoctors(edoctors.map(e => e.id === updated.id ? updated : e));
         } else {
-          const newEdoctor = await edoctorApi.addEdoctor({
+          await edoctorApi.addEdoctor({
             ...submitData,
             hospital: hospital.id,
             experience_years: parseInt(submitData.experience_years),
             is_available: submitData.is_available || true
           });
-          setEdoctors([...edoctors, newEdoctor]);
+          // Refresh e-doctors list to get complete data
+          const updatedEdoctors = await edoctorApi.getMyEdoctors();
+          setEdoctors(updatedEdoctors);
         }
       }
       setShowForm(false);
@@ -182,7 +213,10 @@ const HospitalAdminDashboard = () => {
       setShowMoreSpecializations(false);
       setError(null);
     } catch (err) {
+      console.error('Form submission error:', err);
+      console.error('Error details:', err.response || err.message);
       setError(err.message || 'An error occurred while saving');
+    }
     }
   };
 
@@ -201,18 +235,18 @@ const HospitalAdminDashboard = () => {
           </tr>
         </thead>
         <tbody>
-          {doctors.map(doctor => (
+          {doctors && Array.isArray(doctors) ? doctors.map(doctor => (
             <tr key={doctor.id}>
-              <td>{doctor.name}</td>
-              <td>{doctor.specialization}</td>
-              <td>{doctor.qualification}</td>
-              <td>{doctor.phone_number}</td>
+              <td>{doctor.user?.first_name} {doctor.user?.last_name}</td>
+              <td>{doctor.specialty}</td>
+              <td>{doctor.qualifications}</td>
+              <td>{doctor.user?.phone_number}</td>
               <td>
                 <button className="btn-edit" onClick={() => handleEditClick(doctor)}>Edit</button>
                 <button className="btn-delete" onClick={() => handleDelete(doctor.id)}>Delete</button>
               </td>
             </tr>
-          ))}
+          )) : null}
         </tbody>
       </table>
     </div>
@@ -304,6 +338,10 @@ const HospitalAdminDashboard = () => {
     </div>
   );
 
+  if (!user || !user.roles.includes('hospital_admin')) {
+    return null;
+  }
+
   if (loading && !hospital) {
     return <div className="loading">Loading Hospital Dashboard...</div>;
   }
@@ -312,7 +350,7 @@ const HospitalAdminDashboard = () => {
     <div className="admin-dashboard">
       <div className="admin-header">
         <h1>🏥 Hospital Admin Dashboard</h1>
-        {hospital && <p className="hospital-name">{hospital.name}</p>}
+        {hospital && <p className="hospital-name">{hospital.name} (ID: {hospital.id})</p>}
       </div>
 
       {error && <div className="error-message">{error}</div>}
