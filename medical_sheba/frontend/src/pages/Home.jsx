@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search } from 'lucide-react';
+import { useState } from 'react';
+import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search, Check, Zap } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Home.css';
 
 export default function Home() {
+  const [adminType, setAdminType] = useState('pharmacy');
   // Set SEO metadata for this page
   useSEO(pageMetadata.home);
   const stats = [
@@ -55,6 +57,147 @@ export default function Home() {
       title: 'E-Medicine (Pharmacy)',
       description: 'Order medicines online and get them delivered to your doorstep',
       link: '/emedicine'
+    },
+  ];
+
+  const pharmacyPlans = [
+    {
+      name: '3 Days Trial',
+      duration: 'Trial Period',
+      price: 'Free',
+      description: 'Perfect to explore all features',
+      features: [
+        'Limited medicine listings (up to 50)',
+        'Basic pharmacy dashboard',
+        'Email support',
+        'Basic order tracking',
+      ],
+      cta: 'Start Free Trial',
+      popular: false,
+    },
+    {
+      name: 'Monthly Plan',
+      duration: 'Per Month',
+      price: '৳999',
+      description: 'Best for growing pharmacies',
+      features: [
+        'Unlimited medicine listings',
+        'Full pharmacy admin dashboard',
+        'Advanced inventory management',
+        'Order processing & management',
+        'Delivery tracking system',
+        'Customer reviews & ratings',
+        'Email & chat support',
+        'Sales analytics & reports',
+      ],
+      cta: 'Get Started',
+      popular: true,
+    },
+    {
+      name: 'Yearly Plan',
+      duration: 'Per Year',
+      price: '৳9,999',
+      description: '17% savings on annual plan',
+      features: [
+        'All Monthly features',
+        'Priority support 24/7',
+        'Prescription management system',
+        'Medicine expiry tracking',
+        'Automated low stock alerts',
+        'Multi-branch management',
+        'API access for integration',
+        'Monthly performance reports',
+      ],
+      cta: 'Subscribe Now',
+      popular: false,
+    },
+    {
+      name: 'Custom Plan',
+      duration: 'Flexible',
+      price: 'Custom',
+      description: 'Enterprise solutions for chains',
+      features: [
+        'All Yearly plan features',
+        'White-label pharmacy portal',
+        'Dedicated account manager',
+        'Custom integrations',
+        'Employee role management',
+        'Real-time inventory sync',
+        'SLA guarantee',
+        'Training & onboarding',
+      ],
+      cta: 'Contact Sales',
+      popular: false,
+    },
+  ];
+
+  const hospitalPlans = [
+    {
+      name: '3 Days Trial',
+      duration: 'Trial Period',
+      price: 'Free',
+      description: 'Perfect to explore all features',
+      features: [
+        'Basic hospital dashboard',
+        'Limited doctor profiles (up to 10)',
+        'Basic bed management',
+        'Email support',
+      ],
+      cta: 'Start Free Trial',
+      popular: false,
+    },
+    {
+      name: 'Monthly Plan',
+      duration: 'Per Month',
+      price: '৳1,999',
+      description: 'Best for mid-size hospitals',
+      features: [
+        'Complete hospital admin dashboard',
+        'Unlimited doctor profiles',
+        'Advanced bed/ward management',
+        'Patient appointment scheduling',
+        'Outpatient (OPD) management',
+        'Medical records digitization',
+        'Staff management system',
+        'Email & chat support',
+      ],
+      cta: 'Get Started',
+      popular: true,
+    },
+    {
+      name: 'Yearly Plan',
+      duration: 'Per Year',
+      price: '৳19,999',
+      description: '17% savings on annual plan',
+      features: [
+        'All Monthly features',
+        'Inpatient (IPD) management',
+        'Emergency module',
+        'Lab integration & reports',
+        'Billing & invoice management',
+        'Priority support 24/7',
+        'Dedicated account manager',
+      ],
+      cta: 'Subscribe Now',
+      popular: false,
+    },
+    {
+      name: 'Enterprise Plan',
+      duration: 'Flexible',
+      price: 'Custom',
+      description: 'Complete healthcare solutions',
+      features: [
+        'All Yearly plan features',
+        'Multi-hospital management',
+        'Advanced analytics & dashboards',
+        'Insurance claim processing',
+        'Telemedicine integration',
+        'Mobile app access',
+        'API & custom development',
+        'Dedicated support team',
+      ],
+      cta: 'Contact Sales',
+      popular: false,
     },
   ];
 
@@ -129,6 +272,64 @@ export default function Home() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Subscription Plans Section */}
+      <section className="subscription">
+        <div className="subscription-header">
+          <h2 className="section-title">Subscription Plans</h2>
+          <p className="section-subtitle">Choose Your Admin Type</p>
+          <p className="section-description">Select tailored plans for your healthcare business</p>
+          
+          {/* Toggle Between Pharmacy and Hospital Admin */}
+          <div className="admin-type-toggle">
+            <button 
+              className={`toggle-btn ${adminType === 'pharmacy' ? 'active' : ''}`}
+              onClick={() => setAdminType('pharmacy')}
+            >
+              <Pill size={20} />
+              <span>Pharmacy Admin</span>
+            </button>
+            <button 
+              className={`toggle-btn ${adminType === 'hospital' ? 'active' : ''}`}
+              onClick={() => setAdminType('hospital')}
+            >
+              <Building2 size={20} />
+              <span>Hospital Admin</span>
+            </button>
+          </div>
+        </div>
+        
+        <div className="subscription-grid">
+          {(adminType === 'pharmacy' ? pharmacyPlans : hospitalPlans).map((plan, idx) => (
+            <div key={idx} className={`subscription-card ${plan.popular ? 'popular' : ''}`}>
+              {plan.popular && (
+                <div className="popular-badge">
+                  <Zap size={16} />
+                  Most Popular
+                </div>
+              )}
+              <h3 className="plan-name">{plan.name}</h3>
+              <p className="plan-duration">{plan.duration}</p>
+              <div className="plan-price">
+                <span className="price">{plan.price}</span>
+              </div>
+              <p className="plan-description">{plan.description}</p>
+              <button className={`btn-plan ${plan.popular ? 'btn-popular' : ''}`}>
+                {plan.cta}
+              </button>
+              <div className="plan-divider"></div>
+              <ul className="features-list">
+                {plan.features.map((feature, featureIdx) => (
+                  <li key={featureIdx}>
+                    <Check size={18} className="check-icon" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </section>
 

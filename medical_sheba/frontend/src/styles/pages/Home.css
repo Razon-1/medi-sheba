@@ -332,6 +332,208 @@
   color: var(--primary-blue);
 }
 
+/* Subscription Section */
+.subscription {
+  margin-bottom: 5rem;
+}
+
+.subscription-header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+.admin-type-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 2rem;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: var(--text-gray);
+  font-weight: 600;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.toggle-btn:hover {
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.25);
+}
+
+.toggle-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.section-description {
+  font-size: 1rem;
+  color: var(--text-gray);
+  font-weight: 400;
+  margin-top: 0.5rem;
+}
+
+.subscription-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.5rem;
+  position: relative;
+}
+
+.subscription-card {
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  border: 2px solid #e5e7eb;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.subscription-card:hover {
+  transform: translateY(-10px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-blue);
+}
+
+.subscription-card.popular {
+  border: 2px solid var(--primary-blue);
+  transform: scale(1.05);
+  box-shadow: 0 15px 40px rgba(0, 102, 204, 0.15);
+}
+
+.subscription-card.popular:hover {
+  transform: scale(1.05) translateY(-10px);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.plan-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.plan-duration {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.plan-price {
+  margin: 1.5rem 0 1rem;
+}
+
+.plan-price .price {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary-blue);
+}
+
+.plan-description {
+  font-size: 0.95rem;
+  color: var(--text-gray);
+  margin-bottom: 1.5rem;
+  min-height: 2.5rem;
+}
+
+.btn-plan {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--primary-blue);
+  background: white;
+  color: var(--primary-blue);
+  font-weight: 700;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.btn-plan:hover {
+  background: var(--primary-blue);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-plan.btn-popular {
+  background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
+  border: none;
+  color: white;
+}
+
+.btn-plan.btn-popular:hover {
+  background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
+  opacity: 0.9;
+}
+
+.plan-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  margin: 1.5rem 0;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.features-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-gray);
+  line-height: 1.5;
+}
+
+.features-list li:last-child {
+  margin-bottom: 0;
+}
+
+.check-icon {
+  color: var(--accent-teal);
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  width: 18px;
+  height: 18px;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .hero-content {
@@ -386,6 +588,27 @@
 
   .benefits-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .subscription-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .subscription-card.popular {
+    transform: scale(1);
+  }
+
+  .subscription-card.popular:hover {
+    transform: scale(1) translateY(-10px);
+  }
+
+  .admin-type-toggle {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .toggle-btn {
+    width: 100%;
   }
 
   .cta-section {
