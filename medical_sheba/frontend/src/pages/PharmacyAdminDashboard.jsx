@@ -10,12 +10,14 @@ export default function PharmacyAdminDashboard() {
   const { user } = useAuthStore();
   const [pharmacy, setPharmacy] = useState(null);
   const [medicines, setMedicines] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('medicines');
   const [showAddMedicine, setShowAddMedicine] = useState(false);
   const [showEditPharmacy, setShowEditPharmacy] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Redirect if not pharmacy admin
   useEffect(() => {
@@ -24,19 +26,56 @@ export default function PharmacyAdminDashboard() {
     }
   }, [user, navigate]);
 
-  // Fetch pharmacy data
+  // Fetch pharmacy data and initial medicines
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const pharmacyRes = await medicineAPI.getMyPharmacy();
-        setPharmacy(pharmacyRes.data);
+        setError(null);
         
-        const medicinesRes = await medicineAPI.getMyMedicines();
-        setMedicines(medicinesRes.data);
+        // Fetch pharmacy data
+        let pharmacyRes;
+        try {
+          pharmacyRes = await medicineAPI.getMyPharmacy();
+          setPharmacy(pharmacyRes.data);
+        } catch (err) {
+          console.error('Error fetching pharmacy:', err);
+          if (err.response?.status === 404 || err.message?.includes('404')) {
+            console.log('No pharmacy assigned to admin. Redirecting to pharmacy creation page...');
+            navigate('/pharmacy-create');
+            return;
+          } else if (err.response?.status === 403) {
+            setError('You do not have permission to access this pharmacy.');
+          } else {
+            setError(`Failed to load pharmacy: ${err.message}`);
+          }
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch medicines
+        try {
+          const medicinesRes = await medicineAPI.getMyMedicines();
+          setMedicines(medicinesRes.data || []);
+        } catch (err) {
+          console.error('Error fetching medicines:', err);
+          // Don't fail entirely if medicines fail - they might not exist yet
+          setMedicines([]);
+        }
+        
+        // Always fetch orders on initial load
+        try {
+          const ordersRes = await medicineAPI.listOrders();
+          // Handle paginated response - extract results from paginated response
+          const ordersData = ordersRes.data.results || ordersRes.data || [];
+          setOrders(ordersData);
+        } catch (err) {
+          console.error('Error fetching orders:', err);
+          setOrders([]);
+        }
       } catch (err) {
-        console.error('Error fetching pharmacy data:', err);
-        setError('Failed to load pharmacy data');
+        console.error('Unexpected error in fetchData:', err);
+        setError('An unexpected error occurred. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -46,6 +85,24 @@ export default function PharmacyAdminDashboard() {
       fetchData();
     }
   }, [user]);
+
+  // Refetch orders when tab changes to 'orders'
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      const fetchOrders = async () => {
+        try {
+          const ordersRes = await medicineAPI.listOrders();
+          // Handle paginated response - extract results from paginated response
+          const ordersData = ordersRes.data.results || ordersRes.data || [];
+          setOrders(ordersData);
+        } catch (err) {
+          console.error('Error fetching orders:', err);
+          setOrders([]);
+        }
+      };
+      fetchOrders();
+    }
+  }, [activeTab]);
 
   if (!user || !user.roles.includes('pharmacy_admin')) {
     return null;
@@ -76,13 +133,19 @@ export default function PharmacyAdminDashboard() {
           className={`tab-button ${activeTab === 'medicines' ? 'active' : ''}`}
           onClick={() => setActiveTab('medicines')}
         >
-          Medicines ({medicines.length})
+          💊 Medicines ({medicines.length})
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'orders' ? 'active' : ''}`}
+          onClick={() => setActiveTab('orders')}
+        >
+          📦 Orders ({orders.length})
         </button>
         <button
           className={`tab-button ${activeTab === 'pharmacy' ? 'active' : ''}`}
           onClick={() => setActiveTab('pharmacy')}
         >
-          Pharmacy Info
+          🏪 Pharmacy Info
         </button>
       </div>
 
@@ -98,6 +161,15 @@ export default function PharmacyAdminDashboard() {
           />
         )}
 
+        {activeTab === 'orders' && (
+          <OrdersTab
+            orders={orders}
+            setOrders={setOrders}
+            selectedOrder={selectedOrder}
+            setSelectedOrder={setSelectedOrder}
+          />
+        )}
+
         {activeTab === 'pharmacy' && pharmacy && (
           <PharmacyInfoTab
             pharmacy={pharmacy}
@@ -106,6 +178,330 @@ export default function PharmacyAdminDashboard() {
             setShowEditPharmacy={setShowEditPharmacy}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterUrgency, setFilterUrgency] = useState('all');
+
+  const filteredOrders = orders.filter(order => {
+    const statusMatch = filterStatus === 'all' || order.status === filterStatus;
+    const urgencyMatch = filterUrgency === 'all' || order.urgency === filterUrgency;
+    return statusMatch && urgencyMatch;
+  });
+
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: '#FFA500',
+      confirmed: '#4169E1',
+      processing: '#9370DB',
+      shipped: '#20B2AA',
+      delivered: '#28A745',
+      cancelled: '#DC3545',
+    };
+    return colors[status] || '#666';
+  };
+
+  const getUrgencyBadge = (urgency) => {
+    const badges = {
+      normal: '🔵 Normal',
+      urgent: '🟠 Urgent',
+      critical: '🔴 Critical',
+    };
+    return badges[urgency] || urgency;
+  };
+
+  return (
+    <div className="orders-tab">
+      <div className="tab-header">
+        <h2>📦 Manage Orders & Deliveries</h2>
+      </div>
+
+      <div className="filters-section">
+        <div className="filter-group">
+          <label>Filter by Status:</label>
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="filter-select">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label>Filter by Urgency:</label>
+          <select value={filterUrgency} onChange={(e) => setFilterUrgency(e.target.value)} className="filter-select">
+            <option value="all">All Levels</option>
+            <option value="normal">Normal</option>
+            <option value="urgent">Urgent</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+
+      {filteredOrders.length === 0 ? (
+        <div className="empty-state">
+          <p>No orders found. {filterStatus !== 'all' || filterUrgency !== 'all' ? 'Try adjusting filters.' : ''}</p>
+        </div>
+      ) : (
+        <div className="orders-grid">
+          {filteredOrders.map(order => (
+            <div key={order.id} className="order-card">
+              <div className="order-header">
+                <div className="order-id">
+                  <h3>Order #{order.order_id}</h3>
+                  <span className="order-date">{new Date(order.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="order-status" style={{ borderLeft: `4px solid ${getStatusColor(order.status)}` }}>
+                  <span className="status-badge" style={{ backgroundColor: getStatusColor(order.status) }}>
+                    {order.status.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="order-info">
+                <div className="info-row">
+                  <span className="label">Patient:</span>
+                  <span className="value">{order.patient_name}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Contact:</span>
+                  <span className="value">{order.contact_phone}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Urgency:</span>
+                  <span className="urgency-badge">{getUrgencyBadge(order.urgency)}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Delivery Address:</span>
+                  <span className="value address">{order.delivery_address}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Total Amount:</span>
+                  <span className="value amount">৳{parseFloat(order.total_amount).toFixed(2)}</span>
+                </div>
+                {order.notes && (
+                  <div className="info-row">
+                    <span className="label">Notes:</span>
+                    <span className="value">{order.notes}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="order-actions">
+                <button 
+                  className="btn-view" 
+                  onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
+                >
+                  {selectedOrder?.id === order.id ? 'Hide Details' : 'View Details'}
+                </button>
+              </div>
+
+              {selectedOrder?.id === order.id && (
+                <OrderDetailsModal
+                  order={order}
+                  orders={orders}
+                  setOrders={setOrders}
+                  onClose={() => setSelectedOrder(null)}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderDetailsModal({ order, orders, setOrders, onClose }) {
+  const [newStatus, setNewStatus] = useState(order.status);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleStatusChange = async () => {
+    if (newStatus === order.status) {
+      setError('Please select a different status');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      await medicineAPI.updateOrderStatus(order.id, newStatus);
+      
+      // Update local state
+      const updatedOrders = orders.map(o => 
+        o.id === order.id ? { ...o, status: newStatus } : o
+      );
+      setOrders(updatedOrders);
+      setError(null);
+    } catch (err) {
+      console.error('Error updating order status:', err);
+      setError(err.response?.data?.detail || 'Failed to update order status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await medicineAPI.cancelOrder(order.id);
+      
+      // Update local state
+      const updatedOrders = orders.map(o => 
+        o.id === order.id ? { ...o, status: 'cancelled' } : o
+      );
+      setOrders(updatedOrders);
+      onClose();
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      setError(err.response?.data?.detail || 'Failed to cancel order');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmOrder = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await medicineAPI.confirmOrder(order.id);
+      
+      // Update local state
+      const updatedOrders = orders.map(o => 
+        o.id === order.id ? { ...o, status: 'confirmed' } : o
+      );
+      setOrders(updatedOrders);
+    } catch (err) {
+      console.error('Error confirming order:', err);
+      setError(err.response?.data?.detail || 'Failed to confirm order');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMedicineDelivery = async (medicineName, isDelivered) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const quantity = order.medicines_list[medicineName];
+      
+      if (isDelivered) {
+        // Mark as delivered
+        await medicineAPI.markMedicineDelivered(order.id, medicineName, quantity);
+      } else {
+        // Unmark as delivered
+        await medicineAPI.unmarkMedicineDelivered(order.id, medicineName);
+      }
+      
+      // Fetch updated order
+      const updatedOrder = await medicineAPI.getOrder(order.id);
+      const updatedOrders = orders.map(o => 
+        o.id === order.id ? updatedOrder.data : o
+      );
+      setOrders(updatedOrders);
+    } catch (err) {
+      console.error('Error updating medicine delivery:', err);
+      setError(err.response?.data?.detail || 'Failed to update medicine delivery status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="order-details-modal">
+      <div className="modal-body">
+        <h4>Order Management</h4>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <div className="medicines-section">
+          <h5>📦 Medicines & Delivery Status:</h5>
+          {typeof order.medicines_list === 'object' && order.medicines_list !== null && (
+            <div className="medicines-delivery-list">
+              {Object.entries(order.medicines_list).map(([medicineName, quantity]) => {
+                const isDelivered = order.delivered_medicines_list && order.delivered_medicines_list[medicineName];
+                return (
+                  <div key={medicineName} className="medicine-delivery-item">
+                    <input 
+                      type="checkbox"
+                      id={`medicine-${medicineName}`}
+                      checked={isDelivered ? true : false}
+                      onChange={(e) => handleMedicineDelivery(medicineName, e.target.checked)}
+                      disabled={loading || order.status === 'cancelled' || order.status === 'delivered'}
+                      className="medicine-checkbox"
+                    />
+                    <label htmlFor={`medicine-${medicineName}`} className={`medicine-label ${isDelivered ? 'delivered' : ''}`}>
+                      <span className="medicine-name">{medicineName}</span>
+                      <span className="medicine-qty">x{quantity}</span>
+                      {isDelivered && <span className="delivery-badge">✓ Delivered</span>}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="status-section">
+          <label>Update Order Status:</label>
+          <div className="status-control">
+            <select 
+              value={newStatus} 
+              onChange={(e) => setNewStatus(e.target.value)}
+              disabled={order.status === 'cancelled' || order.status === 'delivered'}
+              className="status-select"
+            >
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+            </select>
+            <button 
+              className="btn-update-status" 
+              onClick={handleStatusChange}
+              disabled={loading || order.status === 'cancelled' || order.status === 'delivered'}
+            >
+              {loading ? 'Updating...' : 'Update Status'}
+            </button>
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          {order.status === 'pending' && (
+            <button 
+              className="btn-confirm" 
+              onClick={handleConfirmOrder}
+              disabled={loading}
+            >
+              ✓ Confirm Order
+            </button>
+          )}
+          {order.status !== 'delivered' && order.status !== 'cancelled' && (
+            <button 
+              className="btn-cancel" 
+              onClick={handleCancelOrder}
+              disabled={loading}
+            >
+              ✕ Cancel Order
+            </button>
+          )}
+          <button className="btn-close" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -21,6 +21,10 @@ export const emedicineAPI = {
     return apiClient.get('/emedicine/pharmacies/my_pharmacy/');
   },
 
+  createPharmacy: async (data) => {
+    return apiClient.post('/emedicine/pharmacies/', data);
+  },
+
   updatePharmacy: async (id, data) => {
     return apiClient.patch(`/emedicine/pharmacies/${id}/`, data);
   },
@@ -95,6 +99,19 @@ export const emedicineAPI = {
 
   updateOrderStatus: async (id, status) => {
     return apiClient.post(`/emedicine/orders/${id}/update_status/`, { status });
+  },
+
+  markMedicineDelivered: async (orderId, medicineName, quantity = 1) => {
+    return apiClient.post(`/emedicine/orders/${orderId}/mark_medicine_delivered/`, {
+      medicine_name: medicineName,
+      quantity: quantity
+    });
+  },
+
+  unmarkMedicineDelivered: async (orderId, medicineName) => {
+    return apiClient.post(`/emedicine/orders/${orderId}/unmark_medicine_delivered/`, {
+      medicine_name: medicineName
+    });
   },
 };
 

@@ -22,6 +22,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Contact from './pages/Contact';
 import PharmacyAdminDashboard from './pages/PharmacyAdminDashboard';
+import PharmacyCreatePage from './pages/PharmacyCreatePage';
 import HospitalAdminDashboard from './pages/HospitalAdminDashboard';
 import HospitalCreatePage from './pages/HospitalCreatePage';
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/ambulance" element={<Ambulance />} />
             <Route path="/emedicine" element={<EMedicine />} />
             <Route path="/pharmacy-admin" element={<PharmacyAdminDashboard />} />
+            <Route path="/pharmacy-create" element={<PharmacyCreatePage />} />
             <Route path="/hospital-admin" element={<HospitalAdminDashboard />} />
             <Route path="/hospital-create" element={<HospitalCreatePage />} />
             <Route path="/edoctor" element={<EDoctor />} />

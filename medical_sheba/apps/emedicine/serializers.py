@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import EMedicinePharmacy, MedicineItem, EMedicineOrder
+from apps.location.models import District, Upazila
 
 
 class MedicineItemSerializer(serializers.ModelSerializer):
@@ -48,7 +49,40 @@ class EMedicinePharmacyDetailSerializer(serializers.ModelSerializer):
             'delivery_charge', 'is_available', 'is_verified', 'rating', 'review_count',
             'medicines', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'is_verified', 'rating', 'review_count']
+        read_only_fields = ['id', 'admin_user', 'created_at', 'updated_at', 'is_verified', 'rating', 'review_count']
+
+
+class EMedicinePharmacyCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating pharmacies - accepts district/upazila names"""
+    
+    district_name = serializers.CharField(write_only=True)
+    upazila_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    
+    class Meta:
+        model = EMedicinePharmacy
+        fields = [
+            'name', 'pharmacy_type', 'license_number', 'phone_number', 'email',
+            'address', 'district_name', 'upazila_name', 'delivery_time_hours',
+            'min_order_amount', 'delivery_charge'
+        ]
+    
+    def create(self, validated_data):
+        district_name = validated_data.pop('district_name')
+        upazila_name = validated_data.pop('upazila_name', None)
+        
+        # Get or create district
+        district, _ = District.objects.get_or_create(name=district_name)
+        validated_data['district'] = district
+        
+        # Get upazila if provided
+        if upazila_name:
+            upazila, _ = Upazila.objects.get_or_create(
+                name=upazila_name,
+                district=district
+            )
+            validated_data['upazila'] = upazila
+        
+        return super().create(validated_data)
 
 
 class EMedicineOrderListSerializer(serializers.ModelSerializer):
@@ -60,7 +94,7 @@ class EMedicineOrderListSerializer(serializers.ModelSerializer):
         model = EMedicineOrder
         fields = [
             'id', 'order_id', 'patient_name', 'contact_phone', 'pharmacy_name',
-            'total_amount', 'urgency', 'status', 'required_date', 'created_at'
+            'medicines_list', 'delivered_medicines_list', 'total_amount', 'urgency', 'status', 'required_date', 'created_at'
         ]
 
 
@@ -75,8 +109,8 @@ class EMedicineOrderDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'order_id', 'patient_name', 'contact_phone', 'delivery_address',
             'pharmacy', 'pharmacy_name', 'pharmacy_phone', 'medicines_list',
-            'total_amount', 'urgency', 'status', 'required_date', 'notes',
-            'created_at', 'updated_at'
+            'delivered_medicines_list', 'total_amount', 'urgency', 'status',
+            'required_date', 'notes', 'created_at', 'updated_at'
         ]
 
 

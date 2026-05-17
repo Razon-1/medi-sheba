@@ -9,6 +9,7 @@ from .models import EMedicinePharmacy, MedicineItem, EMedicineOrder
 from .serializers import (
     EMedicinePharmacyListSerializer,
     EMedicinePharmacyDetailSerializer,
+    EMedicinePharmacyCreateSerializer,
     EMedicineOrderListSerializer,
     EMedicineOrderDetailSerializer,
     EMedicineOrderCreateSerializer,
@@ -49,7 +50,9 @@ class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
     ordering = ['-is_verified', '-rating']
     
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action == 'create':
+            return EMedicinePharmacyCreateSerializer
+        elif self.action == 'retrieve':
             return EMedicinePharmacyDetailSerializer
         return EMedicinePharmacyListSerializer
     
@@ -60,6 +63,18 @@ class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
             return EMedicinePharmacy.objects.filter(admin_user=user)
         # Others see all available pharmacies
         return EMedicinePharmacy.objects.all()
+    
+    def perform_create(self, serializer):
+        """Auto-assign current user as pharmacy admin"""
+        user = self.request.user
+        if 'pharmacy_admin' not in user.roles:
+            raise serializers.ValidationError("Only pharmacy admins can create pharmacies")
+        
+        # Check if user already has a pharmacy
+        if EMedicinePharmacy.objects.filter(admin_user=user).exists():
+            raise serializers.ValidationError("You already have a pharmacy. One pharmacy admin can manage only one pharmacy.")
+        
+        serializer.save(admin_user=user)
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_pharmacy(self, request):
@@ -177,6 +192,19 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'total_amount', 'required_date']
     ordering = ['-created_at']
     
+    def get_queryset(self):
+        """Filter orders by pharmacy admin's pharmacy"""
+        user = self.request.user
+        if user.is_authenticated and 'pharmacy_admin' in user.roles:
+            try:
+                pharmacy = EMedicinePharmacy.objects.get(admin_user=user)
+                return EMedicineOrder.objects.filter(pharmacy=pharmacy)
+            except EMedicinePharmacy.DoesNotExist:
+                # Pharmacy admin without assigned pharmacy sees no orders
+                return EMedicineOrder.objects.none()
+        # Non-pharmacy-admins see all orders
+        return EMedicineOrder.objects.all()
+    
     def get_serializer_class(self):
         if self.action == 'create':
             return EMedicineOrderCreateSerializer
@@ -242,3 +270,47 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
         order.save()
         serializer = EMedicineOrderDetailSerializer(order)
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def mark_medicine_delivered(self, request, pk=None):
+        """Mark a specific medicine as delivered in an order"""
+        order = self.get_object()
+        medicine_name = request.data.get('medicine_name')
+        quantity = request.data.get('quantity', 1)
+        
+        if not medicine_name:
+            return Response(
+                {'error': 'medicine_name is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Initialize delivered_medicines_list if empty
+        if not order.delivered_medicines_list:
+            order.delivered_medicines_list = {}
+        
+        # Add or update the delivered medicine quantity
+        order.delivered_medicines_list[medicine_name] = quantity
+        order.save()
+        
+        serializer = EMedicineOrderDetailSerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['post'])
+    def unmark_medicine_delivered(self, request, pk=None):
+        """Remove a medicine from delivered list"""
+        order = self.get_object()
+        medicine_name = request.data.get('medicine_name')
+        
+        if not medicine_name:
+            return Response(
+                {'error': 'medicine_name is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Remove medicine from delivered list
+        if order.delivered_medicines_list and medicine_name in order.delivered_medicines_list:
+            del order.delivered_medicines_list[medicine_name]
+            order.save()
+        
+        serializer = EMedicineOrderDetailSerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)

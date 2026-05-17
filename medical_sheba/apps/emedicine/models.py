@@ -140,6 +140,7 @@ class EMedicineOrder(models.Model):
     
     pharmacy = models.ForeignKey(EMedicinePharmacy, on_delete=models.CASCADE, related_name='orders')
     medicines_list = models.JSONField(default=dict, help_text="List of medicines with quantities")
+    delivered_medicines_list = models.JSONField(default=dict, help_text="List of delivered medicines with quantities - tracks which medicines have been delivered")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     urgency = models.CharField(max_length=20, choices=URGENCY_CHOICES, default='normal')
