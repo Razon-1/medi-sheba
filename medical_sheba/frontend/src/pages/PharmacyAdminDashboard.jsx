@@ -384,6 +384,8 @@ export default function PharmacyAdminDashboard() {
 function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterUrgency, setFilterUrgency] = useState('all');
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   const filteredOrders = orders.filter(order => {
     const statusMatch = filterStatus === 'all' || order.status === filterStatus;
@@ -410,6 +412,65 @@ function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
       critical: '🔴 Critical',
     };
     return badges[urgency] || urgency;
+  };
+
+  const updateOrderInList = (orderId, updatedFields) => {
+    setOrders(orders.map(order => (
+      order.id === orderId ? { ...order, ...updatedFields } : order
+    )));
+  };
+
+  const handleQuickStatusChange = async (order, status) => {
+    try {
+      setUpdatingOrderId(order.id);
+      setActionError(null);
+      await medicineAPI.updateOrderStatus(order.id, status);
+      updateOrderInList(order.id, { status });
+    } catch (err) {
+      console.error('Error updating order status:', err);
+      setActionError(err.response?.data?.error || err.response?.data?.detail || 'Failed to update order status.');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleQuickConfirm = async (order) => {
+    try {
+      setUpdatingOrderId(order.id);
+      setActionError(null);
+      await medicineAPI.confirmOrder(order.id);
+      updateOrderInList(order.id, { status: 'confirmed' });
+    } catch (err) {
+      console.error('Error confirming order:', err);
+      setActionError(err.response?.data?.error || err.response?.data?.detail || 'Failed to confirm order.');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleQuickCancel = async (order) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+
+    try {
+      setUpdatingOrderId(order.id);
+      setActionError(null);
+      await medicineAPI.cancelOrder(order.id);
+      updateOrderInList(order.id, { status: 'cancelled' });
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      setActionError(err.response?.data?.error || err.response?.data?.detail || 'Failed to cancel order.');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const getNextAction = (order) => {
+    const actions = {
+      confirmed: { label: 'Start Processing', status: 'processing' },
+      processing: { label: 'Mark Shipped', status: 'shipped' },
+      shipped: { label: 'Mark Delivered', status: 'delivered' },
+    };
+    return actions[order.status];
   };
 
   return (
@@ -443,9 +504,11 @@ function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
         </div>
       </div>
 
+      {actionError && <div className="error-message">{actionError}</div>}
+
       {filteredOrders.length === 0 ? (
         <div className="empty-state">
-          <p>No orders found. {filterStatus !== 'all' || filterUrgency !== 'all' ? 'Try adjusting filters.' : ''}</p>
+          <p>No orders found. {filterStatus !== 'all' || filterUrgency !== 'all' ? 'Try adjusting filters.' : 'New customer medicine orders will appear here.'}</p>
         </div>
       ) : (
         <div className="orders-grid">
@@ -493,6 +556,38 @@ function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
               </div>
 
               <div className="order-actions">
+                <div className="quick-actions">
+                  {order.status === 'pending' && (
+                    <button
+                      type="button"
+                      className="btn-action confirm"
+                      onClick={() => handleQuickConfirm(order)}
+                      disabled={updatingOrderId === order.id}
+                    >
+                      Confirm
+                    </button>
+                  )}
+                  {getNextAction(order) && (
+                    <button
+                      type="button"
+                      className="btn-action progress"
+                      onClick={() => handleQuickStatusChange(order, getNextAction(order).status)}
+                      disabled={updatingOrderId === order.id}
+                    >
+                      {getNextAction(order).label}
+                    </button>
+                  )}
+                  {!['delivered', 'cancelled'].includes(order.status) && (
+                    <button
+                      type="button"
+                      className="btn-action cancel"
+                      onClick={() => handleQuickCancel(order)}
+                      disabled={updatingOrderId === order.id}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
                 <button 
                   className="btn-view" 
                   onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
