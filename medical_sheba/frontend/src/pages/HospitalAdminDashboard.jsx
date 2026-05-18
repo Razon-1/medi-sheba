@@ -25,6 +25,16 @@ const HospitalAdminDashboard = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
   const [editingHospital, setEditingHospital] = useState(false);
+  const [reviewPeriod, setReviewPeriod] = useState('weekly');
+  const [revenueSummary, setRevenueSummary] = useState({
+    appointmentsRevenue: 0,
+    consultationsRevenue: 0,
+    totalRevenue: 0,
+    appointmentsCount: 0,
+    consultationsCount: 0,
+    breakdown: []
+  });
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   useEffect(() => {
     if (user && !user.roles.includes('hospital_admin')) {
@@ -78,19 +88,99 @@ const HospitalAdminDashboard = () => {
       }
     } catch (err) {
       console.error('Error loading data:', err);
-      
-      // Check if it's a 404 error (no hospital found)
-      if (err.response?.status === 404 || err.message?.includes('404')) {
+      const status = err.response?.status || err.status;
+
+      // If no hospital exists for this admin, redirect to hospital creation
+      if (status === 404 || (err.message && err.message.includes('404'))) {
         console.log('No hospital assigned to admin. Redirecting to hospital creation page...');
         navigate('/hospital-create');
         return;
       }
-      
+
       setError(err.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
   };
+
+  const getPeriodStart = (period) => {
+    const now = new Date();
+    if (period === 'weekly') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 7);
+      return start;
+    }
+    if (period === 'monthly') {
+      const start = new Date(now);
+      start.setMonth(now.getMonth() - 1);
+      return start;
+    }
+    if (period === 'yearly') {
+      const start = new Date(now);
+      start.setFullYear(now.getFullYear() - 1);
+      return start;
+    }
+    return new Date(0);
+  };
+
+  const parseDateValue = (value) => {
+    const date = value ? new Date(value) : null;
+    return date instanceof Date && !isNaN(date) ? date : null;
+  };
+
+  const formatCurrency = (amount) => {
+    return `৳${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const loadHospitalRevenueSummary = async () => {
+    try {
+      setReviewLoading(true);
+      setError(null);
+      const [appointmentsRes, consultationsRes] = await Promise.all([
+        appointmentsAPI.hospitalAppointments(),
+        edoctorApi.edoctorAPI.hospitalConsultations()
+      ]);
+      const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : (Array.isArray(appointmentsRes) ? appointmentsRes : []);
+      const consultationsData = Array.isArray(consultationsRes.data) ? consultationsRes.data : (Array.isArray(consultationsRes) ? consultationsRes : []);
+      const periodStart = getPeriodStart(reviewPeriod);
+
+      const filteredAppointments = appointmentsData.filter((appointment) => {
+        const created = parseDateValue(appointment.created_at || appointment.appointment_date);
+        return created && created >= periodStart && appointment.payment_status === 'paid';
+      });
+
+      const filteredConsultations = consultationsData.filter((consultation) => {
+        const created = parseDateValue(consultation.created_at || consultation.scheduled_date);
+        return created && created >= periodStart && (consultation.is_paid === true || consultation.payment_status === 'paid');
+      });
+
+      const appointmentsRevenue = filteredAppointments.reduce((sum, appointment) => sum + parseFloat(appointment.fee_amount || 0), 0);
+      const consultationsRevenue = filteredConsultations.reduce((sum, consultation) => sum + parseFloat(consultation.fee_amount || 0), 0);
+
+      setRevenueSummary({
+        appointmentsRevenue,
+        consultationsRevenue,
+        totalRevenue: appointmentsRevenue + consultationsRevenue,
+        appointmentsCount: filteredAppointments.length,
+        consultationsCount: filteredConsultations.length,
+        breakdown: [
+          { label: 'Appointments', value: appointmentsRevenue, color: '#1D72B8' },
+          { label: 'Consultations', value: consultationsRevenue, color: '#28A745' }
+        ]
+      });
+    } catch (err) {
+      console.error('Error loading hospital revenue summary:', err);
+      setError(err.message || 'Failed to load revenue review');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && user.roles.includes('hospital_admin') && activeTab === 'review') {
+      loadHospitalRevenueSummary();
+    }
+  }, [activeTab, reviewPeriod, user]);
 
   const handleAddClick = () => {
     setEditingItem(null);
@@ -103,6 +193,105 @@ const HospitalAdminDashboard = () => {
     setFormData(item);
     setShowForm(true);
   };
+
+  const renderPieChart = (breakdown) => {
+    const total = breakdown.reduce((sum, item) => sum + item.value, 0);
+    const radius = 60;
+    const circumference = 2 * Math.PI * radius;
+    let offset = 0;
+
+    return (
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <g transform="translate(110, 110)">
+          {breakdown.map((item) => {
+            const sliceLength = total ? (item.value / total) * circumference : 0;
+            const circle = (
+              <circle
+                key={item.label}
+                r={radius}
+                fill="transparent"
+                stroke={item.color}
+                strokeWidth="28"
+                strokeDasharray={`${sliceLength} ${circumference - sliceLength}`}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                transform="rotate(-90)"
+              />
+            );
+            offset -= sliceLength;
+            return circle;
+          })}
+          <circle r={radius - 20} fill="#fff" />
+        </g>
+      </svg>
+    );
+  };
+
+  const ReviewTab = () => (
+    <div className="review-tab">
+      <div className="review-header">
+        <div>
+          <h2>📈 Revenue Review</h2>
+          <p>View earnings from hospital services for the selected period.</p>
+        </div>
+        <div className="review-periods">
+          {['weekly', 'monthly', 'yearly'].map((period) => (
+            <button
+              key={period}
+              type="button"
+              className={`period-button ${reviewPeriod === period ? 'active' : ''}`}
+              onClick={() => setReviewPeriod(period)}
+            >
+              {period.charAt(0).toUpperCase() + period.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {reviewLoading ? (
+        <div className="review-loading">Loading revenue review...</div>
+      ) : (
+        <div className="review-grid">
+          <div className="review-summary">
+            <div className="revenue-card">
+              <p>Total Revenue</p>
+              <strong>{formatCurrency(revenueSummary.totalRevenue)}</strong>
+            </div>
+            <div className="revenue-card">
+              <p>Appointment Earnings</p>
+              <strong>{formatCurrency(revenueSummary.appointmentsRevenue)}</strong>
+              <small>{revenueSummary.appointmentsCount} paid appointments</small>
+            </div>
+            <div className="revenue-card">
+              <p>Consultation Earnings</p>
+              <strong>{formatCurrency(revenueSummary.consultationsRevenue)}</strong>
+              <small>{revenueSummary.consultationsCount} paid consultations</small>
+            </div>
+          </div>
+
+          <div className="review-chart-card">
+            <div className="review-chart-title">Revenue by Service</div>
+            {revenueSummary.totalRevenue > 0 ? (
+              <>
+                {renderPieChart(revenueSummary.breakdown)}
+                <div className="pie-legend">
+                  {revenueSummary.breakdown.map((item) => (
+                    <div key={item.label} className="pie-legend-item">
+                      <span className="pie-dot" style={{ backgroundColor: item.color }} />
+                      <span>{item.label}</span>
+                      <strong>{formatCurrency(item.value)}</strong>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="empty-pie">No paid earnings found for this period.</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const handleConfirmAppointment = async (appointment) => {
     try {
@@ -695,6 +884,12 @@ const HospitalAdminDashboard = () => {
           💬 Consultations
         </button>
         <button
+          className={`tab-button ${activeTab === 'review' ? 'active' : ''}`}
+          onClick={() => setActiveTab('review')}
+        >
+          📈 Revenue Review
+        </button>
+        <button
           className={`tab-button ${activeTab === 'ambulance_requests' ? 'active' : ''}`}
           onClick={() => setActiveTab('ambulance_requests')}
         >
@@ -714,6 +909,7 @@ const HospitalAdminDashboard = () => {
         {activeTab === 'edoctors' && <EdoctorsTab />}
         {activeTab === 'appointments' && <AppointmentsTab />}
         {activeTab === 'consultations' && <ConsultationsTab />}
+        {activeTab === 'review' && <ReviewTab />}
         {activeTab === 'ambulance_requests' && <AmbulanceRequestsTab />}
         {activeTab === 'info' && <HospitalInfoTab />}
       </div>

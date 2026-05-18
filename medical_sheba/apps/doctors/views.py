@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models
+from apps.hospitals.models import Hospital
 from .models import Doctor, DoctorReview
 from .serializers import DoctorSerializer, DoctorListSerializer, DoctorReviewSerializer
 
@@ -20,7 +21,7 @@ class IsHospitalAdminOrReadOnly(BasePermission):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
         # Write permission only for hospital admin of that doctor's hospital
-        if 'hospital_admin' in request.user.roles and obj.hospital:
+        if request.user.is_authenticated and 'hospital_admin' in getattr(request.user, 'roles', []) and obj.hospital:
             return obj.hospital.admin_user == request.user
         return False
 
@@ -40,9 +41,9 @@ class DoctorViewSet(viewsets.ModelViewSet):
         # Hospital admins only see doctors from their hospital
         if user.is_authenticated and 'hospital_admin' in user.roles:
             try:
-                hospital = user.hospital_admin
+                hospital = Hospital.objects.get(admin_user=user)
                 return Doctor.objects.filter(hospital=hospital)
-            except:
+            except Hospital.DoesNotExist:
                 return Doctor.objects.none()
         # Others see all available doctors
         return Doctor.objects.filter(is_available=True)
@@ -55,18 +56,18 @@ class DoctorViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def my_doctors(self, request):
         """Get doctors for hospital admin's hospital"""
-        if 'hospital_admin' not in request.user.roles:
+        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = request.user.hospital_admin
+            hospital = Hospital.objects.get(admin_user=request.user)
             doctors = Doctor.objects.filter(hospital=hospital)
             serializer = DoctorSerializer(doctors, many=True)
             return Response(serializer.data)
-        except:
+        except Hospital.DoesNotExist:
             return Response(
                 {'error': 'No hospital found for this admin'},
                 status=status.HTTP_404_NOT_FOUND

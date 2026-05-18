@@ -77,14 +77,15 @@ const HospitalAdminDashboard = () => {
       }
     } catch (err) {
       console.error('Error loading data:', err);
-      
-      // Check if it's a 404 error (no hospital found)
-      if (err.message && err.message.includes('404')) {
+      const status = err.status || err.response?.status;
+
+      // If no hospital exists for this admin, redirect to hospital creation
+      if (status === 404 || (err.message && err.message.includes('404'))) {
         console.log('No hospital assigned to admin. Redirecting to hospital creation page...');
         navigate('/hospital-create');
         return;
       }
-      
+
       setError(err.message || 'Failed to load data');
     } finally {
       setLoading(false);

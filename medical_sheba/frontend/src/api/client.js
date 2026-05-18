@@ -34,6 +34,9 @@ client.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    if (error.response?.status) {
+      error.status = error.response.status;
+    }
     return Promise.reject(error);
   }
 );

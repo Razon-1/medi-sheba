@@ -18,6 +18,7 @@ export default function PharmacyAdminDashboard() {
   const [showEditPharmacy, setShowEditPharmacy] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [reviewPeriod, setReviewPeriod] = useState('weekly');
 
   // Redirect if not pharmacy admin
   useEffect(() => {
@@ -104,6 +105,162 @@ export default function PharmacyAdminDashboard() {
     }
   }, [activeTab]);
 
+  const getPeriodStart = (period) => {
+    const now = new Date();
+    if (period === 'weekly') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 7);
+      return start;
+    }
+    if (period === 'monthly') {
+      const start = new Date(now);
+      start.setMonth(now.getMonth() - 1);
+      return start;
+    }
+    if (period === 'yearly') {
+      const start = new Date(now);
+      start.setFullYear(now.getFullYear() - 1);
+      return start;
+    }
+    return new Date(0);
+  };
+
+  const formatCurrency = (amount) => {
+    return `৳${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const parseDateValue = (value) => {
+    const date = value ? new Date(value) : null;
+    return date instanceof Date && !isNaN(date) ? date : null;
+  };
+
+  const getPeriodOrders = () => {
+    const periodStart = getPeriodStart(reviewPeriod);
+    return orders.filter((order) => {
+      const created = parseDateValue(order.created_at || order.required_date || order.updated_at);
+      return created && created >= periodStart;
+    });
+  };
+
+  const getRevenueBreakdown = () => {
+    const periodOrders = getPeriodOrders();
+    const paidRevenue = periodOrders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+    const unpaidRevenue = periodOrders
+      .filter((order) => order.payment_status === 'unpaid')
+      .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+    const refundedRevenue = periodOrders
+      .filter((order) => order.payment_status === 'refunded')
+      .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+
+    return [
+      { label: 'Paid', value: paidRevenue, color: '#28a745' },
+      { label: 'Unpaid', value: unpaidRevenue, color: '#f59e0b' },
+      { label: 'Refunded', value: refundedRevenue, color: '#ef4444' }
+    ];
+  };
+
+  const renderPieChart = (breakdown) => {
+    const total = breakdown.reduce((sum, item) => sum + item.value, 0);
+    const radius = 60;
+    const circumference = 2 * Math.PI * radius;
+    let offset = 0;
+
+    return (
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <g transform="translate(110, 110)">
+          {breakdown.map((item) => {
+            const sliceLength = total ? (item.value / total) * circumference : 0;
+            const circle = (
+              <circle
+                key={item.label}
+                r={radius}
+                fill="transparent"
+                stroke={item.color}
+                strokeWidth="28"
+                strokeDasharray={`${sliceLength} ${circumference - sliceLength}`}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                transform="rotate(-90)"
+              />
+            );
+            offset -= sliceLength;
+            return circle;
+          })}
+          <circle r={radius - 20} fill="#fff" />
+        </g>
+      </svg>
+    );
+  };
+
+  const RevenueReviewTab = () => {
+    const breakdown = getRevenueBreakdown();
+    const totalRevenue = breakdown.reduce((sum, item) => sum + item.value, 0);
+
+    return (
+      <div className="review-tab">
+        <div className="review-header">
+          <div>
+            <h2>📈 Revenue Review</h2>
+            <p>See pharmacy earnings by period and payment status.</p>
+          </div>
+          <div className="review-periods">
+            {['weekly', 'monthly', 'yearly'].map((period) => (
+              <button
+                key={period}
+                type="button"
+                className={`period-button ${reviewPeriod === period ? 'active' : ''}`}
+                onClick={() => setReviewPeriod(period)}
+              >
+                {period.charAt(0).toUpperCase() + period.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="review-grid">
+          <div className="review-summary">
+            <div className="revenue-card">
+              <p>Total Revenue</p>
+              <strong>{formatCurrency(totalRevenue)}</strong>
+              <small>{getPeriodOrders().length} orders in period</small>
+            </div>
+            <div className="revenue-card">
+              <p>Paid Revenue</p>
+              <strong>{formatCurrency(breakdown.find((item) => item.label === 'Paid')?.value || 0)}</strong>
+            </div>
+            <div className="revenue-card">
+              <p>Pending / Refunded</p>
+              <strong>{formatCurrency(
+                (breakdown.find((item) => item.label === 'Unpaid')?.value || 0)
+                + (breakdown.find((item) => item.label === 'Refunded')?.value || 0)
+              )}</strong>
+            </div>
+          </div>
+
+          <div className="review-chart-card">
+            <div className="review-chart-title">Revenue by Payment Status</div>
+            {totalRevenue > 0 ? (
+              <>
+                {renderPieChart(breakdown)}
+                <div className="pie-legend">
+                  {breakdown.map((item) => (
+                    <div key={item.label} className="pie-legend-item">
+                      <span className="pie-dot" style={{ backgroundColor: item.color }} />
+                      <span>{item.label}</span>
+                      <strong>{formatCurrency(item.value)}</strong>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="empty-pie">No orders found for this period.</div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (!user || !user.roles.includes('pharmacy_admin')) {
     return null;
   }
@@ -142,6 +299,12 @@ export default function PharmacyAdminDashboard() {
           📦 Orders ({orders.length})
         </button>
         <button
+          className={`tab-button ${activeTab === 'review' ? 'active' : ''}`}
+          onClick={() => setActiveTab('review')}
+        >
+          📈 Revenue Review
+        </button>
+        <button
           className={`tab-button ${activeTab === 'pharmacy' ? 'active' : ''}`}
           onClick={() => setActiveTab('pharmacy')}
         >
@@ -169,6 +332,8 @@ export default function PharmacyAdminDashboard() {
             setSelectedOrder={setSelectedOrder}
           />
         )}
+
+        {activeTab === 'review' && <RevenueReviewTab />}
 
         {activeTab === 'pharmacy' && pharmacy && (
           <PharmacyInfoTab

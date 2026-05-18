@@ -923,6 +923,143 @@
   background: var(--bg-light);
 }
 
+.review-tab {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.review-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.review-header h2 {
+  margin: 0;
+  font-size: 1.7rem;
+}
+
+.review-header p {
+  margin: 0.25rem 0 0;
+  color: #555;
+}
+
+.review-periods {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.period-button {
+  border: 1px solid #d0d7e6;
+  background: #fff;
+  color: #333;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.period-button:hover,
+.period-button.active {
+  background: #1d72b8;
+  color: white;
+  border-color: #1d72b8;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 1.5rem;
+}
+
+.review-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.revenue-card {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.revenue-card p {
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+  color: #555;
+}
+
+.revenue-card strong {
+  font-size: 1.8rem;
+  color: #111;
+  display: block;
+}
+
+.revenue-card small {
+  display: block;
+  margin-top: 0.5rem;
+  color: #666;
+}
+
+.review-chart-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+  justify-items: center;
+}
+
+.review-chart-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.pie-legend {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.pie-legend-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pie-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.75rem;
+}
+
+.empty-pie {
+  padding: 2rem;
+  border: 2px dashed #d0d7e6;
+  border-radius: 16px;
+  width: 100%;
+  text-align: center;
+  color: #666;
+  background: #f9fafb;
+}
+
+@media (max-width: 1024px) {
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .pharmacy-admin-dashboard {

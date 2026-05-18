@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from datetime import datetime, timedelta
+from apps.hospitals.models import Hospital
 from .models import Appointment
 from .serializers import AppointmentSerializer, AppointmentListSerializer
 
@@ -26,9 +27,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         elif 'hospital_admin' in user.roles:
             # Hospital admins see appointments for their hospital
             try:
-                hospital = user.hospital_admin
+                hospital = Hospital.objects.get(admin_user=user)
                 return Appointment.objects.filter(hospital=hospital)
-            except:
+            except Hospital.DoesNotExist:
                 return Appointment.objects.none()
         elif user.role == 'admin':
             return Appointment.objects.all()
@@ -107,14 +108,14 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def hospital_appointments(self, request):
         """Get all appointments for hospital admin's hospital"""
-        if 'hospital_admin' not in request.user.roles:
+        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = request.user.hospital_admin
+            hospital = Hospital.objects.get(admin_user=request.user)
             appointments = Appointment.objects.filter(hospital=hospital).order_by('-created_at')
             
             # Filter by status if provided
@@ -124,7 +125,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             
             serializer = AppointmentListSerializer(appointments, many=True)
             return Response(serializer.data)
-        except:
+        except Hospital.DoesNotExist:
             return Response(
                 {'error': 'No hospital found for this admin'},
                 status=status.HTTP_404_NOT_FOUND
@@ -136,8 +137,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         appointment = self.get_object()
         
         # Check authorization
-        is_hospital_admin = 'hospital_admin' in request.user.roles and appointment.hospital and appointment.hospital.admin_user == request.user
-        is_patient = appointment.patient == request.user
+        is_hospital_admin = request.user.is_authenticated and 'hospital_admin' in getattr(request.user, 'roles', []) and appointment.hospital and appointment.hospital.admin_user == request.user
+        is_patient = request.user.is_authenticated and appointment.patient == request.user
         
         if not (is_hospital_admin or is_patient):
             return Response(

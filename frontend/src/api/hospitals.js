@@ -13,12 +13,11 @@ export const getMyHospital = async () => {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
-    try {
-      const errorData = await response.json();
-      throw new Error(`[${response.status}] ${errorData.error || errorData.detail || 'Failed to fetch hospital'}`);
-    } catch (e) {
-      throw new Error(`[${response.status}] Failed to fetch hospital`);
-    }
+    const errorData = await response.json().catch(() => null);
+    const message = errorData ? (errorData.error || errorData.detail || 'Failed to fetch hospital') : 'Failed to fetch hospital';
+    const error = new Error(`[${response.status}] ${message}`);
+    error.status = response.status;
+    throw error;
   }
   const data = await response.json();
   // Handle both single object and paginated responses

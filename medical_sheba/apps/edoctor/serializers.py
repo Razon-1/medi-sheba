@@ -67,7 +67,7 @@ class EDoctorConsultationListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'consultation_id', 'doctor', 'doctor_name', 'specialization',
             'patient_name', 'scheduled_date', 'scheduled_time', 'status',
-            'urgency', 'fee_amount', 'is_paid', 'created_at'
+            'urgency', 'fee_amount', 'is_paid', 'payment_status', 'created_at'
         ]
 
 

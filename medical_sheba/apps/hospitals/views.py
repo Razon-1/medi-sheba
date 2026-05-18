@@ -60,7 +60,7 @@ class HospitalViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Custom create method to assign hospital to current admin user"""
         # Only hospital admins can create hospitals
-        if 'hospital_admin' not in request.user.roles:
+        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
             return Response(
                 {'error': 'Only hospital admins can create hospitals'},
                 status=status.HTTP_403_FORBIDDEN
@@ -104,7 +104,7 @@ class HospitalViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_hospital(self, request):
         """Get the current user's hospital (for hospital admin)"""
-        if 'hospital_admin' not in request.user.roles:
+        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN

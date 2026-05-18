@@ -93,7 +93,7 @@ class AppointmentListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'appointment_no', 'appointment_date', 'appointment_time',
             'type', 'status', 'fee_amount', 'payment_status', 'doctor', 'hospital',
-            'patient_name', 'doctor_name'
+            'patient_name', 'doctor_name', 'created_at'
         ]
     
     def get_patient_name(self, obj):

@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
+from apps.hospitals.models import Hospital
 from .models import AmbulanceService, AmbulanceRequest
 from .serializers import (
     AmbulanceServiceListSerializer, AmbulanceServiceDetailSerializer, 
@@ -24,7 +25,7 @@ class IsHospitalAdminOrReadOnly(BasePermission):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
         # Write permission only for hospital admin of that ambulance's hospital
-        if 'hospital_admin' in request.user.roles and obj.hospital:
+        if request.user.is_authenticated and 'hospital_admin' in getattr(request.user, 'roles', []) and obj.hospital:
             return obj.hospital.admin_user == request.user
         return False
 
@@ -41,11 +42,11 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Hospital admins only see ambulances from their hospital
-        if user.is_authenticated and 'hospital_admin' in user.roles:
+        if user.is_authenticated and 'hospital_admin' in getattr(user, 'roles', []):
             try:
-                hospital = user.hospital_admin
+                hospital = Hospital.objects.get(admin_user=user)
                 return AmbulanceService.objects.filter(hospital=hospital)
-            except:
+            except Hospital.DoesNotExist:
                 return AmbulanceService.objects.none()
         # Others see all available ambulances
         return AmbulanceService.objects.filter(is_available=True)
@@ -60,18 +61,18 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def my_ambulances(self, request):
         """Get ambulances for hospital admin's hospital"""
-        if 'hospital_admin' not in request.user.roles:
+        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = request.user.hospital_admin
+            hospital = Hospital.objects.get(admin_user=request.user)
             ambulances = AmbulanceService.objects.filter(hospital=hospital)
             serializer = AmbulanceServiceListSerializer(ambulances, many=True)
             return Response(serializer.data)
-        except:
+        except Hospital.DoesNotExist:
             return Response(
                 {'error': 'No hospital found for this admin'},
                 status=status.HTTP_404_NOT_FOUND
@@ -117,11 +118,11 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Hospital admins see requests for their ambulances
-        if 'hospital_admin' in user.roles:
+        if user.is_authenticated and 'hospital_admin' in getattr(user, 'roles', []):
             try:
-                hospital = user.hospital_admin
+                hospital = Hospital.objects.get(admin_user=user)
                 return AmbulanceRequest.objects.filter(ambulance__hospital=hospital).order_by('-created_at')
-            except:
+            except Hospital.DoesNotExist:
                 return AmbulanceRequest.objects.none()
         # Others see all requests
         return AmbulanceRequest.objects.all()
@@ -129,14 +130,14 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def hospital_requests(self, request):
         """Get all ambulance requests for hospital admin's hospital"""
-        if 'hospital_admin' not in request.user.roles:
+        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = request.user.hospital_admin
+            hospital = Hospital.objects.get(admin_user=request.user)
             requests = AmbulanceRequest.objects.filter(ambulance__hospital=hospital).order_by('-created_at')
             
             # Filter by status if provided
@@ -146,7 +147,7 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
             
             serializer = AmbulanceRequestListSerializer(requests, many=True)
             return Response(serializer.data)
-        except:
+        except Hospital.DoesNotExist:
             return Response(
                 {'error': 'No hospital found for this admin'},
                 status=status.HTTP_404_NOT_FOUND
