@@ -1,11 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search, Check, Zap } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
+import useAuthStore from '../context/authStore';
 import '../styles/pages/Home.css';
 
 export default function Home() {
+  const navigate = useNavigate();
   const [adminType, setAdminType] = useState('pharmacy');
+  const { user } = useAuthStore();
   // Set SEO metadata for this page
   useSEO(pageMetadata.home);
   const stats = [
@@ -316,7 +319,22 @@ export default function Home() {
                 <span className="price">{plan.price}</span>
               </div>
               <p className="plan-description">{plan.description}</p>
-              <button className={`btn-plan ${plan.popular ? 'btn-popular' : ''}`}>
+              <button 
+                className={`btn-plan ${plan.popular ? 'btn-popular' : ''}`}
+                onClick={() => {
+                  if (plan.cta === 'Contact Sales') {
+                    navigate('/contact-sales');
+                    return;
+                  }
+
+                  if (!user) {
+                    navigate('/login', { state: { next: '/payment' } });
+                    return;
+                  }
+
+                  navigate('/payment', { state: { plan } });
+                }}
+              >
                 {plan.cta}
               </button>
               <div className="plan-divider"></div>

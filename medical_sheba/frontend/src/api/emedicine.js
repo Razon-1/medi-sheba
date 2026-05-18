@@ -101,6 +101,10 @@ export const emedicineAPI = {
     return apiClient.post(`/emedicine/orders/${id}/update_status/`, { status });
   },
 
+  updateOrder: async (id, data) => {
+    return apiClient.patch(`/emedicine/orders/${id}/`, data);
+  },
+
   markMedicineDelivered: async (orderId, medicineName, quantity = 1) => {
     return apiClient.post(`/emedicine/orders/${orderId}/mark_medicine_delivered/`, {
       medicine_name: medicineName,

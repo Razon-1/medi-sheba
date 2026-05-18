@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import useAuthStore from '../context/authStore';
 import { medicineAPI } from '../api/emedicine';
+import paymentsAPI from '../api/payments';
 import '../styles/pages/PharmacyCreatePage.css';
+import '../styles/App.css';
 
 export default function PharmacyCreatePage() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [checkingExisting, setCheckingExisting] = useState(true);
+  const [accessState, setAccessState] = useState('checking');
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -55,8 +59,83 @@ export default function PharmacyCreatePage() {
   useEffect(() => {
     if (user && !user.roles.includes('pharmacy_admin')) {
       navigate('/');
+      return;
     }
+    let cancelled = false;
+
+    const checkExistingPharmacy = async () => {
+      try {
+        if (!user) {
+          if (!cancelled) {
+            setAccessState('none');
+            setCheckingExisting(false);
+          }
+          return;
+        }
+
+        const activeSubscription = await paymentsAPI.getActiveSubscription();
+        const hasActiveAccess = Boolean(activeSubscription);
+
+        if (!hasActiveAccess) {
+          if (!cancelled) {
+            setCheckingExisting(false);
+            setAccessState(user.has_made_first_payment ? 'expired' : 'none');
+          }
+          return;
+        }
+
+        const response = await medicineAPI.getMyPharmacy();
+        if (response && !cancelled) {
+          navigate('/pharmacy-admin', { replace: true });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCheckingExisting(false);
+          setAccessState(err?.response?.status === 404 ? (user?.has_made_first_payment ? 'expired' : 'none') : 'none');
+        }
+      }
+    };
+
+    checkExistingPharmacy();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, navigate]);
+
+  const handleStartTrial = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const paymentsAPI = (await import('../api/payments')).default;
+      const res = await paymentsAPI.startTrial();
+      if (res && user) {
+        const updated = { ...user, has_made_first_payment: true };
+        setUser(updated);
+        localStorage.setItem('user', JSON.stringify(updated));
+      }
+    } catch (err) {
+      // If unauthenticated or forbidden, suggest buying a plan or logging in
+      if (err.status === 401) {
+        setError('You must be logged in to start a trial. Redirecting to login...');
+        setTimeout(() => {
+          navigate('/login');
+        }, 1200);
+        return;
+      }
+      if (err.status === 403) {
+        setError(err.detail || 'You are not eligible for a free trial.');
+        return;
+      }
+      setError(err.detail || err.message || 'Failed to start trial');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goToBuyPlan = () => {
+    navigate('/payment', { state: { plan: { name: 'Free Trial', price: 'Free', isTrial: true }, next: '/pharmacy-create' } });
+  };
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -99,14 +178,35 @@ export default function PharmacyCreatePage() {
       setLoading(true);
       setError(null);
 
-      const pharmacy = await medicineAPI.createPharmacy(formData);
+      const payload = {
+        name: formData.name.trim(),
+        pharmacy_type: formData.pharmacy_type,
+        license_number: formData.license_number.trim(),
+        phone_number: formData.phone_number.trim(),
+        email: formData.email.trim(),
+        address: formData.address.trim(),
+        district_name: formData.district,
+        upazila_name: formData.upazila || '',
+        delivery_time_hours: Number(formData.delivery_time_hours) || 24,
+        min_order_amount: Number(formData.min_order_amount) || 0,
+        delivery_charge: Number(formData.delivery_charge) || 0,
+      };
+
+      const pharmacy = await medicineAPI.createPharmacy(payload);
       console.log('Pharmacy created:', pharmacy);
 
       // Redirect to pharmacy admin dashboard
       navigate('/pharmacy-admin');
     } catch (err) {
       console.error('Error creating pharmacy:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to create pharmacy');
+      const apiDetail = err.response?.data?.detail || err.response?.data?.error;
+      const fieldErrors = err.response?.data && typeof err.response.data === 'object'
+        ? Object.entries(err.response.data)
+            .filter(([key]) => !['detail', 'error'].includes(key))
+            .map(([, value]) => Array.isArray(value) ? value.join(' ') : String(value))
+            .join(' ')
+        : '';
+      setError(apiDetail || fieldErrors || err.message || 'Failed to create pharmacy');
     } finally {
       setLoading(false);
     }
@@ -116,11 +216,54 @@ export default function PharmacyCreatePage() {
     return null;
   }
 
+  if (checkingExisting) {
+    return (
+      <div className="subscription-required">
+        <div className="subscription-box">
+          <h2>Loading Pharmacy Setup</h2>
+          <p>Checking your existing pharmacy profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessState !== 'active') {
+    return (
+      <div className="subscription-required">
+        <div className="subscription-box">
+          <h2>{accessState === 'expired' ? 'Trial Expired' : 'Subscription Required'}</h2>
+          <p>
+            {accessState === 'expired'
+              ? 'Your free trial ended. Please choose a monthly or yearly plan to continue creating your pharmacy.'
+              : 'Start your free trial to unlock pharmacy creation.'}
+          </p>
+          <div style={{display: 'flex', gap: '12px', marginTop: '14px', alignItems: 'center', flexWrap: 'wrap'}}>
+            <div style={{flex: '1 1 260px', padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.07)'}}>
+              <div style={{fontWeight:800, fontSize:16}}>Free Trial</div>
+              <div style={{fontSize:13, opacity:0.95, marginTop: 4}}>3 days • No upfront payment • Continue to setup after activation</div>
+            </div>
+            {accessState === 'expired' && (
+              <div style={{flex: '1 1 260px', padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.07)'}}>
+                <div style={{fontWeight:800, fontSize:16}}>Paid Plans</div>
+                <div style={{fontSize:13, opacity:0.95, marginTop: 4}}>Monthly and yearly access unlock continued create access after successful payment.</div>
+              </div>
+            )}
+          </div>
+          <div className="subscription-actions">
+              <button className="btn-outline" onClick={goToBuyPlan} disabled={loading}>Continue Free Trial</button>
+          </div>
+          {error && <div className="error-banner"><span>{error}</span></div>}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pharmacy-create-container">
       <div className="create-header">
+        <div className="header-pill">Free Trial Enabled</div>
         <h1>💊 Create Your Pharmacy</h1>
-        <p>Set up your pharmacy profile to start managing medicines and orders</p>
+        <p>Set up your pharmacy profile to start managing medicines, stock, and orders with a clean responsive dashboard experience.</p>
       </div>
 
       <div className="create-form-container">

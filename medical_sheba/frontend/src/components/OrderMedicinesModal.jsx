@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Plus, Minus, Trash2, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { emedicineAPI } from '../api/emedicine';
+import paymentsAPI from '../api/payments';
+import Payment from './Payment';
 import useAuthStore from '../context/authStore';
 import '../styles/components/OrderMedicinesModal.css';
 
@@ -14,6 +16,8 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [prescriptionNotes, setPrescriptionNotes] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
+  const [orderData, setOrderData] = useState(null);
   
   // Patient Information
   const [patientInfo, setPatientInfo] = useState({
@@ -130,6 +134,7 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
 
       console.log('Order created successfully:', response);
 
+      setOrderData(response);
       setSuccess(true);
       setCartItems([]);
       setPrescriptionNotes('');
@@ -139,13 +144,10 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
         delivery_address: '',
       });
 
-      // Close modal after 3 seconds
+      // Show payment modal for payment
       setTimeout(() => {
-        onClose();
-        if (onSuccess) {
-          onSuccess(response);
-        }
-      }, 3000);
+        setShowPayment(true);
+      }, 2000);
 
     } catch (err) {
       console.error('Error placing order:', err);
@@ -191,6 +193,29 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
     navigate('/login');
   };
 
+  const handlePaymentSuccess = async (paymentData) => {
+    try {
+      // Update order with payment reference
+      await emedicineAPI.updateOrder(orderData.id, {
+        payment_status: 'paid',
+        payment: paymentData.id,
+      });
+      
+      setShowPayment(false);
+      
+      // Close modal after a moment
+      setTimeout(() => {
+        onClose();
+        if (onSuccess) {
+          onSuccess(orderData);
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Error updating order after payment:', err);
+      setError('Payment successful but failed to update order. Please contact support.');
+    }
+  };
+
   if (!isOpen || !pharmacy) return null;
 
   return (
@@ -204,7 +229,21 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
         </div>
 
         <div className="modal-body">
-          {success ? (
+          {showPayment && orderData ? (
+            <Payment
+              isOpen={showPayment}
+              onClose={() => {
+                setShowPayment(false);
+                onClose();
+              }}
+              paymentType="medicine"
+              amount={parseFloat(orderData.total_amount) || 0}
+              referenceId={orderData.id}
+              referenceType="medicine_order"
+              serviceName={`Medicine Order from ${pharmacy.name}`}
+              onPaymentSuccess={handlePaymentSuccess}
+            />
+          ) : success ? (
             <div className="success-message">
               <CheckCircle size={48} color="#10B981" />
               <h3>Order Placed Successfully! 🎉</h3>
@@ -212,6 +251,13 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
               <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: '#666' }}>
                 You will receive a confirmation call shortly. Estimated delivery: {pharmacy.delivery_time_hours} hours
               </p>
+              <button 
+                className="btn-proceed-payment"
+                onClick={() => setShowPayment(true)}
+                style={{ marginTop: '1.5rem' }}
+              >
+                Proceed to Payment - BDT {(orderData?.total_amount || getTotalPrice()).toFixed(2)}
+              </button>
             </div>
           ) : (
             <>

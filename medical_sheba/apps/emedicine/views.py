@@ -69,6 +69,9 @@ class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if 'pharmacy_admin' not in user.roles:
             raise serializers.ValidationError("Only pharmacy admins can create pharmacies")
+        # Require an active subscription or trial access window
+        if not user.has_active_subscription_access():
+            raise serializers.ValidationError("Active subscription required. Please start a trial or purchase a plan before creating a pharmacy.")
         
         # Check if user already has a pharmacy
         if EMedicinePharmacy.objects.filter(admin_user=user).exists():

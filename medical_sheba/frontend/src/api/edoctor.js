@@ -58,6 +58,9 @@ export const edoctorAPI = {
   updateConsultationStatus: (id, status) =>
     apiClient.patch(`/edoctor/consultations/${id}/`, { status }),
 
+  updateConsultation: (id, data) =>
+    apiClient.patch(`/edoctor/consultations/${id}/`, data),
+
   // Hospital admin methods
   myEdoctors: () =>
     apiClient.get('/edoctor/doctors/my_edoctors/'),

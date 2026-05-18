@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Clock, Calendar, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { appointmentsAPI } from '../api/appointments';
+import paymentsAPI from '../api/payments';
 import useAuthStore from '../context/authStore';
+import Payment from './Payment';
 import '../styles/components/BookAppointmentModal.css';
 
 export default function BookAppointmentModal({ doctor, isOpen, onClose, onSuccess }) {
@@ -16,6 +18,8 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [appointmentData, setAppointmentData] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   // Check if user is logged in when modal opens
   useEffect(() => {
@@ -68,19 +72,17 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
       
       console.log('Appointment created successfully:', response);
       
+      setAppointmentData(response);
       setSuccess(true);
       setFormData({
         type: 'new',
         message: '',
       });
 
-      // Close modal after 3 seconds
+      // Show payment modal for payment
       setTimeout(() => {
-        onClose();
-        if (onSuccess) {
-          onSuccess(response);
-        }
-      }, 3000);
+        setShowPayment(true);
+      }, 2000);
 
     } catch (err) {
       console.error('Error booking appointment:', err);
@@ -117,6 +119,29 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
     navigate('/login');
   };
 
+  const handlePaymentSuccess = async (paymentData) => {
+    try {
+      // Update appointment with payment reference
+      await appointmentsAPI.update(appointmentData.id, {
+        payment_status: 'paid',
+        payment: paymentData.id,
+      });
+      
+      setShowPayment(false);
+      
+      // Close modal after a moment
+      setTimeout(() => {
+        onClose();
+        if (onSuccess) {
+          onSuccess(appointmentData);
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Error updating appointment after payment:', err);
+      setError('Payment successful but failed to update appointment. Please contact support.');
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -130,7 +155,21 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
         </div>
 
         <div className="modal-body">
-          {success ? (
+          {showPayment && appointmentData ? (
+            <Payment
+              isOpen={showPayment}
+              onClose={() => {
+                setShowPayment(false);
+                onClose();
+              }}
+              paymentType="appointment"
+              amount={parseFloat(doctor.consultation_fee) || 0}
+              referenceId={appointmentData.id}
+              referenceType="appointment"
+              serviceName={`Appointment with Dr. ${doctor.user_name || doctor.name}`}
+              onPaymentSuccess={handlePaymentSuccess}
+            />
+          ) : success ? (
             <div className="success-message">
               <CheckCircle size={48} color="#10B981" />
               <h3>Request Submitted Successfully! 🎉</h3>
@@ -138,6 +177,13 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
               <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: '#666' }}>
                 We will call you to confirm the exact date and time that works best for you.
               </p>
+              <button 
+                className="btn-proceed-payment"
+                onClick={() => setShowPayment(true)}
+                style={{ marginTop: '1.5rem' }}
+              >
+                Proceed to Payment - BDT {doctor.consultation_fee}
+              </button>
             </div>
           ) : (
             <>

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
-import '../styles/AdminDashboard.css';
+import paymentsAPI from '../api/payments';
+import '../styles/App.css';
 import * as hospitalApi from '../api/hospitals';
 
 const HospitalCreatePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // Corrected context
+  const [checkingExisting, setCheckingExisting] = useState(true);
+  const [accessState, setAccessState] = useState('checking');
   const [formData, setFormData] = useState({
     name: '',
     type: 'private',
@@ -44,7 +47,85 @@ const HospitalCreatePage = () => {
       navigate('/');
       return;
     }
+    let cancelled = false;
+
+    const checkAccess = async () => {
+      try {
+        if (!user) {
+          if (!cancelled) {
+            setCheckingExisting(false);
+            setAccessState('none');
+          }
+          return;
+        }
+
+        const activeSubscription = await paymentsAPI.getActiveSubscription();
+        if (!activeSubscription) {
+          if (!cancelled) {
+            setCheckingExisting(false);
+            setAccessState(user.has_made_first_payment ? 'expired' : 'none');
+          }
+          return;
+        }
+
+        const hospital = await hospitalApi.getMyHospital().catch(() => null);
+        if (hospital && !cancelled) {
+          navigate('/hospital-admin', { replace: true });
+          return;
+        }
+
+        if (!cancelled) {
+          setCheckingExisting(false);
+          setAccessState('active');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCheckingExisting(false);
+          setAccessState('none');
+        }
+      }
+    };
+
+    checkAccess();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, navigate]);
+
+  const handleStartTrial = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const paymentsAPI = (await import('../api/payments')).default;
+      const res = await paymentsAPI.startTrial();
+      // update user flag locally
+      if (res && user) {
+        const updated = { ...user, has_made_first_payment: true };
+        setUser(updated);
+        localStorage.setItem('user', JSON.stringify(updated));
+      }
+    } catch (err) {
+      if (err.status === 401) {
+        setError('You must be logged in to start a trial. Redirecting to login...');
+        setTimeout(() => {
+          navigate('/login');
+        }, 1200);
+        return;
+      }
+      if (err.status === 403) {
+        setError(err.detail || 'You are not eligible for a free trial.');
+        return;
+      }
+      setError(err.detail || err.message || 'Failed to start trial');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goToBuyPlan = () => {
+    navigate('/payment', { state: { plan: { name: 'Free Trial', price: 'Free', isTrial: true }, next: '/hospital-create' } });
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -95,6 +176,48 @@ const HospitalCreatePage = () => {
       setLoading(false);
     }
   };
+
+  if (checkingExisting) {
+    return (
+      <div className="subscription-required">
+        <div className="subscription-box">
+          <h2>Loading Hospital Setup</h2>
+          <p>Checking your current access and hospital profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessState !== 'active') {
+    return (
+      <div className="subscription-required">
+        <div className="subscription-box">
+          <h2>{accessState === 'expired' ? 'Trial Expired' : 'Subscription Required'}</h2>
+          <p>
+            {accessState === 'expired'
+              ? 'Your free trial ended. Please choose a monthly or yearly plan to continue creating your hospital.'
+              : 'Start your free trial to unlock hospital creation.'}
+          </p>
+          <div style={{display: 'flex', gap: '12px', marginTop: '14px', alignItems: 'center', flexWrap: 'wrap'}}>
+            <div style={{flex: '1 1 260px', padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.07)'}}>
+              <div style={{fontWeight:800, fontSize:16}}>Free Trial</div>
+              <div style={{fontSize:13, opacity:0.95, marginTop: 4}}>3 days • No upfront payment • Continue to setup after activation</div>
+            </div>
+            {accessState === 'expired' && (
+              <div style={{flex: '1 1 260px', padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.07)'}}>
+                <div style={{fontWeight:800, fontSize:16}}>Paid Plans</div>
+                <div style={{fontSize:13, opacity:0.95, marginTop: 4}}>Monthly and yearly access unlock continued create access after successful payment.</div>
+              </div>
+            )}
+          </div>
+          <div className="subscription-actions">
+              <button className="btn-outline" onClick={goToBuyPlan} disabled={loading}>Continue Free Trial</button>
+          </div>
+          {error && <div className="error-message">{error}</div>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="hospital-container">

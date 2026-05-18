@@ -1,0 +1,45 @@
+/* Simple contact sales page styling */
+.contact-sales-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 20px;
+}
+
+.contact-card {
+  max-width: 720px;
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(16,24,40,0.08);
+  padding: 28px;
+  text-align: left;
+}
+
+.contact-card h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: #0b3b83;
+}
+
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0;
+}
+
+.contact-list li {
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.contact-list a {
+  color: #0b3b83;
+  text-decoration: none;
+  margin-left: 8px;
+}
+
+.contact-note p {
+  margin: 16px 0 0 0;
+  color: #444;
+}

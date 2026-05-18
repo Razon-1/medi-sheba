@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { PhoneCall, MapPin, DollarSign, AlertCircle, Clock, X } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ambulanceAPI } from '../api/ambulance';
+import paymentsAPI from '../api/payments';
+import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Ambulance.css';
 
@@ -22,6 +24,8 @@ export default function Ambulance() {
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestError, setRequestError] = useState('');
   const [requestSuccess, setRequestSuccess] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
+  const [ambulanceRequestData, setAmbulanceRequestData] = useState(null);
   const [formData, setFormData] = useState({
     patient_name: '',
     contact_phone: '',
@@ -186,13 +190,14 @@ export default function Ambulance() {
         required_date: requiredDateTime,
       };
 
-      await ambulanceAPI.createRequest(requestData);
+      const response = await ambulanceAPI.createRequest(requestData);
       
+      setAmbulanceRequestData(response);
       setRequestSuccess('Ambulance request submitted successfully! You will receive confirmation shortly.');
       
-      // Reset form and close modal after 2 seconds
+      // Show payment modal after 2 seconds
       setTimeout(() => {
-        handleCloseRequestModal();
+        setShowPayment(true);
       }, 2000);
     } catch (err) {
       console.error('Error submitting request:', err);
@@ -203,6 +208,26 @@ export default function Ambulance() {
       );
     } finally {
       setRequestLoading(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentData) => {
+    try {
+      // Update ambulance request with payment reference
+      await ambulanceAPI.updateRequest(ambulanceRequestData.id, {
+        payment_status: 'paid',
+        payment: paymentData.id,
+      });
+      
+      setShowPayment(false);
+      
+      // Close modal after a moment
+      setTimeout(() => {
+        handleCloseRequestModal();
+      }, 1500);
+    } catch (err) {
+      console.error('Error updating ambulance request after payment:', err);
+      setRequestError('Payment successful but failed to update request. Please contact support.');
     }
   };
 
@@ -437,6 +462,24 @@ export default function Ambulance() {
               <div className="alert alert-success">
                 <AlertCircle size={20} />
                 {requestSuccess}
+                {ambulanceRequestData && (
+                  <button 
+                    type="button"
+                    onClick={() => setShowPayment(true)}
+                    style={{ 
+                      marginTop: '1rem',
+                      padding: '10px 20px',
+                      backgroundColor: '#3498db',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    Proceed to Payment
+                  </button>
+                )}
               </div>
             )}
 
@@ -586,6 +629,20 @@ export default function Ambulance() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Payment Modal for Ambulance Service */}
+      {showPayment && ambulanceRequestData && (
+        <Payment
+          isOpen={showPayment}
+          onClose={() => setShowPayment(false)}
+          paymentType="ambulance"
+          amount={ambulanceRequestData.estimated_fare || 100}
+          referenceId={ambulanceRequestData.id}
+          referenceType="ambulance_request"
+          serviceName={`Ambulance Service - ${selectedAmbulance?.name || 'Standard'}`}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
       )}
     </div>
   );

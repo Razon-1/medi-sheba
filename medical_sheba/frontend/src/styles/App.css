@@ -30,6 +30,105 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Subscription prompt (used on create pages) */
+.subscription-required {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+}
+
+.subscription-box {
+  width: 100%;
+  max-width: 980px;
+  border-radius: 14px;
+  padding: 2.25rem;
+  background: linear-gradient(135deg, rgba(75, 43, 171, 0.95), rgba(109, 78, 255, 0.95));
+  color: #ffffff;
+  box-shadow: 0 18px 50px rgba(31, 41, 55, 0.15);
+}
+
+.subscription-box h2 {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.subscription-box p {
+  margin: 0 0 16px 0;
+  color: rgba(255,255,255,0.9);
+  font-size: 1.05rem;
+}
+
+.subscription-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Prevent other global button rules from forcing full width inside this box */
+.subscription-actions > button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Force proper sizing inside the subscription box to override other global button rules */
+.subscription-actions .btn-primary,
+.subscription-actions .btn-outline {
+  width: auto !important;
+  min-width: 140px;
+}
+
+.subscription-actions .btn-outline {
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.9);
+  color: #fff;
+  padding: 0.75rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.subscription-actions .btn-outline:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.subscription-actions .btn-primary {
+  background: #ffffff;
+  color: #3b2bd8;
+  padding: 0.75rem 1.6rem;
+  border-radius: 10px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(59,43,216,0.18);
+}
+
+.subscription-required .error-message,
+.subscription-required .error-banner {
+  margin-top: 12px;
+  background: rgba(255,255,255,0.08);
+  padding: 10px;
+  border-radius: 8px;
+  color: #ffe6e6;
+}
+
+@media (max-width: 768px) {
+  .subscription-box {
+    padding: 1.25rem;
+    border-radius: 10px;
+  }
+  .subscription-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .subscription-actions .btn-primary,
+  .subscription-actions .btn-outline {
+    width: 100%;
+    padding: 0.85rem;
+  }
+}
+
 body {
   font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;

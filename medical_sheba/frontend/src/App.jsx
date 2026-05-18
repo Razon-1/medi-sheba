@@ -14,6 +14,8 @@ import Blood from './pages/Blood';
 import Ambulance from './pages/Ambulance';
 import EMedicine from './pages/EMedicine';
 import EDoctor from './pages/EDoctor';
+import PaymentDemoPage from './pages/PaymentDemoPage';
+import ContactSales from './pages/ContactSales';
 import Appointments from './pages/Appointments';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -49,6 +51,8 @@ function App() {
             <Route path="/blood" element={<Blood />} />
             <Route path="/ambulance" element={<Ambulance />} />
             <Route path="/emedicine" element={<EMedicine />} />
+            <Route path="/payment" element={<PaymentDemoPage />} />
+            <Route path="/contact-sales" element={<ContactSales />} />
             <Route path="/pharmacy-admin" element={<PharmacyAdminDashboard />} />
             <Route path="/pharmacy-create" element={<PharmacyCreatePage />} />
             <Route path="/hospital-admin" element={<HospitalAdminDashboard />} />

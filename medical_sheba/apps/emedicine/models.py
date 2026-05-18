@@ -143,6 +143,15 @@ class EMedicineOrder(models.Model):
     delivered_medicines_list = models.JSONField(default=dict, help_text="List of delivered medicines with quantities - tracks which medicines have been delivered")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
+    # Payment tracking
+    PAYMENT_STATUS_CHOICES = [
+        ('unpaid', 'Unpaid'),
+        ('paid', 'Paid'),
+        ('refunded', 'Refunded'),
+    ]
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
+    payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='medicine_orders')
+    
     urgency = models.CharField(max_length=20, choices=URGENCY_CHOICES, default='normal')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -67,6 +68,8 @@ class User(AbstractBaseUser):
     is_verified = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+    # Flag to indicate the user has completed their first payment
+    has_made_first_payment = models.BooleanField(default=False)
     last_login = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -116,6 +119,16 @@ class User(AbstractBaseUser):
             self.roles.append(role)
             self.save()
         return self
+
+    def has_active_subscription_access(self):
+        """Check whether the user currently has an active subscription or trial."""
+        from apps.payments.models import Subscription
+
+        return Subscription.objects.filter(
+            user=self,
+            status='active',
+            end_date__gt=timezone.now(),
+        ).exists()
     
     def remove_role(self, role):
         """Remove a role from the user"""

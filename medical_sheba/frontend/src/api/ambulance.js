@@ -57,6 +57,11 @@ export const ambulanceAPI = {
     return apiClient.post(`/ambulance/requests/${id}/update_status/`, { status });
   },
 
+  // Update request (for payment and other fields)
+  updateRequest: async (id, data) => {
+    return apiClient.patch(`/ambulance/requests/${id}/`, data);
+  },
+
   // Accept request (assign ambulance)
   acceptRequest: async (id, ambulanceId) => {
     return apiClient.post(`/ambulance/requests/${id}/accept/`, { ambulance_id: ambulanceId });

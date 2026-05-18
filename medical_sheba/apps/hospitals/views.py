@@ -65,6 +65,13 @@ class HospitalViewSet(viewsets.ModelViewSet):
                 {'error': 'Only hospital admins can create hospitals'},
                 status=status.HTTP_403_FORBIDDEN
             )
+
+        # Require an active subscription or trial access window
+        if not request.user.has_active_subscription_access():
+            return Response(
+                {'error': 'Active subscription required. Please start a trial or purchase a plan before creating a hospital.'},
+                status=status.HTTP_402_PAYMENT_REQUIRED
+            )
         
         # Check if user already has a hospital
         if Hospital.objects.filter(admin_user=request.user).exists():
