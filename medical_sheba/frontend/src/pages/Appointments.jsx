@@ -122,10 +122,17 @@ const getMedicineSummary = (medicines) => {
     .join(', ');
 };
 
+const canViewPatientServices = (user) => {
+  const roles = user?.roles || [];
+  return roles.includes('patient')
+    && !roles.some((role) => ['pharmacy_admin', 'hospital_admin', 'doctor', 'admin'].includes(role));
+};
+
 export default function Appointments() {
   useSEO(pageMetadata.appointments);
 
   const { user } = useAuthStore();
+  const isPatientUser = canViewPatientServices(user);
   const [services, setServices] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -135,10 +142,10 @@ export default function Appointments() {
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (isPatientUser) {
       fetchServices();
     }
-  }, [user]);
+  }, [isPatientUser]);
 
   const canCancel = (item) => {
     return cancelableStatuses[item.kind]?.includes(item.status);
@@ -375,6 +382,44 @@ export default function Appointments() {
           >
             Login
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isPatientUser) {
+    return (
+      <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
+          <AlertCircle className="mx-auto mb-4 h-10 w-10 text-primary-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Patient account required</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            My Care Services is available only for patient accounts.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {user?.roles?.includes('hospital_admin') && (
+              <Link
+                to="/hospital-admin"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-primary-600 px-5 text-sm font-bold text-white transition hover:bg-primary-700"
+              >
+                Go to Hospital Admin
+              </Link>
+            )}
+            {user?.roles?.includes('pharmacy_admin') && (
+              <Link
+                to="/pharmacy-admin"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-primary-600 px-5 text-sm font-bold text-white transition hover:bg-primary-700"
+              >
+                Go to Pharmacy Admin
+              </Link>
+            )}
+            <Link
+              to="/"
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-5 text-sm font-bold text-gray-700 transition hover:bg-gray-50"
+            >
+              Back Home
+            </Link>
+          </div>
         </div>
       </div>
     );

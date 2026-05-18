@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import User
 
 
+ADMIN_ROLES = {'pharmacy_admin', 'hospital_admin'}
+
+
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=6)
     full_name = serializers.CharField(write_only=True, required=False, allow_blank=False)
@@ -62,6 +65,13 @@ class UserSerializer(serializers.ModelSerializer):
             for role in roles:
                 if role not in valid_roles:
                     raise serializers.ValidationError({'roles': f'Invalid role: {role}'})
+
+            unique_roles = list(dict.fromkeys(roles))
+            if 'patient' in unique_roles and ADMIN_ROLES.intersection(unique_roles):
+                raise serializers.ValidationError({
+                    'roles': 'Patient role cannot be combined with pharmacy admin or hospital admin.'
+                })
+            data['roles'] = unique_roles
         
         return data
     

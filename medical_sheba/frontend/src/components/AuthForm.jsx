@@ -7,6 +7,8 @@ const roleOptions = [
   { value: 'hospital_admin', label: 'Hospital Admin' },
 ];
 
+const adminRoles = ['pharmacy_admin', 'hospital_admin'];
+
 export default function AuthForm({ type = 'login', onSubmit, loading = false }) {
   const isRegister = type === 'register';
   const [showPassword, setShowPassword] = useState(false);
@@ -30,9 +32,16 @@ export default function AuthForm({ type = 'login', onSubmit, loading = false }) 
   const toggleRole = (role) => {
     setFormData((current) => {
       const hasRole = current.roles.includes(role);
-      const roles = hasRole
-        ? current.roles.filter((item) => item !== role)
-        : [...current.roles, role];
+      let roles;
+
+      if (role === 'patient') {
+        roles = hasRole ? [] : ['patient'];
+      } else {
+        roles = hasRole
+          ? current.roles.filter((item) => item !== role)
+          : [...current.roles.filter((item) => item !== 'patient'), role];
+        roles = roles.filter((item) => item === 'patient' || adminRoles.includes(item));
+      }
 
       return {
         ...current,

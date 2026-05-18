@@ -7,6 +7,9 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const userRoles = user?.roles || [];
+  const isPatientOnly = userRoles.includes('patient')
+    && !userRoles.some((role) => ['pharmacy_admin', 'hospital_admin', 'doctor', 'admin'].includes(role));
   const displayName = user?.first_name && user?.last_name
     ? `${user.first_name} ${user.last_name}`
     : user?.email || 'Account';
@@ -159,14 +162,16 @@ export default function Navbar() {
                       <p className="truncate text-xs text-gray-500">{user.email}</p>
                     </div>
                     <div className="p-2">
-                      <Link
-                        to="/appointments"
-                        onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-primary-700"
-                      >
-                        <CalendarDays size={17} />
-                        My Care Services
-                      </Link>
+                      {isPatientOnly && (
+                        <Link
+                          to="/appointments"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-primary-700"
+                        >
+                          <CalendarDays size={17} />
+                          My Care Services
+                        </Link>
+                      )}
                       {user?.roles?.includes('pharmacy_admin') && (
                         <Link
                           to="/pharmacy-admin"
@@ -229,14 +234,16 @@ export default function Navbar() {
               <p className="truncate text-sm text-gray-500">{user.email}</p>
             </div>
             <div className="p-3">
-              <Link
-                to="/appointments"
-                onClick={closeMenu}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-primary-700"
-              >
-                <CalendarDays size={20} />
-                My Care Services
-              </Link>
+              {isPatientOnly && (
+                <Link
+                  to="/appointments"
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-primary-700"
+                >
+                  <CalendarDays size={20} />
+                  My Care Services
+                </Link>
+              )}
               {user?.roles?.includes('pharmacy_admin') && (
                 <Link
                   to="/pharmacy-admin"
@@ -323,7 +330,7 @@ export default function Navbar() {
                 E-Doctor
               </Link>
 
-              {user && (
+              {isPatientOnly && (
                 <Link
                   to="/appointments"
                   onClick={closeMenu}
