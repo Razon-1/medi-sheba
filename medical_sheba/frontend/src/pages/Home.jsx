@@ -390,7 +390,7 @@ export default function Home() {
         <div className="cta-content">
           <h2>Ready to Get Started?</h2>
           <p>Join thousands of patients who trust Medi Sheba for their healthcare needs</p>
-          <Link to="/doctors" className="btn-primary">Get Started Today</Link>
+          <Link to="/login" className="btn-primary">Get Started Today</Link>
         </div>
       </section>
     </div>

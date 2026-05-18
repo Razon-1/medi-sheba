@@ -1,10 +1,30 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Review
 from .serializers import ReviewSerializer, ReviewListSerializer
+
+
+class IsPatientForReviewWrite(BasePermission):
+    """Only patient accounts can create or manage reviews."""
+    patient_blocked_roles = {'pharmacy_admin', 'hospital_admin', 'doctor', 'admin'}
+
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        roles = set(getattr(request.user, 'roles', []) or [])
+        return 'patient' in roles and not roles.intersection(self.patient_blocked_roles)
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        return obj.reviewer == request.user
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -19,7 +39,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsPatientForReviewWrite()]
     
     def get_serializer_class(self):
         if self.action == 'list':

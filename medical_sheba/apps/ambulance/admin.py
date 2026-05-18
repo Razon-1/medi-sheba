@@ -29,13 +29,13 @@ class AmbulanceServiceAdmin(admin.ModelAdmin):
 
 @admin.register(AmbulanceRequest)
 class AmbulanceRequestAdmin(admin.ModelAdmin):
-    list_display = ['request_id', 'patient_name', 'ambulance', 'status', 'pickup_location', 'required_date']
+    list_display = ['request_id', 'patient_name', 'user', 'ambulance', 'status', 'pickup_location', 'required_date']
     list_filter = ['status', 'vehicle_type_required', 'urgency', 'required_date']
     search_fields = ['patient_name', 'contact_phone']
     readonly_fields = ['request_id', 'created_at', 'updated_at']
     fieldsets = (
         ('Request Information', {
-            'fields': ('request_id', 'patient_name', 'contact_phone')
+            'fields': ('request_id', 'user', 'patient_name', 'contact_phone')
         }),
         ('Location', {
             'fields': ('pickup_location', 'pickup_address', 'dropoff_location')

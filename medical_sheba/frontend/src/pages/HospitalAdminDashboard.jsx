@@ -614,7 +614,6 @@ const HospitalAdminDashboard = () => {
             <p><strong>Beds:</strong> Total: {hospital.beds_total} | Available: {hospital.beds_available}</p>
             <p><strong>Status:</strong> {hospital.is_active ? 'Active' : 'Inactive'}</p>
             <p><strong>Emergency Available:</strong> {hospital.emergency_available ? 'Yes' : 'No'}</p>
-            <p><strong>Rating:</strong> {hospital.rating} ⭐ ({hospital.review_count} reviews)</p>
           </div>
           <button className="btn btn-primary" onClick={handleEditHospital} style={{marginTop: '20px'}}>
             ✏️ Edit Hospital Information

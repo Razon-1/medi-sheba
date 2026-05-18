@@ -19,7 +19,7 @@ from .serializers import (
 from apps.hospitals.models import Hospital
 from apps.doctors.models import Doctor
 from apps.edoctor.models import EDoctorProfile
-from apps.ambulance.models import AmbulanceService
+from apps.ambulance.models import AmbulanceRequest
 from apps.emedicine.models import EMedicineOrder, EMedicinePharmacy
 
 
@@ -139,9 +139,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 return edoctor.hospital
             
             elif payment_type == 'ambulance' and reference_id:
-                # Find ambulance and get hospital
-                ambulance = AmbulanceService.objects.get(id=reference_id)
-                return ambulance.hospital
+                ambulance_request = AmbulanceRequest.objects.select_related('ambulance__hospital').get(id=reference_id)
+                return ambulance_request.ambulance.hospital if ambulance_request.ambulance else None
             
             elif payment_type == 'subscription':
                 # Subscription doesn't belong to a specific hospital
@@ -151,7 +150,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 return None
             
             return None
-        except (Doctor.DoesNotExist, EDoctorProfile.DoesNotExist, AmbulanceService.DoesNotExist):
+        except (Doctor.DoesNotExist, EDoctorProfile.DoesNotExist, AmbulanceRequest.DoesNotExist):
             return None
 
     def _get_pharmacy_for_service(self, payment_type, reference_id):
@@ -313,9 +312,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
     
     def _handle_ambulance_payment(self, payment):
         """Update ambulance request payment status"""
-        if payment.reference_id and payment.reference_type == 'ambulance':
+        if payment.reference_id and payment.reference_type in ['ambulance', 'ambulance_request']:
             try:
-                from apps.ambulance.models import AmbulanceRequest
                 request_obj = AmbulanceRequest.objects.get(id=payment.reference_id)
                 request_obj.payment = payment
                 request_obj.payment_status = 'paid'
@@ -325,7 +323,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
     
     def _handle_medicine_payment(self, payment):
         """Update medicine order payment status"""
-        if payment.reference_id and payment.reference_type == 'medicine':
+        if payment.reference_id and payment.reference_type in ['medicine', 'medicine_order']:
             try:
                 from apps.emedicine.models import EMedicineOrder
                 order = EMedicineOrder.objects.get(id=payment.reference_id)

@@ -69,6 +69,11 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
     return cartItems.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0).toFixed(2);
   };
 
+  const getOrderTotal = () => {
+    const total = orderData?.total_amount ?? getTotalPrice();
+    return Number(total) || 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -131,10 +136,11 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
       console.log('Submitting medicine order:', orderData);
 
       const response = await emedicineAPI.createOrder(orderData);
+      const createdOrder = response.data || response;
 
-      console.log('Order created successfully:', response);
+      console.log('Order created successfully:', createdOrder);
 
-      setOrderData(response);
+      setOrderData(createdOrder);
       setSuccess(true);
       setCartItems([]);
       setPrescriptionNotes('');
@@ -193,14 +199,8 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
     navigate('/login');
   };
 
-  const handlePaymentSuccess = async (paymentData) => {
+  const handlePaymentSuccess = async () => {
     try {
-      // Update order with payment reference
-      await emedicineAPI.updateOrder(orderData.id, {
-        payment_status: 'paid',
-        payment: paymentData.id,
-      });
-      
       setShowPayment(false);
       
       // Close modal after a moment
@@ -211,8 +211,8 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
         }
       }, 1500);
     } catch (err) {
-      console.error('Error updating order after payment:', err);
-      setError('Payment successful but failed to update order. Please contact support.');
+      console.error('Error closing medicine payment flow:', err);
+      setError('Payment successful. Please close this window if it does not close automatically.');
     }
   };
 
@@ -237,7 +237,7 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
                 onClose();
               }}
               paymentType="medicine"
-              amount={parseFloat(orderData.total_amount) || 0}
+              amount={getOrderTotal()}
               referenceId={orderData.id}
               referenceType="medicine_order"
               serviceName={`Medicine Order from ${pharmacy.name}`}
@@ -256,7 +256,7 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
                 onClick={() => setShowPayment(true)}
                 style={{ marginTop: '1.5rem' }}
               >
-                Proceed to Payment - BDT {(orderData?.total_amount || getTotalPrice()).toFixed(2)}
+                Proceed to Payment - BDT {getOrderTotal().toFixed(2)}
               </button>
             </div>
           ) : (

@@ -80,6 +80,7 @@ class AmbulanceRequest(models.Model):
 
     # Request information
     request_id = models.CharField(max_length=50, unique=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ambulance_requests')
     patient_name = models.CharField(max_length=200)
     contact_phone = models.CharField(max_length=20)
     

@@ -203,7 +203,7 @@ export default function Appointments() {
     date: request.required_date,
     time: null,
     amount: request.final_fare || request.estimated_fare,
-    paymentStatus: request.payment_status,
+    paymentStatus: 'offline_payment',
     notes: request.urgency ? `${formatStatus(request.urgency)} priority` : '',
     detail: formatStatus(request.vehicle_type_required || 'ambulance'),
     createdAt: request.created_at,

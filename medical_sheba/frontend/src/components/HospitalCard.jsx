@@ -1,11 +1,8 @@
-import { MapPin, Phone, Users, Bed, CheckCircle, Star, Clock, AlertCircle } from 'lucide-react';
+import { MapPin, Phone, Bed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function HospitalCard({ hospital }) {
   const navigate = useNavigate();
-  const rating = Number(hospital.rating) || 0;
-  const reviewCount = Number(hospital.review_count) || 0;
-  const hasReviews = rating > 0 || reviewCount > 0;
   const bedsAvailable = Number(hospital.beds_available);
   const bedsTotal = Number(hospital.beds_total);
   const hasBedCounts = Number.isFinite(bedsAvailable) && Number.isFinite(bedsTotal) && bedsTotal > 0;
@@ -35,17 +32,6 @@ export default function HospitalCard({ hospital }) {
           onError={(e) => e.target.src = "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop"}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        
-        {/* Badges */}
-        <div className="absolute top-4 right-4 space-y-2">
-          {hospital.emergency_available && (
-            <div className="bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg animate-pulse-gentle">
-              <AlertCircle size={14} />
-              Emergency
-            </div>
-          )}
-        </div>
-
         {/* Type Badge */}
         <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-md">
           <p className="text-sm font-bold text-gray-900">{getHospitalTypeLabel(hospital.type)}</p>
@@ -61,26 +47,6 @@ export default function HospitalCard({ hospital }) {
             {hospital.name}
           </h3>
         </div>
-
-        {/* Rating Section */}
-        {hasReviews ? (
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  size={16} 
-                  fill={i < Math.round(rating) ? '#fbbf24' : '#e5e7eb'}
-                  color={i < Math.round(rating) ? '#fbbf24' : '#e5e7eb'}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="font-bold text-gray-900">{rating.toFixed(1)}</span>
-              <span className="text-xs text-gray-600">({reviewCount} reviews)</span>
-            </div>
-          </div>
-        ) : null}
 
         {/* Bed Availability */}
         {hasBedCounts ? (

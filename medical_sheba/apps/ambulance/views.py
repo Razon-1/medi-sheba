@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Q
 from apps.hospitals.models import Hospital
 from .models import AmbulanceService, AmbulanceRequest
 from .serializers import (
@@ -125,8 +126,13 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
             except Hospital.DoesNotExist:
                 return AmbulanceRequest.objects.none()
         if user.is_authenticated:
-            return AmbulanceRequest.objects.filter(contact_phone=user.phone).order_by('-created_at')
+            return AmbulanceRequest.objects.filter(
+                Q(user=user) | Q(contact_phone=user.phone)
+            ).distinct().order_by('-created_at')
         return AmbulanceRequest.objects.none()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
     
     @action(detail=False, methods=['get'])
     def hospital_requests(self, request):

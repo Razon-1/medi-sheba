@@ -152,7 +152,7 @@ const Payment = ({
       return false;
     }
     if (!paymentDetails.mobile_name.trim()) {
-      setError('Mobile account name is required');
+      setError('Name is required');
       return false;
     }
     return true;
@@ -260,10 +260,10 @@ const Payment = ({
               />
             </div>
             <div className="form-group">
-              <label>Mobile Name</label>
+              <label>Name</label>
               <input
                 type="text"
-                placeholder="Your name"
+                placeholder="Enter name"
                 value={paymentDetails.mobile_name}
                 onChange={(e) => handleInputChange('mobile_name', e.target.value)}
                 required

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { PhoneCall, MapPin, DollarSign, AlertCircle, X } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ambulanceAPI } from '../api/ambulance';
-import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Ambulance.css';
 
@@ -23,13 +22,10 @@ export default function Ambulance() {
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestError, setRequestError] = useState('');
   const [requestSuccess, setRequestSuccess] = useState('');
-  const [showPayment, setShowPayment] = useState(false);
-  const [ambulanceRequestData, setAmbulanceRequestData] = useState(null);
   const [formData, setFormData] = useState({
     patient_name: '',
     contact_phone: '',
     pickup_location: '',
-    pickup_address: '',
     dropoff_location: '',
     vehicle_type_required: 'basic',
     urgency: 'normal',
@@ -140,7 +136,6 @@ export default function Ambulance() {
       patient_name: '',
       contact_phone: '',
       pickup_location: '',
-      pickup_address: '',
       dropoff_location: '',
       vehicle_type_required: 'basic',
       urgency: 'normal',
@@ -167,8 +162,7 @@ export default function Ambulance() {
 
     // Validate required fields
     if (!formData.patient_name.trim() || !formData.contact_phone.trim() || 
-        !formData.pickup_location.trim() || !formData.pickup_address.trim() ||
-        !formData.dropoff_location.trim()) {
+        !formData.pickup_location.trim() || !formData.dropoff_location.trim()) {
       setRequestError('Please fill in all required fields');
       setRequestLoading(false);
       return;
@@ -187,18 +181,14 @@ export default function Ambulance() {
       
       const requestData = {
         ...formData,
+        ambulance: selectedAmbulance?.id || null,
+        pickup_address: formData.pickup_location.trim(),
         required_date: requiredDateTime,
       };
 
-      const response = await ambulanceAPI.createRequest(requestData);
-      
-      setAmbulanceRequestData(response.data || response);
-      setRequestSuccess('Ambulance request submitted successfully! You will receive confirmation shortly.');
-      
-      // Show payment modal after 2 seconds
-      setTimeout(() => {
-        setShowPayment(true);
-      }, 2000);
+      await ambulanceAPI.createRequest(requestData);
+
+      setRequestSuccess('Ambulance request submitted successfully! Payment will be collected offline.');
     } catch (err) {
       console.error('Error submitting request:', err);
       setRequestError(
@@ -208,26 +198,6 @@ export default function Ambulance() {
       );
     } finally {
       setRequestLoading(false);
-    }
-  };
-
-  const handlePaymentSuccess = async (paymentData) => {
-    try {
-      // Update ambulance request with payment reference
-      await ambulanceAPI.updateRequest(ambulanceRequestData.id, {
-        payment_status: 'paid',
-        payment: paymentData.id,
-      });
-      
-      setShowPayment(false);
-      
-      // Close modal after a moment
-      setTimeout(() => {
-        handleCloseRequestModal();
-      }, 1500);
-    } catch (err) {
-      console.error('Error updating ambulance request after payment:', err);
-      setRequestError('Payment successful but failed to update request. Please contact support.');
     }
   };
 
@@ -464,24 +434,6 @@ export default function Ambulance() {
               <div className="alert alert-success">
                 <AlertCircle size={20} />
                 {requestSuccess}
-                {ambulanceRequestData && (
-                  <button 
-                    type="button"
-                    onClick={() => setShowPayment(true)}
-                    style={{ 
-                      marginTop: '1rem',
-                      padding: '10px 20px',
-                      backgroundColor: '#3498db',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem'
-                    }}
-                  >
-                    Proceed to Payment
-                  </button>
-                )}
               </div>
             )}
 
@@ -530,19 +482,6 @@ export default function Ambulance() {
                   placeholder="e.g., City Hospital, Clinic XYZ"
                   required
                 />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="pickup_address">Pickup Address *</label>
-                <textarea
-                  id="pickup_address"
-                  name="pickup_address"
-                  value={formData.pickup_address}
-                  onChange={handleFormChange}
-                  placeholder="Enter detailed pickup address"
-                  rows="2"
-                  required
-                ></textarea>
               </div>
 
               <div className="form-group">
@@ -633,19 +572,6 @@ export default function Ambulance() {
         </div>
       )}
 
-      {/* Payment Modal for Ambulance Service */}
-      {showPayment && ambulanceRequestData && (
-        <Payment
-          isOpen={showPayment}
-          onClose={() => setShowPayment(false)}
-          paymentType="ambulance"
-          amount={ambulanceRequestData.estimated_fare || 100}
-          referenceId={ambulanceRequestData.id}
-          referenceType="ambulance_request"
-          serviceName={`Ambulance Service - ${selectedAmbulance?.name || 'Standard'}`}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
-      )}
     </div>
   );
 }

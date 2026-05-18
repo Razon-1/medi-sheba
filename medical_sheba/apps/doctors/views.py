@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
+from rest_framework.permissions import AllowAny, BasePermission
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db import models
 from apps.hospitals.models import Hospital
@@ -24,6 +24,26 @@ class IsHospitalAdminOrReadOnly(BasePermission):
         if request.user.is_authenticated and 'hospital_admin' in getattr(request.user, 'roles', []) and obj.hospital:
             return obj.hospital.admin_user == request.user
         return False
+
+
+class IsPatientForReviewWrite(BasePermission):
+    """Only patient accounts can create or manage doctor reviews."""
+    patient_blocked_roles = {'pharmacy_admin', 'hospital_admin', 'doctor', 'admin'}
+
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        roles = set(getattr(request.user, 'roles', []) or [])
+        return 'patient' in roles and not roles.intersection(self.patient_blocked_roles)
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in ['GET', 'HEAD', 'OPTIONS']:
+            return True
+        return obj.patient == request.user
 
 
 class DoctorViewSet(viewsets.ModelViewSet):
@@ -103,7 +123,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
 class DoctorReviewViewSet(viewsets.ModelViewSet):
     queryset = DoctorReview.objects.all()
     serializer_class = DoctorReviewSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsPatientForReviewWrite]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['doctor', 'rating', 'is_verified_patient']
     ordering_fields = ['rating', 'helpful_count', 'created_at']
@@ -115,11 +135,6 @@ class DoctorReviewViewSet(viewsets.ModelViewSet):
         if doctor_id:
             queryset = queryset.filter(doctor_id=doctor_id)
         return queryset
-    
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticated()]
-        return [AllowAny()]
     
     def perform_create(self, serializer):
         doctor = Doctor.objects.get(id=serializer.validated_data['doctor_id'])

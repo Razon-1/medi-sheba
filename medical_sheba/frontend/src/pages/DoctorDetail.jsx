@@ -6,6 +6,7 @@ import { reviewsAPI } from '../api/reviews';
 import useAuthStore from '../context/authStore';
 import ReviewList from '../components/ReviewList';
 import ReviewForm from '../components/ReviewForm';
+import BookAppointmentModal from '../components/BookAppointmentModal';
 import '../styles/pages/DoctorDetail.css';
 
 export default function DoctorDetail() {
@@ -13,12 +14,16 @@ export default function DoctorDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const isAuthenticated = !!user;
+  const userRoles = user?.roles || [];
+  const isPatientUser = userRoles.includes('patient')
+    && !userRoles.some((role) => ['pharmacy_admin', 'hospital_admin', 'doctor', 'admin'].includes(role));
   const [doctor, setDoctor] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [userReview, setUserReview] = useState(null);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
 
   useEffect(() => {
     fetchDoctorDetails();
@@ -39,7 +44,7 @@ export default function DoctorDetail() {
       setReviews(Array.isArray(reviewsList) ? reviewsList : []);
 
       // Check if user already has a review
-      if (isAuthenticated && user) {
+      if (isPatientUser && user) {
         const existingReview = reviewsList.find(r => r.patient === user.id);
         if (existingReview) {
           setUserReview(existingReview);
@@ -241,9 +246,9 @@ export default function DoctorDetail() {
         <section className="reviews-section">
           <div className="reviews-header">
             <h2>Patient Reviews ({reviews.length})</h2>
-            {isAuthenticated && !userReview && (
+            {isPatientUser && !userReview && (
               <button
-                className="btn-primary"
+                className="btn-review-action"
                 onClick={() => setShowReviewForm(!showReviewForm)}
               >
                 {showReviewForm ? 'Cancel' : 'Write a Review'}
@@ -251,12 +256,18 @@ export default function DoctorDetail() {
             )}
           </div>
 
-          {showReviewForm && isAuthenticated && (
+          {showReviewForm && isPatientUser && (
             <ReviewForm
               doctorId={id}
               onReviewSubmitted={handleReviewSubmitted}
               onCancel={() => setShowReviewForm(false)}
             />
+          )}
+
+          {isAuthenticated && !isPatientUser && (
+            <div className="no-reviews">
+              <p>Only patient accounts can write doctor reviews.</p>
+            </div>
           )}
 
           {reviews.length > 0 ? (
@@ -273,10 +284,23 @@ export default function DoctorDetail() {
       <section className="cta-section">
         <h2>Ready to Book an Appointment?</h2>
         <p>Schedule your consultation with Dr. {doctor.user.first_name}</p>
-        <button className="btn-primary btn-large">
+        <button
+          className="btn-primary btn-large"
+          onClick={() => setShowAppointmentModal(true)}
+        >
           Book Appointment
         </button>
       </section>
+
+      <BookAppointmentModal
+        doctor={{
+          ...doctor,
+          user_name: `${doctor.user.first_name} ${doctor.user.last_name}`,
+          name: `${doctor.user.first_name} ${doctor.user.last_name}`,
+        }}
+        isOpen={showAppointmentModal}
+        onClose={() => setShowAppointmentModal(false)}
+      />
     </div>
   );
 }

@@ -51,8 +51,8 @@ class AmbulanceServiceDetailSerializer(serializers.ModelSerializer):
 
 
 class AmbulanceRequestListSerializer(serializers.ModelSerializer):
-    ambulance_name = serializers.CharField(source='ambulance.name', read_only=True)
-    ambulance_phone = serializers.CharField(source='ambulance.phone_number', read_only=True)
+    ambulance_name = serializers.CharField(source='ambulance.name', read_only=True, allow_null=True)
+    ambulance_phone = serializers.CharField(source='ambulance.phone_number', read_only=True, allow_null=True)
     
     class Meta:
         model = AmbulanceRequest
@@ -66,9 +66,9 @@ class AmbulanceRequestListSerializer(serializers.ModelSerializer):
 
 
 class AmbulanceRequestDetailSerializer(serializers.ModelSerializer):
-    ambulance_name = serializers.CharField(source='ambulance.name', read_only=True)
-    ambulance_phone = serializers.CharField(source='ambulance.phone_number', read_only=True)
-    ambulance_type = serializers.CharField(source='ambulance.vehicle_type', read_only=True)
+    ambulance_name = serializers.CharField(source='ambulance.name', read_only=True, allow_null=True)
+    ambulance_phone = serializers.CharField(source='ambulance.phone_number', read_only=True, allow_null=True)
+    ambulance_type = serializers.CharField(source='ambulance.vehicle_type', read_only=True, allow_null=True)
     
     class Meta:
         model = AmbulanceRequest
@@ -87,6 +87,19 @@ class AmbulanceRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AmbulanceRequest
         fields = [
-            'patient_name', 'contact_phone', 'pickup_location', 'pickup_address',
-            'dropoff_location', 'vehicle_type_required', 'urgency', 'required_date', 'notes'
+            'id', 'request_id', 'patient_name', 'contact_phone', 'pickup_location',
+            'pickup_address', 'dropoff_location', 'vehicle_type_required', 'urgency',
+            'required_date', 'notes', 'ambulance', 'estimated_fare', 'payment_status'
         ]
+        read_only_fields = ['id', 'request_id', 'estimated_fare', 'payment_status']
+        extra_kwargs = {
+            'ambulance': {'required': False, 'allow_null': True},
+        }
+
+    def validate(self, attrs):
+        ambulance = attrs.get('ambulance')
+        if ambulance:
+            if not ambulance.is_available:
+                raise serializers.ValidationError({'ambulance': 'Selected ambulance is not available.'})
+            attrs['vehicle_type_required'] = ambulance.vehicle_type
+        return attrs
