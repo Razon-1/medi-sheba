@@ -144,7 +144,9 @@ export default function PharmacyAdminDashboard() {
 
   const getRevenueBreakdown = () => {
     const periodOrders = getPeriodOrders();
-    const paidRevenue = periodOrders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+    const paidRevenue = periodOrders
+      .filter((order) => order.payment_status === 'paid')
+      .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
     const unpaidRevenue = periodOrders
       .filter((order) => order.payment_status === 'unpaid')
       .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
@@ -161,40 +163,73 @@ export default function PharmacyAdminDashboard() {
 
   const renderPieChart = (breakdown) => {
     const total = breakdown.reduce((sum, item) => sum + item.value, 0);
-    const radius = 60;
-    const circumference = 2 * Math.PI * radius;
-    let offset = 0;
+    const center = 110;
+    const radius = 82;
+    let currentAngle = -90;
+
+    const getCoordinates = (angle) => {
+      const angleInRadians = (Math.PI / 180) * angle;
+      return {
+        x: center + radius * Math.cos(angleInRadians),
+        y: center + radius * Math.sin(angleInRadians)
+      };
+    };
 
     return (
-      <svg width="220" height="220" viewBox="0 0 220 220">
-        <g transform="translate(110, 110)">
-          {breakdown.map((item) => {
-            const sliceLength = total ? (item.value / total) * circumference : 0;
-            const circle = (
-              <circle
-                key={item.label}
-                r={radius}
-                fill="transparent"
-                stroke={item.color}
-                strokeWidth="28"
-                strokeDasharray={`${sliceLength} ${circumference - sliceLength}`}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform="rotate(-90)"
-              />
-            );
-            offset -= sliceLength;
-            return circle;
-          })}
-          <circle r={radius - 20} fill="#fff" />
-        </g>
+      <svg className="revenue-pie-chart" width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="Revenue pie chart">
+        {!total && (
+          <circle cx={center} cy={center} r={radius} fill="#d0d7e6">
+            <title>No revenue found for this period</title>
+          </circle>
+        )}
+        {breakdown.map((item) => {
+          if (!total || item.value <= 0) return null;
+
+          const sliceAngle = (item.value / total) * 360;
+          const start = getCoordinates(currentAngle);
+          const end = getCoordinates(currentAngle + sliceAngle);
+          const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+          const pathData = sliceAngle >= 360
+            ? [
+                `M ${center} ${center}`,
+                `L ${center} ${center - radius}`,
+                `A ${radius} ${radius} 0 1 1 ${center - 0.01} ${center - radius}`,
+                'Z'
+              ].join(' ')
+            : [
+                `M ${center} ${center}`,
+                `L ${start.x} ${start.y}`,
+                `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+                'Z'
+              ].join(' ');
+
+          currentAngle += sliceAngle;
+
+          return (
+            <path
+              key={item.label}
+              d={pathData}
+              fill={item.color}
+            >
+              <title>{`${item.label}: ${formatCurrency(item.value)} (${Math.round((item.value / total) * 100)}%)`}</title>
+            </path>
+          );
+        })}
       </svg>
     );
   };
 
+  const getRevenuePercentage = (value, total) => {
+    if (!total || value <= 0) return 0;
+    return Math.round((value / total) * 100);
+  };
+
   const RevenueReviewTab = () => {
     const breakdown = getRevenueBreakdown();
-    const totalRevenue = breakdown.reduce((sum, item) => sum + item.value, 0);
+    const paidRevenue = breakdown.find((item) => item.label === 'Paid')?.value || 0;
+    const pendingRefundedRevenue = (breakdown.find((item) => item.label === 'Unpaid')?.value || 0)
+      + (breakdown.find((item) => item.label === 'Refunded')?.value || 0);
+    const chartTotal = breakdown.reduce((sum, item) => sum + item.value, 0);
 
     return (
       <div className="review-tab">
@@ -221,39 +256,37 @@ export default function PharmacyAdminDashboard() {
           <div className="review-summary">
             <div className="revenue-card">
               <p>Total Revenue</p>
-              <strong>{formatCurrency(totalRevenue)}</strong>
+              <strong>{formatCurrency(paidRevenue)}</strong>
               <small>{getPeriodOrders().length} orders in period</small>
             </div>
             <div className="revenue-card">
               <p>Paid Revenue</p>
-              <strong>{formatCurrency(breakdown.find((item) => item.label === 'Paid')?.value || 0)}</strong>
+              <strong>{formatCurrency(paidRevenue)}</strong>
             </div>
             <div className="revenue-card">
               <p>Pending / Refunded</p>
-              <strong>{formatCurrency(
-                (breakdown.find((item) => item.label === 'Unpaid')?.value || 0)
-                + (breakdown.find((item) => item.label === 'Refunded')?.value || 0)
-              )}</strong>
+              <strong>{formatCurrency(pendingRefundedRevenue)}</strong>
             </div>
           </div>
 
           <div className="review-chart-card">
             <div className="review-chart-title">Revenue by Payment Status</div>
-            {totalRevenue > 0 ? (
-              <>
-                {renderPieChart(breakdown)}
-                <div className="pie-legend">
-                  {breakdown.map((item) => (
-                    <div key={item.label} className="pie-legend-item">
-                      <span className="pie-dot" style={{ backgroundColor: item.color }} />
-                      <span>{item.label}</span>
-                      <strong>{formatCurrency(item.value)}</strong>
-                    </div>
-                  ))}
+            {renderPieChart(breakdown)}
+            <div className="pie-legend">
+              {breakdown.map((item) => (
+                <div key={item.label} className="pie-legend-item">
+                  <div className="pie-legend-main">
+                    <span className="pie-dot" style={{ backgroundColor: item.color }} />
+                    <span>{item.label}</span>
+                  </div>
+                  <strong className="pie-legend-value">
+                    {formatCurrency(item.value)} · {getRevenuePercentage(item.value, chartTotal)}%
+                  </strong>
                 </div>
-              </>
-            ) : (
-              <div className="empty-pie">No orders found for this period.</div>
+              ))}
+            </div>
+            {chartTotal === 0 && (
+              <div className="empty-pie">Add order earnings to see the pie split dynamically.</div>
             )}
           </div>
         </div>

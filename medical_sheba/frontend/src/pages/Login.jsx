@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import useAuthStore from '../context/authStore';
 import { useSEO, pageMetadata } from '../utils/seo';
@@ -24,8 +24,15 @@ export default function Login() {
         setLoading(false);
         return;
       }
+
+      const selectedRole = formData.roles?.[0];
+      if (!selectedRole) {
+        setError('Please select your login role');
+        setLoading(false);
+        return;
+      }
       
-      await login(formData.email, formData.password);
+      await login(formData.email, formData.password, selectedRole);
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);
@@ -46,6 +53,10 @@ export default function Login() {
       if (err.response?.status === 401) {
         errorMsg = 'Invalid email or password. Please check and try again.';
       }
+
+      if (err.response?.status === 403) {
+        errorMsg = err.response?.data?.detail || 'This account is not registered for the selected role.';
+      }
       
       setError(errorMsg);
     } finally {
@@ -54,80 +65,54 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-lg mb-4">
-            <LogIn size={32} className="text-white" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Welcome Back!
-          </h1>
-          <p className="text-gray-600">
-            Login to access your healthcare services
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-2xl items-center">
+        <div className="w-full overflow-hidden rounded-[14px] border border-gray-200 bg-white shadow-xl shadow-slate-900/10">
+          <section className="px-5 py-7 sm:px-8 sm:py-9 lg:p-10">
+            <div className="mx-auto w-full max-w-md">
+              <div className="mb-7 text-center">
+                <p className="text-sm font-semibold uppercase tracking-wide text-primary-600">Sign in</p>
+                <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">Access your account</h2>
+                <p className="mt-2 text-sm text-gray-600">
+                  Enter your email and password to continue.
+                </p>
+              </div>
 
-        {/* Card */}
-        <div className="card shadow-xl border-0">
-          <div className="card-body p-8">
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-slide-up">
-                <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs font-bold">!</span>
+              {error && (
+                <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                  <div className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-500">
+                    <span className="text-xs font-bold text-white">!</span>
+                  </div>
+                  <p className="text-sm font-semibold text-red-700">{error}</p>
                 </div>
-                <p className="text-red-700 text-sm font-medium">{error}</p>
-              </div>
-            )}
+              )}
 
-            {/* Form */}
-            <AuthForm type="login" onSubmit={handleLogin} loading={loading} />
+              <AuthForm type="login" onSubmit={handleLogin} loading={loading} />
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+              <div className="mt-6 flex flex-col gap-4 border-t border-gray-200 pt-6 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+                <p>Do not have an account?</p>
+                <Link 
+                  to="/register" 
+                  className="inline-flex items-center gap-2 font-bold text-primary-600 transition hover:text-primary-700"
+                >
+                  Create one now
+                  <ArrowRight size={16} />
+                </Link>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">OR</span>
-              </div>
+
+              <p className="mt-6 text-xs leading-6 text-gray-500">
+                By logging in, you agree to our{' '}
+                <Link to="/terms" className="font-semibold text-primary-600 hover:text-primary-700">
+                  Terms of Service
+                </Link>
+                {' '}and{' '}
+                <Link to="/privacy" className="font-semibold text-primary-600 hover:text-primary-700">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
             </div>
-
-            {/* Alternative Login (Future) */}
-            <p className="text-center text-sm text-gray-600 mb-6">
-              Don't have an account?{' '}
-              <Link 
-                to="/register" 
-                className="font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1 transition-colors"
-              >
-                Create one now
-                <ArrowRight size={16} />
-              </Link>
-            </p>
-          </div>
-        </div>
-
-        {/* Footer Info */}
-        <div className="mt-8 text-center text-xs text-gray-600">
-          <p>
-            By logging in, you agree to our{' '}
-            <Link to="/terms" className="text-primary-600 hover:text-primary-700 font-medium">
-              Terms of Service
-            </Link>
-            {' '}and{' '}
-            <Link to="/privacy" className="text-primary-600 hover:text-primary-700 font-medium">
-              Privacy Policy
-            </Link>
-          </p>
-        </div>
-
-        {/* Demo Credentials (For Development) */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-xs text-gray-700">
-          <p className="font-semibold text-blue-900 mb-2">Demo Credentials (Testing):</p>
-          <p>Email: <code className="bg-white px-2 py-1 rounded text-blue-600 font-mono">demo@example.com</code></p>
-          <p>Password: <code className="bg-white px-2 py-1 rounded text-blue-600 font-mono">demo1234</code></p>
+          </section>
         </div>
       </div>
     </div>

@@ -205,8 +205,9 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
             except EMedicinePharmacy.DoesNotExist:
                 # Pharmacy admin without assigned pharmacy sees no orders
                 return EMedicineOrder.objects.none()
-        # Non-pharmacy-admins see all orders
-        return EMedicineOrder.objects.all()
+        if user.is_authenticated:
+            return EMedicineOrder.objects.filter(contact_phone=user.phone)
+        return EMedicineOrder.objects.none()
     
     def get_serializer_class(self):
         if self.action == 'create':

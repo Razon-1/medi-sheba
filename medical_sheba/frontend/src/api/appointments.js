@@ -13,8 +13,8 @@ export const appointmentsAPI = {
   update: (id, data) =>
     client.put(`/appointments/${id}/`, data),
   
-  cancel: (id) =>
-    client.post(`/appointments/${id}/cancel/`),
+  cancel: (id, reason = '') =>
+    client.post(`/appointments/${id}/cancel/`, { reason }),
   
   delete: (id) =>
     client.delete(`/appointments/${id}/`),

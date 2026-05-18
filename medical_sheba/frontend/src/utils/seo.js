@@ -106,9 +106,9 @@ export const pageMetadata = {
     ogUrl: 'https://medisheba.bd/hospitals'
   },
   appointments: {
-    title: 'Book Appointments | Medi Sheba - Healthcare Platform',
-    description: 'Book and manage your medical appointments with doctors in Bangladesh. Easy online scheduling.',
-    keywords: 'appointments, book doctor, medical appointments, healthcare scheduling',
+    title: 'My Care Services | Medi Sheba - Healthcare Platform',
+    description: 'Manage doctor appointments, E-Doctor consultations, ambulance requests, and medicine orders in one patient dashboard.',
+    keywords: 'patient services, appointments, e-doctor, ambulance requests, medicine orders, healthcare dashboard',
     ogUrl: 'https://medisheba.bd/appointments'
   },
   blood: {

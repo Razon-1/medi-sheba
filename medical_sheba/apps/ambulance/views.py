@@ -124,8 +124,9 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
                 return AmbulanceRequest.objects.filter(ambulance__hospital=hospital).order_by('-created_at')
             except Hospital.DoesNotExist:
                 return AmbulanceRequest.objects.none()
-        # Others see all requests
-        return AmbulanceRequest.objects.all()
+        if user.is_authenticated:
+            return AmbulanceRequest.objects.filter(contact_phone=user.phone).order_by('-created_at')
+        return AmbulanceRequest.objects.none()
     
     @action(detail=False, methods=['get'])
     def hospital_requests(self, request):

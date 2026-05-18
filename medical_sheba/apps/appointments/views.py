@@ -167,6 +167,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(appointment)
         return Response(serializer.data)
     
+    @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         """Cancel an appointment"""
         appointment = self.get_object()

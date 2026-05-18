@@ -1,210 +1,209 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, User, Phone, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, Mail, Phone, User } from 'lucide-react';
+
+const roleOptions = [
+  { value: 'patient', label: 'Patient' },
+  { value: 'pharmacy_admin', label: 'Pharmacy Admin' },
+  { value: 'hospital_admin', label: 'Hospital Admin' },
+];
 
 export default function AuthForm({ type = 'login', onSubmit, loading = false }) {
+  const isRegister = type === 'register';
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    name: '',
-    phone: '',
     roles: ['patient'],
   });
-  const [showPassword, setShowPassword] = useState(false);
 
-  const roleOptions = [
-    { value: 'patient', label: 'Patient', icon: '👤', color: 'blue' },
-    { value: 'pharmacy_admin', label: 'Pharmacy Admin', icon: '💊', color: 'green' },
-    { value: 'hospital_admin', label: 'Hospital Admin', icon: '🏥', color: 'purple' },
-  ];
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const updateField = (field, value) => {
+    setFormData((current) => ({
+      ...current,
+      [field]: value,
+    }));
   };
 
-  const handleRoleChange = (roleValue) => {
-    setFormData(prev => {
-      const currentRoles = prev.roles || [];
-      if (currentRoles.includes(roleValue)) {
-        return {
-          ...prev,
-          roles: currentRoles.filter(r => r !== roleValue)
-        };
-      } else {
-        return {
-          ...prev,
-          roles: [...currentRoles, roleValue]
-        };
-      }
+  const toggleRole = (role) => {
+    setFormData((current) => {
+      const hasRole = current.roles.includes(role);
+      const roles = hasRole
+        ? current.roles.filter((item) => item !== role)
+        : [...current.roles, role];
+
+      return {
+        ...current,
+        roles: roles.length ? roles : ['patient'],
+      };
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (event) => {
+    event.preventDefault();
     onSubmit(formData);
   };
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
-      {type === 'register' && (
-        <>
-          {/* Full Name */}
-          <div className="form-group">
-            <label htmlFor="name" className="form-label">
-              <User size={18} className="inline mr-2 text-primary-600" />
-              Full Name
-            </label>
+    <form className="space-y-5" onSubmit={handleSubmit}>
+      {isRegister && (
+        <label className="block">
+          <span className="mb-2 block text-sm font-semibold text-gray-700">Full Name</span>
+          <div className="relative">
+            <User className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              id="name"
-              name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={(event) => updateField('name', event.target.value)}
+              className="h-12 w-full rounded-lg border border-gray-300 bg-white pl-11 pr-4 text-base font-medium text-gray-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
+              placeholder="Enter your full name"
+              autoComplete="name"
               required
-              placeholder="John Doe"
-              className="form-input"
             />
           </div>
-
-          {/* Phone Number */}
-          <div className="form-group">
-            <label htmlFor="phone" className="form-label">
-              <Phone size={18} className="inline mr-2 text-primary-600" />
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+880 1234567890"
-              className="form-input"
-            />
-          </div>
-
-          {/* User Type Selection */}
-          <div className="form-group">
-            <label className="form-label mb-4">
-              <CheckCircle2 size={18} className="inline mr-2 text-primary-600" />
-              User Type(s) - Select one or more
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {roleOptions.map(option => (
-                <div
-                  key={option.value}
-                  onClick={() => handleRoleChange(option.value)}
-                  className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                    (formData.roles || []).includes(option.value)
-                      ? 'border-primary-500 bg-primary-50 shadow-md'
-                      : 'border-gray-200 bg-white hover:border-primary-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id={`role-${option.value}`}
-                      checked={(formData.roles || []).includes(option.value)}
-                      onChange={() => {}}
-                      className="w-5 h-5 text-primary-600 rounded cursor-pointer"
-                    />
-                    <div className="text-2xl">{option.icon}</div>
-                    <label 
-                      htmlFor={`role-${option.value}`} 
-                      className="font-medium text-gray-700 cursor-pointer flex-1"
-                    >
-                      {option.label}
-                    </label>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
+        </label>
       )}
 
-      {/* Email Address */}
-      <div className="form-group">
-        <label htmlFor="email" className="form-label">
-          <Mail size={18} className="inline mr-2 text-primary-600" />
-          Email Address
-        </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          placeholder="your@email.com"
-          className="form-input"
-        />
-      </div>
-
-      {/* Password */}
-      <div className="form-group">
-        <label htmlFor="password" className="form-label">
-          <Lock size={18} className="inline mr-2 text-primary-600" />
-          Password
-        </label>
+      <label className="block">
+        <span className="mb-2 block text-sm font-semibold text-gray-700">Email Address</span>
         <div className="relative">
+          <Mail className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(event) => updateField('email', event.target.value)}
+            className="h-12 w-full rounded-lg border border-gray-300 bg-white pl-11 pr-4 text-base font-medium text-gray-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+          />
+        </div>
+      </label>
+
+      {!isRegister && (
+        <label className="block">
+          <span className="mb-2 block text-sm font-semibold text-gray-700">Login Role</span>
+          <select
+            value={formData.roles[0] || 'patient'}
+            onChange={(event) => updateField('roles', [event.target.value])}
+            className="h-12 w-full rounded-lg border border-gray-300 bg-white px-4 text-base font-medium text-gray-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
+            required
+          >
+            {roleOptions.map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {isRegister && (
+        <label className="block">
+          <span className="mb-2 block text-sm font-semibold text-gray-700">Phone Number</span>
+          <div className="relative">
+            <Phone className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(event) => updateField('phone', event.target.value)}
+              className="h-12 w-full rounded-lg border border-gray-300 bg-white pl-11 pr-4 text-base font-medium text-gray-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
+              placeholder="+880 1700000000"
+              autoComplete="tel"
+              required
+            />
+          </div>
+        </label>
+      )}
+
+      <label className="block">
+        <span className="mb-2 block text-sm font-semibold text-gray-700">Password</span>
+        <div className="relative">
+          <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             type={showPassword ? 'text' : 'password'}
-            id="password"
-            name="password"
             value={formData.password}
-            onChange={handleChange}
+            onChange={(event) => updateField('password', event.target.value)}
+            className="h-12 w-full rounded-lg border border-gray-300 bg-white pl-11 pr-12 text-base font-medium text-gray-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
+            placeholder="Enter password"
+            autoComplete={isRegister ? 'new-password' : 'current-password'}
             required
-            placeholder="••••••••"
-            className="form-input pr-12"
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+            onClick={() => setShowPassword((value) => !value)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
-      </div>
+      </label>
 
-      {/* Confirm Password (Register Only) */}
-      {type === 'register' && (
-        <div className="form-group">
-          <label htmlFor="confirmPassword" className="form-label">
-            <Lock size={18} className="inline mr-2 text-primary-600" />
-            Confirm Password
+      {isRegister && (
+        <>
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-gray-700">Confirm Password</span>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={(event) => updateField('confirmPassword', event.target.value)}
+                className="h-12 w-full rounded-lg border border-gray-300 bg-white pl-11 pr-12 text-base font-medium text-gray-900 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-100"
+                placeholder="Re-enter password"
+                autoComplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                onClick={() => setShowConfirmPassword((value) => !value)}
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            placeholder="••••••••"
-            className="form-input"
-          />
-        </div>
+
+          <fieldset>
+            <legend className="mb-3 text-sm font-semibold text-gray-700">Account Type</legend>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {roleOptions.map((role) => {
+                const checked = formData.roles.includes(role.value);
+                return (
+                  <label
+                    key={role.value}
+                    className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                      checked
+                        ? 'border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-100'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-primary-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      checked={checked}
+                      onChange={() => toggleRole(role.value)}
+                    />
+                    {role.label}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        </>
       )}
 
-      {/* Submit Button */}
-      <button 
-        type="submit" 
+      <button
+        type="submit"
         disabled={loading}
-        className="btn btn-primary w-full py-3 text-base font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-5 text-base font-bold text-white shadow-lg shadow-primary-600/20 transition hover:bg-primary-700 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
       >
-        {loading ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
-            Processing...
-          </span>
-        ) : type === 'login' ? (
-          'Login to Account'
-        ) : (
-          'Create Account'
-        )}
+        {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+        {loading ? 'Please wait...' : isRegister ? 'Create Account' : 'Sign In'}
       </button>
     </form>
   );

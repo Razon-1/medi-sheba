@@ -370,6 +370,18 @@
   color: #222;
 }
 
+.revenue-pie-chart {
+  display: block;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+}
+
+.revenue-pie-chart path {
+  stroke: #fff;
+  stroke-width: 2;
+}
+
 .pie-legend {
   display: grid;
   gap: 0.75rem;
@@ -381,6 +393,17 @@
   justify-content: space-between;
   gap: 0.75rem;
   align-items: center;
+}
+
+.pie-legend-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.pie-legend-value {
+  text-align: right;
+  white-space: nowrap;
 }
 
 .pie-dot {

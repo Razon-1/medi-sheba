@@ -174,8 +174,9 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
                 return EDoctorConsultation.objects.filter(doctor__hospital=hospital).order_by('-created_at')
             except Hospital.DoesNotExist:
                 return EDoctorConsultation.objects.none()
-        # Others see all consultations
-        return EDoctorConsultation.objects.all()
+        if user.is_authenticated:
+            return EDoctorConsultation.objects.filter(patient_email=user.email).order_by('-created_at')
+        return EDoctorConsultation.objects.none()
 
     def get_serializer_class(self):
         if self.action == 'create':

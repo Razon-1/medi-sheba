@@ -1,30 +1,42 @@
 import { Link } from 'react-router-dom';
-import { Menu, X, LogOut } from 'lucide-react';
+import { Building2, CalendarDays, ChevronDown, LogOut, Menu, Pill, UserCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../context/authStore';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const displayName = user?.first_name && user?.last_name
+    ? `${user.first_name} ${user.last_name}`
+    : user?.email || 'Account';
 
   const handleLogout = async () => {
     await logout();
     setIsOpen(false);
+    setAccountOpen(false);
     window.location.href = '/';
   };
 
   const closeMenu = () => {
     setIsOpen(false);
+    setAccountOpen(false);
   };
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen);
+    setIsOpen((open) => !open);
+    setAccountOpen(false);
+  };
+
+  const toggleAccountMenu = () => {
+    setAccountOpen((open) => !open);
+    setIsOpen(false);
   };
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 sm:h-18 md:h-20">
+        <div className="flex justify-between items-center h-16 sm:h-18 md:h-20 gap-4">
           
           {/* Logo Section - Left */}
           <Link 
@@ -42,113 +54,150 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Mobile Toggle */}
-          <button 
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-            onClick={toggleMenu}
-            aria-label="Toggle Menu"
-            aria-expanded={isOpen}
-          >
-            {isOpen ? (
-              <X size={24} className="text-gray-900" />
-            ) : (
-              <Menu size={24} className="text-gray-900" />
+          {/* Mobile Actions */}
+          <div className="md:hidden ml-auto flex items-center gap-2">
+            {user && (
+              <button
+                type="button"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-primary-700 shadow-sm transition-colors duration-200 hover:bg-primary-50"
+                onClick={toggleAccountMenu}
+                aria-label="Open account menu"
+                aria-expanded={accountOpen}
+                aria-haspopup="menu"
+              >
+                <UserCircle size={24} />
+              </button>
             )}
-          </button>
+            <button
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              onClick={toggleMenu}
+              aria-label="Toggle Menu"
+              aria-expanded={isOpen}
+            >
+              {isOpen ? (
+                <X size={24} className="text-gray-900" />
+              ) : (
+                <Menu size={24} className="text-gray-900" />
+              )}
+            </button>
+          </div>
 
           {/* Center Menu - Desktop */}
-          <div className="hidden md:flex items-center gap-1 lg:gap-2">
+          <div className="hidden md:flex flex-1 items-center justify-center gap-1">
             <Link 
               to="/" 
-              className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+              className="whitespace-nowrap px-2.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
             >
               Home
             </Link>
             <Link 
               to="/doctors" 
-              className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+              className="whitespace-nowrap px-2.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
             >
               Doctors
             </Link>
             <Link 
               to="/hospitals" 
-              className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+              className="whitespace-nowrap px-2.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
             >
               Hospitals
             </Link>
             <Link 
               to="/blood" 
-              className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+              className="whitespace-nowrap px-2.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
             >
               Blood Bank
             </Link>
             <Link 
               to="/ambulance" 
-              className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+              className="whitespace-nowrap px-2.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
             >
               Ambulance
             </Link>
             <Link 
               to="/emedicine" 
-              className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+              className="whitespace-nowrap px-2.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
             >
               E-Medicine
             </Link>
             <Link 
               to="/edoctor" 
-              className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+              className="whitespace-nowrap px-2.5 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
             >
               E-Doctor
             </Link>
-            
-            {user && (
-              <Link
-                to="/appointments"
-                className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-              >
-                My Appointments
-              </Link>
-            )}
-
-            {user?.roles?.includes('pharmacy_admin') && (
-              <Link
-                to="/pharmacy-admin"
-                className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors duration-200"
-              >
-                My Pharmacy
-              </Link>
-            )}
-
-            {user?.roles?.includes('hospital_admin') && (
-              <Link
-                to="/hospital-admin"
-                className="px-3 py-2 rounded-lg text-sm lg:text-base font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200"
-              >
-                My Hospital
-              </Link>
-            )}
           </div>
 
           {/* Auth Section - Desktop */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3 ml-4">
+          <div className="hidden md:flex flex-shrink-0 items-center gap-2 lg:gap-3">
             {user ? (
-              <div className="flex items-center gap-2 lg:gap-3 pl-4 border-l border-gray-200">
-                <div className="text-right hidden sm:block">
-                  <p className="text-xs lg:text-sm font-semibold text-gray-900">
-                    {user.first_name && user.last_name 
-                      ? `${user.first_name} ${user.last_name}`
-                      : user.email}
-                  </p>
-                  <p className="text-xs text-gray-500">Member</p>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors duration-200 flex items-center gap-2 font-medium text-sm"
-                  title="Logout"
+              <div className="relative pl-4 border-l border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setAccountOpen((open) => !open)}
+                  className="flex min-w-0 items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left shadow-sm transition hover:border-primary-200 hover:bg-primary-50"
+                  aria-expanded={accountOpen}
+                  aria-haspopup="menu"
                 >
-                  <LogOut size={16} />
-                  <span className="hidden lg:inline">Logout</span>
+                  <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-700">
+                    <UserCircle size={22} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block max-w-[140px] truncate text-sm font-semibold text-gray-900">{displayName}</span>
+                    <span className="block text-xs text-gray-500">Member</span>
+                  </span>
+                  <ChevronDown size={16} className={`flex-shrink-0 text-gray-500 transition ${accountOpen ? 'rotate-180' : ''}`} />
                 </button>
+
+                {accountOpen && (
+                  <div
+                    className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl shadow-slate-900/10"
+                    role="menu"
+                  >
+                    <div className="border-b border-gray-100 px-4 py-3">
+                      <p className="truncate text-sm font-semibold text-gray-900">{displayName}</p>
+                      <p className="truncate text-xs text-gray-500">{user.email}</p>
+                    </div>
+                    <div className="p-2">
+                      <Link
+                        to="/appointments"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:text-primary-700"
+                      >
+                        <CalendarDays size={17} />
+                        My Care Services
+                      </Link>
+                      {user?.roles?.includes('pharmacy_admin') && (
+                        <Link
+                          to="/pharmacy-admin"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-green-50 hover:text-green-700"
+                        >
+                          <Pill size={17} />
+                          My Pharmacy
+                        </Link>
+                      )}
+                      {user?.roles?.includes('hospital_admin') && (
+                        <Link
+                          to="/hospital-admin"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          <Building2 size={17} />
+                          My Hospital
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                      >
+                        <LogOut size={17} />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-2 lg:gap-3">
@@ -168,6 +217,57 @@ export default function Navbar() {
             )}
           </div>
         </div>
+
+        {/* Mobile Account Menu */}
+        {accountOpen && user && (
+          <div
+            className="md:hidden fixed left-4 right-4 top-[72px] z-[60] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-slate-900/20"
+            role="menu"
+          >
+            <div className="border-b border-gray-100 px-5 py-4">
+              <p className="truncate text-base font-semibold text-gray-900">{displayName}</p>
+              <p className="truncate text-sm text-gray-500">{user.email}</p>
+            </div>
+            <div className="p-3">
+              <Link
+                to="/appointments"
+                onClick={closeMenu}
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-gray-50 hover:text-primary-700"
+              >
+                <CalendarDays size={20} />
+                My Care Services
+              </Link>
+              {user?.roles?.includes('pharmacy_admin') && (
+                <Link
+                  to="/pharmacy-admin"
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-green-50 hover:text-green-700"
+                >
+                  <Pill size={20} />
+                  My Pharmacy
+                </Link>
+              )}
+              {user?.roles?.includes('hospital_admin') && (
+                <Link
+                  to="/hospital-admin"
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-blue-50 hover:text-blue-700"
+                >
+                  <Building2 size={20} />
+                  My Hospital
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-1 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-base font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                <LogOut size={20} />
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Mobile Menu */}
         {isOpen && (
@@ -229,7 +329,7 @@ export default function Navbar() {
                   onClick={closeMenu}
                   className="block w-full px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 font-medium text-sm"
                 >
-                  My Appointments
+                  My Care Services
                 </Link>
               )}
 

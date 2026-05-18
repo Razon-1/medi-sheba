@@ -34,10 +34,17 @@ class UserViewSet(viewsets.ModelViewSet):
         """Authenticate user and return JWT tokens"""
         email = request.data.get('email')
         password = request.data.get('password')
+        role = request.data.get('role')
         
         if not email or not password:
             return Response(
                 {'detail': 'Email and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not role:
+            return Response(
+                {'detail': 'Login role is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -47,6 +54,12 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 {'detail': 'Invalid credentials'},
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if role not in user.roles:
+            return Response(
+                {'detail': 'This account is not registered for the selected role.'},
+                status=status.HTTP_403_FORBIDDEN
             )
         
         refresh = RefreshToken.for_user(user)

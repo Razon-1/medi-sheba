@@ -12,10 +12,10 @@ const useAuthStore = create((set) => ({
   
   setError: (error) => set({ error }),
 
-  login: async (email, password) => {
+  login: async (email, password, role) => {
     try {
       set({ loading: true, error: null });
-      const { data } = await authAPI.login(email, password);
+      const { data } = await authAPI.login(email, password, role);
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('user', JSON.stringify(data.user));
       set({ user: data.user, loading: false });

@@ -4,7 +4,6 @@ import useAuthStore from '../context/authStore';
 import '../styles/AdminDashboard.css';
 import * as hospitalApi from '../api/hospitals';
 import * as doctorApi from '../api/doctors';
-import * as ambulanceApi from '../api/ambulance';
 import * as edoctorApi from '../api/edoctor';
 import { appointmentsAPI } from '../api/appointments';
 
@@ -14,11 +13,9 @@ const HospitalAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('doctors');
   const [hospital, setHospital] = useState(null);
   const [doctors, setDoctors] = useState([]);
-  const [ambulances, setAmbulances] = useState([]);
   const [edoctors, setEdoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [consultations, setConsultations] = useState([]);
-  const [ambulanceRequests, setAmbulanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -65,10 +62,6 @@ const HospitalAdminDashboard = () => {
         // API returns array directly, not wrapped in {data: ...}
         const doctorsData = Array.isArray(doctorsRes.data) ? doctorsRes.data : (Array.isArray(doctorsRes) ? doctorsRes : []);
         setDoctors(doctorsData);
-      } else if (activeTab === 'ambulances') {
-        const ambulancesRes = await ambulanceApi.getMyAmbulances();
-        const ambulancesData = Array.isArray(ambulancesRes.data) ? ambulancesRes.data : (Array.isArray(ambulancesRes) ? ambulancesRes : []);
-        setAmbulances(ambulancesData);
       } else if (activeTab === 'edoctors') {
         const edoctorsRes = await edoctorApi.getMyEdoctors();
         const edoctorsData = Array.isArray(edoctorsRes.data) ? edoctorsRes.data : (Array.isArray(edoctorsRes) ? edoctorsRes : []);
@@ -81,10 +74,6 @@ const HospitalAdminDashboard = () => {
         const consultationsRes = await edoctorApi.edoctorAPI.hospitalConsultations();
         const consultationsData = Array.isArray(consultationsRes.data) ? consultationsRes.data : (Array.isArray(consultationsRes) ? consultationsRes : []);
         setConsultations(consultationsData);
-      } else if (activeTab === 'ambulance_requests') {
-        const requestsRes = await ambulanceApi.getHospitalAmbulanceRequests();
-        const requestsData = Array.isArray(requestsRes.data) ? requestsRes.data : (Array.isArray(requestsRes) ? requestsRes : []);
-        setAmbulanceRequests(requestsData);
       }
     } catch (err) {
       console.error('Error loading data:', err);
@@ -196,35 +185,65 @@ const HospitalAdminDashboard = () => {
 
   const renderPieChart = (breakdown) => {
     const total = breakdown.reduce((sum, item) => sum + item.value, 0);
-    const radius = 60;
-    const circumference = 2 * Math.PI * radius;
-    let offset = 0;
+    const center = 110;
+    const radius = 82;
+    let currentAngle = -90;
+
+    const getCoordinates = (angle) => {
+      const angleInRadians = (Math.PI / 180) * angle;
+      return {
+        x: center + radius * Math.cos(angleInRadians),
+        y: center + radius * Math.sin(angleInRadians)
+      };
+    };
 
     return (
-      <svg width="220" height="220" viewBox="0 0 220 220">
-        <g transform="translate(110, 110)">
-          {breakdown.map((item) => {
-            const sliceLength = total ? (item.value / total) * circumference : 0;
-            const circle = (
-              <circle
-                key={item.label}
-                r={radius}
-                fill="transparent"
-                stroke={item.color}
-                strokeWidth="28"
-                strokeDasharray={`${sliceLength} ${circumference - sliceLength}`}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform="rotate(-90)"
-              />
-            );
-            offset -= sliceLength;
-            return circle;
-          })}
-          <circle r={radius - 20} fill="#fff" />
-        </g>
+      <svg className="revenue-pie-chart" width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="Revenue pie chart">
+        {!total && (
+          <circle cx={center} cy={center} r={radius} fill="#d0d7e6">
+            <title>No revenue found for this period</title>
+          </circle>
+        )}
+        {breakdown.map((item) => {
+          if (!total || item.value <= 0) return null;
+
+          const sliceAngle = (item.value / total) * 360;
+          const start = getCoordinates(currentAngle);
+          const end = getCoordinates(currentAngle + sliceAngle);
+          const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+          const pathData = sliceAngle >= 360
+            ? [
+                `M ${center} ${center}`,
+                `L ${center} ${center - radius}`,
+                `A ${radius} ${radius} 0 1 1 ${center - 0.01} ${center - radius}`,
+                'Z'
+              ].join(' ')
+            : [
+                `M ${center} ${center}`,
+                `L ${start.x} ${start.y}`,
+                `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+                'Z'
+              ].join(' ');
+
+          currentAngle += sliceAngle;
+
+          return (
+            <path
+              key={item.label}
+              d={pathData}
+              fill={item.color}
+            >
+              <title>{`${item.label}: ${formatCurrency(item.value)} (${Math.round((item.value / total) * 100)}%)`}</title>
+            </path>
+          );
+        })}
       </svg>
     );
+  };
+
+  const getRevenuePercentage = (value, total) => {
+    if (!total || value <= 0) return 0;
+    return Math.round((value / total) * 100);
   };
 
   const ReviewTab = () => (
@@ -251,44 +270,51 @@ const HospitalAdminDashboard = () => {
       {reviewLoading ? (
         <div className="review-loading">Loading revenue review...</div>
       ) : (
-        <div className="review-grid">
-          <div className="review-summary">
-            <div className="revenue-card">
-              <p>Total Revenue</p>
-              <strong>{formatCurrency(revenueSummary.totalRevenue)}</strong>
-            </div>
-            <div className="revenue-card">
-              <p>Appointment Earnings</p>
-              <strong>{formatCurrency(revenueSummary.appointmentsRevenue)}</strong>
-              <small>{revenueSummary.appointmentsCount} paid appointments</small>
-            </div>
-            <div className="revenue-card">
-              <p>Consultation Earnings</p>
-              <strong>{formatCurrency(revenueSummary.consultationsRevenue)}</strong>
-              <small>{revenueSummary.consultationsCount} paid consultations</small>
-            </div>
-          </div>
+        (() => {
+          const chartTotal = revenueSummary.breakdown.reduce((sum, item) => sum + item.value, 0);
 
-          <div className="review-chart-card">
-            <div className="review-chart-title">Revenue by Service</div>
-            {revenueSummary.totalRevenue > 0 ? (
-              <>
+          return (
+            <div className="review-grid">
+              <div className="review-summary">
+                <div className="revenue-card">
+                  <p>Total Revenue</p>
+                  <strong>{formatCurrency(revenueSummary.totalRevenue)}</strong>
+                </div>
+                <div className="revenue-card">
+                  <p>Appointment Earnings</p>
+                  <strong>{formatCurrency(revenueSummary.appointmentsRevenue)}</strong>
+                  <small>{revenueSummary.appointmentsCount} paid appointments</small>
+                </div>
+                <div className="revenue-card">
+                  <p>Consultation Earnings</p>
+                  <strong>{formatCurrency(revenueSummary.consultationsRevenue)}</strong>
+                  <small>{revenueSummary.consultationsCount} paid consultations</small>
+                </div>
+              </div>
+
+              <div className="review-chart-card">
+                <div className="review-chart-title">Revenue by Service</div>
                 {renderPieChart(revenueSummary.breakdown)}
                 <div className="pie-legend">
                   {revenueSummary.breakdown.map((item) => (
                     <div key={item.label} className="pie-legend-item">
-                      <span className="pie-dot" style={{ backgroundColor: item.color }} />
-                      <span>{item.label}</span>
-                      <strong>{formatCurrency(item.value)}</strong>
+                      <div className="pie-legend-main">
+                        <span className="pie-dot" style={{ backgroundColor: item.color }} />
+                        <span>{item.label}</span>
+                      </div>
+                      <strong className="pie-legend-value">
+                        {formatCurrency(item.value)} · {getRevenuePercentage(item.value, chartTotal)}%
+                      </strong>
                     </div>
                   ))}
                 </div>
-              </>
-            ) : (
-              <div className="empty-pie">No paid earnings found for this period.</div>
-            )}
-          </div>
-        </div>
+                {revenueSummary.totalRevenue === 0 && (
+                  <div className="empty-pie">Add paid earnings to see the pie split dynamically.</div>
+                )}
+              </div>
+            </div>
+          );
+        })()
       )}
     </div>
   );
@@ -356,21 +382,6 @@ const HospitalAdminDashboard = () => {
     }
   };
 
-  const handleUpdateAmbulanceStatus = async (requestId, newStatus) => {
-    if (!newStatus) return;
-    
-    try {
-      await ambulanceApi.updateAmbulanceRequestStatus(requestId, newStatus);
-      // Reload requests
-      const requestsRes = await ambulanceApi.getHospitalAmbulanceRequests();
-      const requestsData = Array.isArray(requestsRes.data) ? requestsRes.data : (Array.isArray(requestsRes) ? requestsRes : []);
-      setAmbulanceRequests(requestsData);
-      alert('Ambulance request status updated successfully!');
-    } catch (err) {
-      alert('Failed to update ambulance request: ' + err.message);
-    }
-  };
-
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
 
@@ -378,9 +389,6 @@ const HospitalAdminDashboard = () => {
       if (activeTab === 'doctors') {
         await doctorApi.deleteDoctor(id);
         setDoctors(doctors.filter(d => d.id !== id));
-      } else if (activeTab === 'ambulances') {
-        await ambulanceApi.deleteAmbulance(id);
-        setAmbulances(ambulances.filter(a => a.id !== id));
       } else if (activeTab === 'edoctors') {
         await edoctorApi.deleteEdoctor(id);
         setEdoctors(edoctors.filter(e => e.id !== id));
@@ -420,17 +428,6 @@ const HospitalAdminDashboard = () => {
           submitData.doctor_image_url = formData.doctor_image_url;
         }
         
-        if (formData.ambulance_image_file) {
-          try {
-            const res = await hospitalApi.uploadImage(formData.ambulance_image_file);
-            submitData.ambulance_image_url = res.data.image_url;
-          } catch (err) {
-            console.error('Ambulance image upload failed:', err);
-          }
-        } else if (formData.ambulance_image_url) {
-          submitData.ambulance_image_url = formData.ambulance_image_url;
-        }
-        
         if (formData.edoctor_image_file) {
           try {
             const res = await hospitalApi.uploadImage(formData.edoctor_image_file);
@@ -445,7 +442,6 @@ const HospitalAdminDashboard = () => {
         // Remove the temporary image file fields
         delete submitData.hospital_image_file;
         delete submitData.doctor_image_file;
-        delete submitData.ambulance_image_file;
         delete submitData.edoctor_image_file;
         delete submitData.hospital_image_url;
         
@@ -484,42 +480,6 @@ const HospitalAdminDashboard = () => {
           const res = await doctorApi.addDoctor(submitData);
           const newDoctor = res.data;
           setDoctors([...doctors, newDoctor]);
-        }
-      } else if (activeTab === 'ambulances') {
-        let submitData = {
-          ...formData,
-          hospital: hospital.id,
-          cost_per_km: parseFloat(formData.cost_per_km),
-          district: formData.district ? parseInt(formData.district) : null
-        };
-        
-        // Upload ambulance image if file provided
-        if (formData.image_file) {
-          try {
-            const res = await hospitalApi.uploadImage(formData.image_file);
-            submitData.image_url = res.data.image_url;
-          } catch (err) {
-            console.error('Image upload failed:', err);
-            // Fall back to hospital default or provided URL
-            if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.ambulance_image_url) {
-              submitData.image_url = hospital.ambulance_image_url;
-            }
-          }
-        } else if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.ambulance_image_url) {
-          // Use hospital's default ambulance image if no specific image provided
-          submitData.image_url = hospital.ambulance_image_url;
-        }
-        
-        delete submitData.image_file;
-        
-        if (editingItem) {
-          const res = await ambulanceApi.updateAmbulance(editingItem.id, submitData);
-          const updated = res.data;
-          setAmbulances(ambulances.map(a => a.id === updated.id ? updated : a));
-        } else {
-          const res = await ambulanceApi.addAmbulance(submitData);
-          const newAmbulance = res.data;
-          setAmbulances([...ambulances, newAmbulance]);
         }
       } else if (activeTab === 'edoctors') {
         let submitData = {...formData};
@@ -589,44 +549,6 @@ const HospitalAdminDashboard = () => {
               <td>
                 <button className="btn-edit" onClick={() => handleEditClick(doctor)}>Edit</button>
                 <button className="btn-delete" onClick={() => handleDelete(doctor.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  const AmbulancesTab = () => (
-    <div className="admin-content">
-      <h2>🚑 Manage Ambulances</h2>
-      <button className="btn btn-primary" onClick={handleAddClick}>+ Add Ambulance</button>
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Vehicle Type</th>
-            <th>Driver</th>
-            <th>Phone</th>
-            <th>Cost/KM</th>
-            <th>Public</th>
-            <th>Verified</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ambulances.map(ambulance => (
-            <tr key={ambulance.id}>
-              <td>{ambulance.name}</td>
-              <td>{ambulance.vehicle_type}</td>
-              <td>{ambulance.driver_name}</td>
-              <td>{ambulance.phone_number}</td>
-              <td>৳{parseFloat(ambulance.cost_per_km).toFixed(2)}</td>
-              <td>{ambulance.is_available ? '✓' : '✗'}</td>
-              <td>{ambulance.is_verified ? '✓ Verified' : '✗ Not Verified'}</td>
-              <td>
-                <button className="btn-edit" onClick={() => handleEditClick(ambulance)}>Edit</button>
-                <button className="btn-delete" onClick={() => handleDelete(ambulance.id)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -792,53 +714,6 @@ const HospitalAdminDashboard = () => {
     </div>
   );
 
-  const AmbulanceRequestsTab = () => (
-    <div className="admin-content">
-      <h2>🚑 Ambulance Service Requests</h2>
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Request ID</th>
-            <th>Patient Name</th>
-            <th>Contact</th>
-            <th>Vehicle Type</th>
-            <th>Urgency</th>
-            <th>Pickup Location</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ambulanceRequests.length === 0 ? (
-            <tr><td colSpan="8" style={{textAlign: 'center', padding: '20px'}}>No ambulance requests found</td></tr>
-          ) : (
-            ambulanceRequests.map(request => (
-              <tr key={request.id}>
-                <td>{request.request_id}</td>
-                <td>{request.patient_name}</td>
-                <td>{request.contact_phone}</td>
-                <td>{request.vehicle_type_required}</td>
-                <td><span style={{color: request.urgency === 'critical' ? '#d32f2f' : request.urgency === 'urgent' ? '#f57c00' : '#1976d2'}}>{request.urgency}</span></td>
-                <td>{request.pickup_location}</td>
-                <td><span style={{backgroundColor: request.status === 'completed' ? '#d4edda' : '#fff3cd', padding: '4px 8px', borderRadius: '4px'}}>{request.status}</span></td>
-                <td>
-                  <select value="" onChange={(e) => handleUpdateAmbulanceStatus(request.id, e.target.value)} style={{padding: '4px', marginRight: '5px'}}>
-                    <option value="">Update Status</option>
-                    <option value="accepted">Accept</option>
-                    <option value="on_the_way">On The Way</option>
-                    <option value="arrived">Arrived</option>
-                    <option value="completed">Complete</option>
-                    <option value="cancelled">Cancel</option>
-                  </select>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-
   if (loading && !hospital) {
     return <div className="loading">Loading Hospital Dashboard...</div>;
   }
@@ -858,12 +733,6 @@ const HospitalAdminDashboard = () => {
           onClick={() => setActiveTab('doctors')}
         >
           🩺 Doctors
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'ambulances' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ambulances')}
-        >
-          🚑 Ambulances
         </button>
         <button
           className={`tab-button ${activeTab === 'edoctors' ? 'active' : ''}`}
@@ -890,12 +759,6 @@ const HospitalAdminDashboard = () => {
           📈 Revenue Review
         </button>
         <button
-          className={`tab-button ${activeTab === 'ambulance_requests' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ambulance_requests')}
-        >
-          📞 Requests
-        </button>
-        <button
           className={`tab-button ${activeTab === 'info' ? 'active' : ''}`}
           onClick={() => setActiveTab('info')}
         >
@@ -905,12 +768,10 @@ const HospitalAdminDashboard = () => {
 
       <div className="tab-content">
         {activeTab === 'doctors' && <DoctorsTab />}
-        {activeTab === 'ambulances' && <AmbulancesTab />}
         {activeTab === 'edoctors' && <EdoctorsTab />}
         {activeTab === 'appointments' && <AppointmentsTab />}
         {activeTab === 'consultations' && <ConsultationsTab />}
         {activeTab === 'review' && <ReviewTab />}
-        {activeTab === 'ambulance_requests' && <AmbulanceRequestsTab />}
         {activeTab === 'info' && <HospitalInfoTab />}
       </div>
 
@@ -1063,90 +924,6 @@ const HospitalAdminDashboard = () => {
                     <input
                       type="url"
                       placeholder="Doctor image URL"
-                      value={formData.image_url || ''}
-                      onChange={(e) => setFormData({...formData, image_url: e.target.value})}
-                      style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
-                    />
-                  </div>
-                </>
-              )}
-              {activeTab === 'ambulances' && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                  <select
-                    value={formData.vehicle_type || ''}
-                    onChange={(e) => setFormData({...formData, vehicle_type: e.target.value})}
-                    required
-                  >
-                    <option>Select Vehicle Type</option>
-                    <option value="basic">Basic Ambulance</option>
-                    <option value="advanced">Advanced Life Support</option>
-                    <option value="icu">ICU Ambulance</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Driver Name"
-                    value={formData.driver_name || ''}
-                    onChange={(e) => setFormData({...formData, driver_name: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Phone"
-                    value={formData.phone_number || ''}
-                    onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Cost Per KM"
-                    step="0.01"
-                    value={formData.cost_per_km || ''}
-                    onChange={(e) => setFormData({...formData, cost_per_km: e.target.value})}
-                    required
-                  />
-                  <select
-                    value={formData.district || ''}
-                    onChange={(e) => setFormData({...formData, district: e.target.value})}
-                    required
-                  >
-                    <option value="">Select District</option>
-                    <option value="1">Dhaka</option>
-                  </select>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={formData.is_available !== false}
-                      onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
-                    />
-                    Make available for public (visible without login)
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={formData.is_verified === true}
-                      onChange={(e) => setFormData({...formData, is_verified: e.target.checked})}
-                    />
-                    Verify this ambulance (show verification badge)
-                  </label>
-                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
-                    <h4 style={{ marginTop: 0 }}>📸 Ambulance Image (Optional)</h4>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setFormData({...formData, image_file: e.target.files[0]})}
-                      style={{ padding: '8px', marginBottom: '10px' }}
-                    />
-                    <small style={{ display: 'block', color: '#666', marginBottom: '5px' }}>Or enter image URL:</small>
-                    <input
-                      type="url"
-                      placeholder="Ambulance image URL"
                       value={formData.image_url || ''}
                       onChange={(e) => setFormData({...formData, image_url: e.target.value})}
                       style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
@@ -1419,24 +1196,6 @@ const HospitalAdminDashboard = () => {
                             placeholder="Doctor image URL"
                             value={formData.doctor_image_url || ''}
                             onChange={(e) => setFormData({...formData, doctor_image_url: e.target.value})}
-                            style={{ marginTop: '5px', padding: '8px', width: '100%', boxSizing: 'border-box' }}
-                          />
-                        </div>
-
-                        <div style={{ marginBottom: '15px' }}>
-                          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Ambulance Image (for ambulances added)</label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setFormData({...formData, ambulance_image_file: e.target.files[0]})}
-                            style={{ padding: '8px' }}
-                          />
-                          <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
-                          <input
-                            type="url"
-                            placeholder="Ambulance image URL"
-                            value={formData.ambulance_image_url || ''}
-                            onChange={(e) => setFormData({...formData, ambulance_image_url: e.target.value})}
                             style={{ marginTop: '5px', padding: '8px', width: '100%', boxSizing: 'border-box' }}
                           />
                         </div>

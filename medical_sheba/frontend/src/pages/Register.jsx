@@ -1,18 +1,46 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import AuthForm from '../components/AuthForm';
 import useAuthStore from '../context/authStore';
 import { useSEO, pageMetadata } from '../utils/seo';
 
 export default function Register() {
-  // Set SEO metadata for this page
   useSEO(pageMetadata.register);
-  
+
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const { register } = useAuthStore();
   const navigate = useNavigate();
+
+  const getRegistrationError = (err) => {
+    const data = err.response?.data;
+
+    if (!data) {
+      return 'Registration failed. Please try again.';
+    }
+
+    if (typeof data === 'string') {
+      return data;
+    }
+
+    if (data.detail) {
+      return data.detail;
+    }
+
+    if (data.message) {
+      return data.message;
+    }
+
+    const messages = Object.entries(data)
+      .map(([field, value]) => {
+        const text = Array.isArray(value) ? value.join(', ') : String(value);
+        return `${field.replaceAll('_', ' ')}: ${text}`;
+      })
+      .filter(Boolean);
+
+    return messages.length ? messages.join(' | ') : 'Registration failed. Please try again.';
+  };
 
   const handleRegister = async (formData) => {
     try {
@@ -25,8 +53,7 @@ export default function Register() {
         return;
       }
 
-      // Split full name into first_name and last_name
-      const nameParts = formData.name.trim().split(' ');
+      const nameParts = formData.name.trim().split(/\s+/);
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || nameParts[0];
 
@@ -39,111 +66,65 @@ export default function Register() {
         roles: formData.roles || ['patient'],
       };
 
-      console.log('Registration payload:', payload);
-
       await register(payload);
       navigate('/');
     } catch (err) {
       console.error('Registration error:', err);
-      console.error('Error response:', err.response?.data);
-      
-      // Extract error message from various possible response formats
-      let errorMsg = 'Registration failed. Please try again.';
-      
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          errorMsg = err.response.data;
-        } else if (err.response.data.detail) {
-          errorMsg = err.response.data.detail;
-        } else if (err.response.data.message) {
-          errorMsg = err.response.data.message;
-        } else if (typeof err.response.data === 'object') {
-          // Handle field-specific errors
-          const errors = [];
-          for (const [field, messages] of Object.entries(err.response.data)) {
-            if (Array.isArray(messages)) {
-              errors.push(`${field}: ${messages.join(', ')}`);
-            } else if (typeof messages === 'string') {
-              errors.push(`${field}: ${messages}`);
-            }
-          }
-          if (errors.length > 0) {
-            errorMsg = errors.join(' | ');
-          }
-        }
-      }
-      
-      setError(errorMsg);
+      setError(getRegistrationError(err));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-2xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl shadow-lg mb-4">
-            <UserPlus size={32} className="text-white" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Create Your Account
-          </h1>
-          <p className="text-gray-600">
-            Join Medi Sheba and access our healthcare services
-          </p>
-        </div>
-
-        {/* Card */}
-        <div className="card shadow-xl border-0">
-          <div className="card-body p-8">
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-slide-up">
-                <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs font-bold">!</span>
-                </div>
-                <p className="text-red-700 text-sm font-medium">{error}</p>
+    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-2xl items-center">
+        <div className="w-full overflow-hidden rounded-[14px] border border-gray-200 bg-white shadow-xl shadow-slate-900/10">
+          <section className="px-5 py-7 sm:px-8 sm:py-9 lg:p-10">
+            <div className="mx-auto w-full max-w-xl">
+              <div className="mb-7 text-center">
+                <p className="text-sm font-semibold uppercase tracking-wide text-primary-600">Registration</p>
+                <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">Set up your profile</h2>
+                <p className="mt-2 text-sm text-gray-600">
+                  Choose the account type that matches how you will use Medi Sheba.
+                </p>
               </div>
-            )}
 
-            {/* Form */}
-            <AuthForm type="register" onSubmit={handleRegister} loading={loading} />
+              {error && (
+                <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                  <div className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-500">
+                    <span className="text-xs font-bold text-white">!</span>
+                  </div>
+                  <p className="text-sm font-semibold text-red-700">{error}</p>
+                </div>
+              )}
 
-            {/* Back to Login */}
-            <p className="text-center text-sm text-gray-600 mt-6 flex items-center justify-center gap-1">
-              Already have an account?{' '}
-              <Link 
-                to="/login" 
-                className="font-semibold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1 transition-colors"
-              >
-                <ArrowLeft size={16} />
-                Sign in here
-              </Link>
-            </p>
-          </div>
-        </div>
+              <AuthForm type="register" onSubmit={handleRegister} loading={loading} />
 
-        {/* Footer Info */}
-        <div className="mt-8 text-center text-xs text-gray-600">
-          <p>
-            By registering, you agree to our{' '}
-            <Link to="/terms" className="text-primary-600 hover:text-primary-700 font-medium">
-              Terms of Service
-            </Link>
-            {' '}and{' '}
-            <Link to="/privacy" className="text-primary-600 hover:text-primary-700 font-medium">
-              Privacy Policy
-            </Link>
-          </p>
-        </div>
+              <div className="mt-6 flex flex-col gap-4 border-t border-gray-200 pt-6 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+                <p>Already have an account?</p>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 font-bold text-primary-600 transition hover:text-primary-700"
+                >
+                  <ArrowLeft size={16} />
+                  Sign in here
+                </Link>
+              </div>
 
-        {/* Info Box */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-xs text-gray-700">
-            <span className="font-semibold text-blue-900">💡 Tip:</span> You can register as a Patient, Pharmacy Admin, or Hospital Admin, or select multiple roles.
-          </p>
+              <p className="mt-6 text-xs leading-6 text-gray-500">
+                By registering, you agree to our{' '}
+                <Link to="/terms" className="font-semibold text-primary-600 hover:text-primary-700">
+                  Terms of Service
+                </Link>
+                {' '}and{' '}
+                <Link to="/privacy" className="font-semibold text-primary-600 hover:text-primary-700">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </div>
+          </section>
         </div>
       </div>
     </div>
