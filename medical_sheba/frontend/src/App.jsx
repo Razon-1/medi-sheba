@@ -29,6 +29,7 @@ import HospitalAdminDashboard from './pages/HospitalAdminDashboard';
 import HospitalCreatePage from './pages/HospitalCreatePage';
 
 import './styles/App.css';
+import './styles/Responsive.css';
 
 function App() {
   const { initializeAuth } = useAuthStore();

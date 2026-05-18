@@ -1,18 +1,22 @@
 .ambulance-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f6f8fb;
 }
 
 .ambulance-page .page-header {
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: white;
-  padding: 40px 20px;
+  padding: clamp(32px, 6vw, 56px) 20px;
   text-align: center;
+  border-radius: 14px;
+  margin-bottom: 24px;
 }
 
 .ambulance-page .page-header h1 {
-  font-size: 32px;
+  font-size: clamp(28px, 5vw, 42px);
   margin-bottom: 10px;
+  color: white;
+  letter-spacing: 0;
 }
 
 .ambulance-page .page-header p {
@@ -22,15 +26,17 @@
 
 .search-filter-section {
   background: white;
-  padding: 30px;
-  margin-bottom: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: clamp(18px, 3vw, 28px);
+  margin-bottom: 20px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid #eef2f7;
 }
 
 .search-box {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
   margin-bottom: 20px;
   align-items: center;
 }
@@ -40,7 +46,7 @@
 }
 
 .search-box input {
-  flex: 1;
+  min-width: 0;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -69,6 +75,8 @@
 
 .filter-buttons {
   margin-top: 20px;
+  display: grid;
+  gap: 12px;
 }
 
 .filter-buttons h3 {
@@ -108,8 +116,9 @@
   padding: 15px 20px;
   background: white;
   margin-bottom: 20px;
-  border-radius: 4px;
+  border-radius: 10px;
   text-align: center;
+  border: 1px solid #eef2f7;
 }
 
 .filter-info strong {
@@ -119,17 +128,20 @@
 
 .ambulance-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
   gap: 20px;
-  padding: 0 20px 40px;
+  padding: 0 0 40px;
 }
 
 .ambulance-card {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid #eef2f7;
   overflow: hidden;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .ambulance-card:hover {
@@ -140,7 +152,8 @@
 .ambulance-image {
   position: relative;
   width: 100%;
-  height: 250px;
+  aspect-ratio: 16 / 10;
+  height: auto;
   overflow: hidden;
   background: #f0f0f0;
 }
@@ -172,21 +185,25 @@
 .ambulance-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 20px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .ambulance-name-section {
   display: flex;
-  align-items: center;
-  gap: 15px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
 }
 
 .ambulance-name-section h3 {
   margin: 0;
   font-size: 18px;
   color: #333;
+  overflow-wrap: anywhere;
 }
 
 .vehicle-type-badge {
@@ -195,7 +212,7 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  white-space: nowrap;
+  line-height: 1.25;
 }
 
 .availability-status {
@@ -221,20 +238,22 @@
 }
 
 .ambulance-details {
-  padding: 20px;
+  padding: 18px;
+  flex: 1;
 }
 
 .detail-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 12px;
   margin-bottom: 15px;
 }
 
 .detail-item {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 
 .detail-item svg {
@@ -245,12 +264,14 @@
 .detail-item .label {
   font-weight: 600;
   color: #666;
-  min-width: 70px;
+  flex: 0 0 68px;
 }
 
 .detail-item .value {
   color: #333;
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .address-info {
@@ -265,12 +286,14 @@
 .address-info .label {
   font-weight: 600;
   color: #666;
-  min-width: 80px;
+  flex: 0 0 72px;
 }
 
 .address-info .value {
   color: #333;
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .rating-section {
@@ -282,6 +305,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-wrap: wrap;
 }
 
 .rating .star {
@@ -302,7 +326,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding: 20px;
+  padding: 18px;
   border-top: 1px solid #f0f0f0;
 }
 
@@ -324,7 +348,7 @@
 
 .btn-call:hover {
   background: #45a049;
-  transform: scale(1.02);
+  transform: translateY(-1px);
 }
 
 .btn-book {
@@ -334,7 +358,14 @@
 
 .btn-book:hover {
   background: #c0392b;
-  transform: scale(1.02);
+  transform: translateY(-1px);
+}
+
+.btn-call:disabled,
+.btn-book:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .no-results {
@@ -359,31 +390,6 @@
 .no-results p {
   margin-bottom: 20px;
   font-size: 14px;
-}
-
-@media (max-width: 768px) {
-  .ambulance-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .ambulance-name-section {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
-  .availability-status {
-    width: 100%;
-    text-align: left;
-  }
-
-  .detail-row {
-    grid-template-columns: 1fr;
-  }
-
-  .action-buttons {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Modal Styles */
@@ -505,15 +511,15 @@
   flex-shrink: 0;
 }
 
-form {
+.ambulance-request-form {
   padding: 20px;
 }
 
-.form-group {
+.ambulance-request-form .form-group {
   margin-bottom: 18px;
 }
 
-.form-group label {
+.ambulance-request-form .form-group label {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
@@ -521,9 +527,9 @@ form {
   font-size: 14px;
 }
 
-.form-group input,
-.form-group textarea,
-.form-group select {
+.ambulance-request-form .form-group input,
+.ambulance-request-form .form-group textarea,
+.ambulance-request-form .form-group select {
   width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
@@ -533,26 +539,26 @@ form {
   transition: border-color 0.3s;
 }
 
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
+.ambulance-request-form .form-group input:focus,
+.ambulance-request-form .form-group textarea:focus,
+.ambulance-request-form .form-group select:focus {
   outline: none;
   border-color: #e74c3c;
   box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
 }
 
-.form-group textarea {
+.ambulance-request-form .form-group textarea {
   resize: vertical;
   min-height: 80px;
 }
 
-.form-row {
+.ambulance-request-form .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
 }
 
-.form-actions {
+.ambulance-request-form .form-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -598,20 +604,172 @@ form {
 }
 
 @media (max-width: 600px) {
-  .modal-content {
-    border-radius: 0;
-    max-height: 100vh;
+  .ambulance-page .page-header {
+    border-radius: 10px;
   }
 
-  .form-row {
+  .search-box {
     grid-template-columns: 1fr;
   }
 
-  .form-actions {
-    grid-template-columns: 1fr;
+  .search-box svg {
+    display: none;
+  }
+
+  .search-box .btn-search {
+    width: 100%;
+  }
+
+  .button-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-btn {
+    width: 100%;
+    padding: 10px 8px;
+  }
+
+  .ambulance-header {
+    flex-direction: column;
+  }
+
+  .availability-status {
+    text-align: left;
   }
 
   .action-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    border-radius: 10px;
+    max-height: calc(100vh - 16px);
+  }
+
+  .ambulance-request-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ambulance-request-form .form-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Page-scoped protection from other globally imported page styles. */
+.ambulance-page .ambulance-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+}
+
+.ambulance-page .ambulance-card {
+  padding: 0;
+}
+
+.ambulance-page .ambulance-card .detail-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.ambulance-page .ambulance-card .detail-item {
+  display: grid;
+  grid-template-columns: 22px minmax(72px, auto) minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  color: #334155;
+  font-size: 0.95rem;
+  min-width: 0;
+  flex: none;
+}
+
+.ambulance-page .ambulance-card .detail-item svg {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: #e74c3c;
+  flex-shrink: 0;
+}
+
+.ambulance-page .ambulance-card .detail-item .label,
+.ambulance-page .ambulance-card .address-info .label {
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.35;
+  min-width: 0;
+  flex: none;
+}
+
+.ambulance-page .ambulance-card .detail-item .value,
+.ambulance-page .ambulance-card .address-info .value {
+  color: #111827;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.ambulance-page .ambulance-card .address-info {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.ambulance-page .ambulance-card .rating-section {
+  margin: 12px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid #eef2f7;
+  border-bottom: 0;
+}
+
+.ambulance-page .ambulance-card .rating {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ambulance-page .ambulance-card .rating .star {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.ambulance-page .ambulance-card .rating-value,
+.ambulance-page .ambulance-card .reviews {
+  margin-left: 4px;
+  line-height: 1.3;
+}
+
+.ambulance-page .ambulance-card .action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-content: stretch;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-top: 0;
+  padding: 18px;
+}
+
+.ambulance-page .ambulance-card .btn-call,
+.ambulance-page .ambulance-card .btn-book {
+  width: 100%;
+  min-width: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .ambulance-page .ambulance-list {
+    grid-template-columns: 1fr;
+  }
+
+  .ambulance-page .ambulance-card .action-buttons {
     grid-template-columns: 1fr;
   }
 }

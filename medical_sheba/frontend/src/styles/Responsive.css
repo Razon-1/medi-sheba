@@ -1,0 +1,943 @@
+/* Final responsive layer for the full React app.
+   Keep this imported after page/component styles so it can normalize older pages. */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+button,
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-search,
+.btn-submit,
+.btn-confirm,
+.btn-cancel,
+.btn-view,
+.btn-book,
+.btn-call,
+.btn-contact,
+.btn-plan,
+.filter-btn,
+.tab-button,
+.period-button {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.main-content {
+  width: min(100%, 1400px);
+  padding-left: clamp(0.875rem, 3vw, 2rem);
+  padding-right: clamp(0.875rem, 3vw, 2rem);
+}
+
+.home,
+.doctors-page,
+.hospitals-page,
+.hospital-detail,
+.doctor-detail,
+.blood-page,
+.ambulance-page,
+.emedicine-page,
+.edoctor-container,
+.appointments-page,
+.support-page,
+.contact-sales-page,
+.payment-demo-page,
+.pharmacy-admin-dashboard,
+.admin-dashboard,
+.hospital-container,
+.pharmacy-create-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.page-header,
+.hero,
+.admin-header,
+.dashboard-header,
+.header-banner {
+  overflow: hidden;
+}
+
+.page-header .header-content,
+.hero-content,
+.detail-header,
+.hospital-hero-content,
+.contact-container,
+.support-content,
+.doctor-summary,
+.pharmacy-summary,
+.appointment-header,
+.ambulance-header,
+.order-header,
+.tab-header,
+.review-header,
+.filters-section,
+.search-filter-section,
+.blood-actions,
+.edoctor-tabs,
+.dashboard-tabs,
+.admin-tabs,
+.review-periods,
+.form-actions,
+.modal-actions,
+.appointment-actions,
+.doctor-actions,
+.ambulance-actions,
+.order-actions,
+.payment-actions,
+.subscription-actions,
+.hero-buttons,
+.filter-buttons,
+.button-group,
+.auth-buttons,
+.user-section {
+  min-width: 0;
+}
+
+.search-box,
+.filter-section,
+.search-section,
+.filters-section,
+.blood-actions,
+.search-filter-section {
+  flex-wrap: wrap;
+}
+
+.search-box input,
+.search-section input,
+.filter-section input,
+.filter-group,
+.form-group,
+.doctor-info-text,
+.hospital-info,
+.ambulance-name-section,
+.order-id,
+.order-info,
+.contact-card-content,
+.detail-item,
+.info-row,
+.value,
+.label {
+  min-width: 0;
+}
+
+.value,
+.address,
+.notes-section,
+.detail-item,
+.info-row,
+.doctor-info-text h3,
+.hospital-info h3,
+.ambulance-name-section h3,
+.order-id strong,
+.medicine-name,
+.user-name,
+.user-name-mobile {
+  overflow-wrap: anywhere;
+}
+
+.features-grid,
+.stats-grid,
+.benefits-grid,
+.subscription-grid,
+.doctors-grid,
+.hospitals-grid,
+.donors-grid,
+.ambulance-list,
+.pharmacies-grid,
+.medicines-grid,
+.consultations-list,
+.slots-grid,
+.orders-grid,
+.quick-info,
+.services-grid,
+.contact-info-grid,
+.details-grid,
+.facilities-grid,
+.nearby-grid,
+.review-grid,
+.review-summary {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.admin-content,
+.dashboard-content,
+.table-responsive,
+.comparison-table,
+.payment-table-wrapper,
+.medicines-list,
+.appointments-list,
+.doctors-list,
+.consultations-list {
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table,
+.medicines-table,
+.comparison-table table {
+  min-width: 720px;
+}
+
+.modal-overlay,
+.booking-modal-overlay {
+  padding: clamp(0.75rem, 3vw, 1.5rem);
+  align-items: center;
+}
+
+.modal-content,
+.booking-modal,
+.order-medicines-modal,
+.payment-modal,
+.medicine-form,
+.pharmacy-form,
+.form-container,
+.contact-card,
+.subscription-box {
+  width: min(100%, 680px);
+  max-width: calc(100vw - 1.5rem);
+}
+
+.modal-content,
+.booking-modal,
+.order-medicines-modal,
+.payment-modal {
+  max-height: calc(100vh - 1.5rem);
+  overflow-y: auto;
+}
+
+.nav-menu.active {
+  max-height: min(80vh, 680px);
+  overflow-y: auto;
+}
+
+@media (max-width: 1200px) {
+  .main-content {
+    padding-top: 2rem;
+  }
+
+  .features-grid,
+  .subscription-grid,
+  .doctors-grid,
+  .hospitals-grid,
+  .orders-grid {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .main-content {
+    padding-top: 1.5rem;
+  }
+
+  h1,
+  .hero-text h1,
+  .page-header h1,
+  .header-content h1,
+  .header-banner h1 {
+    font-size: clamp(1.85rem, 7vw, 2.45rem);
+    line-height: 1.15;
+  }
+
+  h2,
+  .section-title,
+  .cta-section h2,
+  .review-header h2 {
+    font-size: clamp(1.45rem, 5vw, 2rem);
+  }
+
+  .hero,
+  .cta-section,
+  .why-us,
+  .admin-header,
+  .dashboard-header,
+  .header-banner {
+    border-radius: 0.85rem;
+    padding: clamp(1.5rem, 5vw, 2.25rem);
+  }
+
+  .hero-content,
+  .detail-header,
+  .hospital-hero-content,
+  .contact-container,
+  .support-content,
+  .review-grid,
+  .form-row,
+  .doctor-details .detail-row,
+  .ambulance-details .detail-row,
+  .pharmacy-details .detail-row,
+  .appointment-details,
+  .form-row.full {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tabs,
+  .dashboard-tabs,
+  .edoctor-tabs,
+  .review-periods,
+  .filter-buttons,
+  .button-group {
+    display: flex;
+    gap: 0.6rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-tabs .tab-button,
+  .dashboard-tabs .tab-button,
+  .edoctor-tabs .tab-button,
+  .review-periods .period-button,
+  .filter-buttons .filter-btn,
+  .button-group .filter-btn {
+    flex: 0 0 auto;
+  }
+
+  .search-box {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .search-box button,
+  .btn-search {
+    width: 100%;
+  }
+
+  .admin-content,
+  .dashboard-content,
+  .form-container,
+  .medicine-form,
+  .pharmacy-form,
+  .contact-form-section,
+  .contact-info-section {
+    padding: clamp(1rem, 4vw, 1.5rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem 0.875rem;
+  }
+
+  .stats-grid,
+  .benefits-grid,
+  .quick-stats,
+  .details-grid,
+  .facilities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero,
+  .stats,
+  .services,
+  .why-us,
+  .subscription,
+  .cta-section {
+    margin-bottom: 2.25rem;
+  }
+
+  .hero-buttons,
+  .form-actions,
+  .modal-actions,
+  .appointment-actions,
+  .doctor-actions,
+  .ambulance-actions,
+  .order-actions,
+  .payment-actions,
+  .subscription-actions,
+  .admin-type-toggle,
+  .filters-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-buttons button,
+  .form-actions button,
+  .modal-actions button,
+  .appointment-actions button,
+  .doctor-actions button,
+  .ambulance-actions button,
+  .order-actions button,
+  .payment-actions button,
+  .subscription-actions button,
+  .admin-type-toggle button,
+  .filters-section button,
+  .filters-section select {
+    width: 100%;
+  }
+
+  .appointment-header,
+  .doctor-info-header,
+  .donor-header,
+  .ambulance-header,
+  .order-header,
+  .review-header,
+  .tab-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .doctor-avatar,
+  .appointment-card .doctor-avatar {
+    flex-shrink: 0;
+  }
+
+  .revenue-card strong,
+  .plan-price .price,
+  .stat-card h3 {
+    font-size: clamp(1.45rem, 9vw, 2rem);
+  }
+
+  .review-chart-card svg {
+    width: min(220px, 72vw);
+    height: auto;
+  }
+
+  .pie-legend-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .page-header,
+  .hero,
+  .cta-section,
+  .why-us,
+  .admin-header,
+  .dashboard-header,
+  .header-banner,
+  .feature-card,
+  .stat-card,
+  .subscription-card,
+  .appointment-card,
+  .ambulance-card,
+  .doctor-card,
+  .hospital-card,
+  .donor-card,
+  .order-card,
+  .revenue-card,
+  .review-chart-card,
+  .info-card,
+  .contact-card,
+  .faq-item {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .subscription-card.popular,
+  .subscription-card.popular:hover {
+    transform: none;
+  }
+
+  .modal-overlay,
+  .booking-modal-overlay {
+    align-items: flex-start;
+    padding: 0.5rem;
+  }
+
+  .modal-content,
+  .booking-modal,
+  .order-medicines-modal,
+  .payment-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 1rem);
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .cart-item,
+  .medicine-delivery-item,
+  .pharmacy-summary,
+  .doctor-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .medicine-item,
+  .cart-item,
+  .medicine-delivery-item {
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 15px;
+  }
+
+  .main-content {
+    padding-top: 0.75rem;
+  }
+
+  button,
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-search,
+  .btn-submit,
+  .btn-confirm,
+  .btn-cancel,
+  .btn-view,
+  .btn-book,
+  .btn-call,
+  .btn-contact,
+  .btn-plan,
+  input,
+  select,
+  textarea {
+    font-size: 0.92rem;
+  }
+
+  .nav-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .nav-menu {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+
+  .admin-tabs,
+  .dashboard-tabs,
+  .edoctor-tabs,
+  .review-periods,
+  .filter-buttons,
+  .button-group {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+  }
+
+  .blood-type-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .blood-type-btn {
+    width: 100%;
+  }
+}
+
+/* Professional UI polish, kept in this existing final layer to avoid more CSS files. */
+.app {
+  color: #111827;
+}
+
+.page-header,
+.hero,
+.admin-header,
+.dashboard-header,
+.header-banner {
+  border-radius: 14px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+}
+
+.page-header .header-content,
+.hero-content,
+.dashboard-header,
+.admin-header {
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-header h1,
+.hero h1,
+.admin-header h1,
+.dashboard-header h1,
+.header-banner h1 {
+  letter-spacing: 0;
+}
+
+.page-header p,
+.hero p,
+.admin-header p,
+.dashboard-header p,
+.header-banner p {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.feature-card,
+.stat-card,
+.subscription-card,
+.doctor-card,
+.hospital-card,
+.appointment-card,
+.ambulance-card,
+.donor-card,
+.order-card,
+.review-card,
+.pharmacy-card,
+.medicine-card,
+.info-card,
+.contact-card,
+.faq-item,
+.about-section,
+.policy-section,
+.contact-info-section,
+.contact-form-section,
+.faq-section,
+.admin-content,
+.dashboard-content,
+.form-container,
+.medicine-form,
+.pharmacy-form,
+.review-chart-card,
+.revenue-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.feature-card:hover,
+.stat-card:hover,
+.subscription-card:hover,
+.doctor-card:hover,
+.hospital-card:hover,
+.appointment-card:hover,
+.ambulance-card:hover,
+.donor-card:hover,
+.order-card:hover,
+.pharmacy-card:hover,
+.medicine-card:hover {
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+}
+
+.search-filter-section,
+.search-section,
+.filter-section,
+.filters-section,
+.blood-actions {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+.search-box {
+  min-width: 0;
+}
+
+.search-box input,
+.search-section input,
+.filter-section input,
+.filter-group select,
+.filter-select {
+  min-height: 44px;
+}
+
+.form-group label,
+.auth-form .form-group label,
+.contact-form .form-group label,
+.appointment-form .form-group label,
+.ambulance-request-form .form-group label,
+.medicine-form .form-group label,
+.pharmacy-form .form-group label,
+.form-container .form-group label {
+  color: #374151;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select,
+.auth-form input,
+.auth-form textarea,
+.auth-form select,
+.contact-form input,
+.contact-form textarea,
+.contact-form select,
+.appointment-form input,
+.appointment-form textarea,
+.appointment-form select,
+.ambulance-request-form input,
+.ambulance-request-form textarea,
+.ambulance-request-form select,
+.medicine-form input,
+.medicine-form textarea,
+.medicine-form select,
+.pharmacy-form input,
+.pharmacy-form textarea,
+.pharmacy-form select,
+.form-container input,
+.form-container textarea,
+.form-container select {
+  min-height: 44px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus,
+.auth-form input:focus,
+.auth-form textarea:focus,
+.auth-form select:focus,
+.contact-form input:focus,
+.contact-form textarea:focus,
+.contact-form select:focus,
+.appointment-form input:focus,
+.appointment-form textarea:focus,
+.appointment-form select:focus,
+.ambulance-request-form input:focus,
+.ambulance-request-form textarea:focus,
+.ambulance-request-form select:focus,
+.medicine-form input:focus,
+.medicine-form textarea:focus,
+.medicine-form select:focus,
+.pharmacy-form input:focus,
+.pharmacy-form textarea:focus,
+.pharmacy-form select:focus,
+.form-container input:focus,
+.form-container textarea:focus,
+.form-container select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.form-actions,
+.modal-actions,
+.appointment-actions,
+.doctor-actions,
+.ambulance-actions,
+.order-actions,
+.action-buttons {
+  gap: 0.75rem;
+}
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-submit,
+.btn-confirm,
+.btn-cancel,
+.btn-view,
+.btn-book,
+.btn-call,
+.btn-contact,
+.btn-search,
+.filter-btn,
+.period-button,
+.tab-button {
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  min-height: 42px;
+}
+
+.btn-primary,
+.btn-submit,
+.btn-confirm,
+.btn-search {
+  background: #0f5fba;
+  color: #ffffff;
+}
+
+.btn-primary:hover,
+.btn-submit:hover:not(:disabled),
+.btn-confirm:hover:not(:disabled),
+.btn-search:hover {
+  background: #0b4f9c;
+  transform: translateY(-1px);
+}
+
+.btn-secondary,
+.btn-cancel {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #d1d5db;
+}
+
+.modal-content,
+.booking-modal,
+.order-medicines-modal,
+.payment-modal {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.modal-header {
+  border-radius: 14px 14px 0 0;
+}
+
+.detail-item,
+.info-row,
+.detail-row,
+.address-info {
+  min-width: 0;
+}
+
+.detail-item .label,
+.info-row .label,
+.detail-row .label,
+.address-info .label {
+  color: #4b5563;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.detail-item .value,
+.info-row .value,
+.detail-row .value,
+.address-info .value {
+  color: #111827;
+  font-weight: 600;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.policy-list li:before {
+  content: "\2713";
+}
+
+.services-list li:before {
+  content: "\2192";
+}
+
+.admin-tabs,
+.dashboard-tabs,
+.edoctor-tabs,
+.review-periods {
+  scrollbar-width: thin;
+}
+
+.admin-table,
+.medicines-table {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.admin-table th,
+.medicines-table th {
+  background: #f8fafc;
+  color: #374151;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ambulance-page .modal-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ambulance-page .modal-header h2 {
+  min-width: 0;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ambulance-page .modal-header .btn-close {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  flex: 0 0 44px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.ambulance-page .modal-header .btn-close svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+@media (min-width: 901px) {
+  .modal-content,
+  .booking-modal,
+  .order-medicines-modal,
+  .payment-modal {
+    max-width: min(720px, calc(100vw - 3rem));
+  }
+}
+
+@media (max-width: 640px) {
+  .page-header,
+  .hero,
+  .admin-header,
+  .dashboard-header,
+  .header-banner {
+    border-radius: 10px;
+  }
+
+  .feature-card,
+  .stat-card,
+  .subscription-card,
+  .doctor-card,
+  .hospital-card,
+  .appointment-card,
+  .ambulance-card,
+  .donor-card,
+  .order-card,
+  .review-card,
+  .pharmacy-card,
+  .medicine-card,
+  .info-card,
+  .contact-card,
+  .faq-item,
+  .about-section,
+  .policy-section,
+  .contact-info-section,
+  .contact-form-section,
+  .faq-section,
+  .admin-content,
+  .dashboard-content,
+  .form-container,
+  .medicine-form,
+  .pharmacy-form {
+    border-radius: 10px;
+  }
+}

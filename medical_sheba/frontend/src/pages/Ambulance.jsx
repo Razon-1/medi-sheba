@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { PhoneCall, MapPin, DollarSign, AlertCircle, Clock, X } from 'lucide-react';
+import { PhoneCall, MapPin, DollarSign, AlertCircle, X } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ambulanceAPI } from '../api/ambulance';
-import paymentsAPI from '../api/payments';
 import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Ambulance.css';
@@ -89,10 +88,11 @@ export default function Ambulance() {
 
     // Apply search
     if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(amb =>
-        amb.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        amb.driver_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        amb.phone_number.includes(searchQuery)
+        String(amb.name || '').toLowerCase().includes(query) ||
+        String(amb.driver_name || '').toLowerCase().includes(query) ||
+        String(amb.phone_number || '').includes(searchQuery)
       );
     }
 
@@ -192,7 +192,7 @@ export default function Ambulance() {
 
       const response = await ambulanceAPI.createRequest(requestData);
       
-      setAmbulanceRequestData(response);
+      setAmbulanceRequestData(response.data || response);
       setRequestSuccess('Ambulance request submitted successfully! You will receive confirmation shortly.');
       
       // Show payment modal after 2 seconds
@@ -267,7 +267,7 @@ export default function Ambulance() {
             placeholder="Search by name, driver, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <button onClick={handleSearch} className="btn-search">Search</button>
         </div>
@@ -329,14 +329,14 @@ export default function Ambulance() {
               <div className="ambulance-image">
                 <img 
                   src={ambulance.image_url || "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop"} 
-                  alt={ambulance.name}
+                  alt={ambulance.name || 'Ambulance service'}
                   onError={(e) => e.target.src = "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop"}
                 />
                 {ambulance.is_verified && <div className="badge">Verified</div>}
               </div>
               <div className="ambulance-header">
                 <div className="ambulance-name-section">
-                  <h3>{ambulance.name}</h3>
+                  <h3>{ambulance.name || 'Ambulance Service'}</h3>
                   <span 
                     className="vehicle-type-badge" 
                     style={{ backgroundColor: getVehicleTypeColor(ambulance.vehicle_type) }}
@@ -358,12 +358,12 @@ export default function Ambulance() {
                   <div className="detail-item">
                     <PhoneCall size={16} />
                     <span className="label">Driver:</span>
-                    <span className="value">{ambulance.driver_name}</span>
+                    <span className="value">{ambulance.driver_name || 'Not provided'}</span>
                   </div>
                   <div className="detail-item">
                     <PhoneCall size={16} />
                     <span className="label">Contact:</span>
-                    <span className="value">{ambulance.phone_number}</span>
+                    <span className="value">{ambulance.phone_number || 'Not provided'}</span>
                   </div>
                 </div>
 
@@ -371,18 +371,18 @@ export default function Ambulance() {
                   <div className="detail-item">
                     <MapPin size={16} />
                     <span className="label">Location:</span>
-                    <span className="value">{ambulance.district_name}</span>
+                    <span className="value">{ambulance.district_name || 'Location not provided'}</span>
                   </div>
                   <div className="detail-item">
                     <DollarSign size={16} />
                     <span className="label">Rate:</span>
-                    <span className="value">BDT {ambulance.cost_per_km}/km</span>
+                    <span className="value">BDT {ambulance.cost_per_km || '0.00'}/km</span>
                   </div>
                 </div>
 
                 <div className="address-info">
                   <span className="label">Address:</span>
-                  <span className="value">{ambulance.address}</span>
+                  <span className="value">{ambulance.address || 'Address not provided'}</span>
                 </div>
 
                 <div className="rating-section">
@@ -392,14 +392,14 @@ export default function Ambulance() {
                         key={i}
                         className="star"
                         style={{
-                          color: i < Math.round(ambulance.rating) ? '#FFA500' : '#ddd'
+                          color: i < Math.round(Number(ambulance.rating) || 0) ? '#FFA500' : '#ddd'
                         }}
                       >
                         ★
                       </span>
                     ))}
-                    <span className="rating-value">{ambulance.rating}</span>
-                    <span className="reviews">({ambulance.review_count} reviews)</span>
+                    <span className="rating-value">{ambulance.rating || '0.0'}</span>
+                    <span className="reviews">({ambulance.review_count || 0} reviews)</span>
                   </div>
                 </div>
               </div>
@@ -408,12 +408,14 @@ export default function Ambulance() {
                 <button 
                   className="btn-call" 
                   onClick={() => handleCallNow(ambulance.phone_number)}
+                  disabled={!ambulance.phone_number}
                 >
                   Call Now
                 </button>
                 <button 
                   className="btn-book"
                   onClick={() => handleOpenRequestModal(ambulance)}
+                  disabled={!ambulance.is_available}
                 >
                   Request Ambulance
                 </button>
@@ -490,7 +492,7 @@ export default function Ambulance() {
               </div>
             )}
 
-            <form onSubmit={handleSubmitRequest}>
+            <form className="ambulance-request-form" onSubmit={handleSubmitRequest}>
               <div className="form-group">
                 <label htmlFor="patient_name">Patient Name *</label>
                 <input

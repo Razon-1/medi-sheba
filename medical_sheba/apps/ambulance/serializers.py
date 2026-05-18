@@ -11,7 +11,8 @@ class AmbulanceServiceListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'vehicle_type', 'driver_name', 'phone_number',
             'district', 'district_name', 'upazila', 'upazila_name', 'address',
-            'cost_per_km', 'is_available', 'rating', 'review_count'
+            'cost_per_km', 'is_available', 'is_verified', 'rating', 'review_count',
+            'image_url', 'requires_authentication'
         ]
 
 
@@ -59,7 +60,8 @@ class AmbulanceRequestListSerializer(serializers.ModelSerializer):
             'id', 'request_id', 'patient_name', 'contact_phone',
             'pickup_location', 'dropoff_location', 'vehicle_type_required',
             'urgency', 'status', 'required_date', 'ambulance',
-            'ambulance_name', 'ambulance_phone', 'created_at'
+            'ambulance_name', 'ambulance_phone', 'estimated_fare',
+            'final_fare', 'payment_status', 'created_at'
         ]
 
 
@@ -75,7 +77,8 @@ class AmbulanceRequestDetailSerializer(serializers.ModelSerializer):
             'pickup_location', 'pickup_address', 'dropoff_location',
             'vehicle_type_required', 'urgency', 'notes', 'status',
             'required_date', 'ambulance', 'ambulance_name', 'ambulance_phone',
-            'ambulance_type', 'created_at', 'updated_at'
+            'ambulance_type', 'estimated_fare', 'final_fare', 'payment_status',
+            'payment', 'created_at', 'updated_at'
         ]
         read_only_fields = ['request_id', 'created_at', 'updated_at']
 
