@@ -7,9 +7,15 @@ export const bloodAPI = {
   
   getDonor: (id) =>
     client.get(`/blood/donors/${id}/`),
+
+  getMyDonor: () =>
+    client.get('/blood/donors/me/'),
   
   createDonor: (data) =>
     client.post('/blood/donors/', data),
+
+  saveMyDonor: (data) =>
+    client.patch('/blood/donors/me/', data),
   
   updateDonor: (id, data) =>
     client.put(`/blood/donors/${id}/`, data),

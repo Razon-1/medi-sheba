@@ -114,15 +114,6 @@ export default function DoctorDetail() {
 
       {/* Header Section */}
       <div className="detail-header">
-        <div className="header-left">
-          <div className="doctor-avatar">
-            <img
-              src={`https://ui-avatars.com/api/?name=${doctor.user.first_name}+${doctor.user.last_name}&background=0066CC&color=fff&size=200`}
-              alt={`Dr. ${doctor.user.first_name} ${doctor.user.last_name}`}
-            />
-          </div>
-        </div>
-
         <div className="header-right">
           <h1>Dr. {doctor.user.first_name} {doctor.user.last_name}</h1>
           <p className="specialty">{getSpecialtyLabel(doctor.specialty)}</p>

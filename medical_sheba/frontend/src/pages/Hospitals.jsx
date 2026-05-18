@@ -6,6 +6,12 @@ import { hospitalsAPI } from '../api/hospitals';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Hospitals.css';
 
+const getListData = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
+
 export default function Hospitals() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.hospitals);
@@ -16,7 +22,7 @@ export default function Hospitals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 21;
+  const ITEMS_PER_PAGE = 16;
 
   useEffect(() => {
     fetchHospitals();
@@ -34,16 +40,15 @@ export default function Hospitals() {
         const response = await hospitalsAPI.list({ page });
         const data = response.data;
         
-        if (data.results) {
-          allHospitals = [...allHospitals, ...data.results];
+        const pageHospitals = getListData(data);
+
+        if (Array.isArray(data?.results)) {
+          allHospitals = [...allHospitals, ...pageHospitals];
           // Check if there are more pages
           hasMore = !!data.next;
           page++;
-        } else if (Array.isArray(data)) {
-          allHospitals = data;
-          hasMore = false;
         } else {
-          allHospitals = data;
+          allHospitals = pageHospitals;
           hasMore = false;
         }
       }
@@ -65,10 +70,14 @@ export default function Hospitals() {
       setCurrentPage(1);
       return;
     }
-    const filtered = hospitals.filter(hospital =>
-      hospital.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      hospital.district.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = hospitals.filter(hospital => {
+      const name = (hospital.name || '').toLowerCase();
+      const district = (hospital.district || '').toLowerCase();
+      return (
+        name.includes(searchQuery.toLowerCase()) ||
+        district.includes(searchQuery.toLowerCase())
+      );
+    });
     setFilteredHospitals(filtered);
     setCurrentPage(1);
   };
@@ -78,7 +87,6 @@ export default function Hospitals() {
       <div className="page-header">
         <div className="header-content">
           <h1>Find Hospitals</h1>
-          <p>Discover world-class healthcare facilities near you</p>
         </div>
       </div>
 

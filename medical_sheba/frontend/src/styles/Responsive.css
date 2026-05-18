@@ -787,6 +787,24 @@ button,
   border: 1px solid #d1d5db;
 }
 
+.doctor-card-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.doctor-card-action-button {
+  flex: 1 1 0;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 0.5rem;
+  line-height: 1;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
 .modal-content,
 .booking-modal,
 .order-medicines-modal,

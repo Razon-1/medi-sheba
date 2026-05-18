@@ -4,29 +4,51 @@ from .models import BloodDonor, BloodRequest
 
 class BloodDonorSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
     
     class Meta:
         model = BloodDonor
         fields = [
-            'id', 'user', 'user_name', 'blood_group', 'last_donation_date',
+            'id', 'user', 'user_name', 'phone', 'contact_phone', 'blood_group', 'last_donation_date',
             'total_donations', 'is_available', 'district', 'upazila',
             'latitude', 'longitude', 'health_conditions', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'user': {'validators': [], 'required': False}
+        }
     
     def get_user_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_phone(self, obj):
+        return obj.contact_phone or obj.user.phone
+
+    def create(self, validated_data):
+        user = validated_data.pop('user')
+        donor, _ = BloodDonor.objects.update_or_create(
+            user=user,
+            defaults=validated_data
+        )
+        return donor
 
 
 class BloodDonorListSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
     
     class Meta:
         model = BloodDonor
-        fields = ['id', 'user_name', 'blood_group', 'district', 'is_available']
+        fields = [
+            'id', 'user_name', 'phone', 'contact_phone', 'blood_group',
+            'district', 'upazila', 'total_donations', 'is_available'
+        ]
     
     def get_user_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_phone(self, obj):
+        return obj.contact_phone or obj.user.phone
 
 
 class BloodRequestSerializer(serializers.ModelSerializer):

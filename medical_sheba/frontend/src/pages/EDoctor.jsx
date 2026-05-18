@@ -24,9 +24,8 @@ export default function EDoctor() {
   const [error, setError] = useState(null);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 21;
+  const ITEMS_PER_PAGE = 15;
   const [activeTab, setActiveTab] = useState('doctors');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -165,11 +164,6 @@ export default function EDoctor() {
       filtered = filtered.filter(doc => doc.specialization === filterSpecialization);
     }
 
-    // Apply verified only filter
-    if (verifiedOnly) {
-      filtered = filtered.filter(doc => doc.is_verified);
-    }
-
     // Apply search
     if (searchQuery.trim()) {
       filtered = filtered.filter(doc =>
@@ -185,7 +179,7 @@ export default function EDoctor() {
 
   useEffect(() => {
     handleSearch();
-  }, [filterSpecialization, verifiedOnly]);
+  }, [filterSpecialization]);
 
   const getSpecializationLabel = (spec) => {
     const labels = {
@@ -298,7 +292,6 @@ export default function EDoctor() {
     <div className="edoctor-container">
       <div className="edoctor-header">
         <h1>Online Doctor Consultation</h1>
-        <p>Connect with experienced doctors for online medical consultation</p>
       </div>
 
       {/* Tab Navigation */}
@@ -368,14 +361,6 @@ export default function EDoctor() {
                 </button>
               </div>
 
-              <label className="checkbox-label">
-                <input 
-                  type="checkbox"
-                  checked={verifiedOnly}
-                  onChange={(e) => setVerifiedOnly(e.target.checked)}
-                />
-                <span>Verified Doctors Only</span>
-              </label>
             </div>
           </div>
 
@@ -404,7 +389,6 @@ export default function EDoctor() {
                       alt={doctor.name}
                       onError={(e) => e.target.src = "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"}
                     />
-                    {doctor.is_verified && <div className="badge">Verified</div>}
                   </div>
                   <div className="doctor-header">
                     <div className="doctor-basic">
@@ -446,12 +430,9 @@ export default function EDoctor() {
                         <strong>⏰ Available Time:</strong>
                         <span>{doctor.available_start_time && doctor.available_end_time ? `${doctor.available_start_time} - ${doctor.available_end_time}` : 'Check with hospital'}</span>
                       </div>
-                      <div className="contact-for-serial">
-                        <strong>📞 How it works:</strong>
-                        <p>Contact for serial at {doctor.phone_number || 'N/A'}</p>
-                      </div>
                     </div>
 
+                    {false && (
                     <div className="rating-section">
                       <div className="stars">
                         {[...Array(5)].map((_, i) => (
@@ -461,6 +442,7 @@ export default function EDoctor() {
                       <span className="rating-value">{doctor.rating}</span>
                       <span className="review-count">({doctor.review_count} reviews)</span>
                     </div>
+                    )}
                   </div>
 
                   <div className="doctor-actions">
@@ -542,6 +524,7 @@ export default function EDoctor() {
               <button 
                 className="close-btn"
                 onClick={() => setShowBookingForm(false)}
+                aria-label="Close booking form"
               >
                 ✕
               </button>

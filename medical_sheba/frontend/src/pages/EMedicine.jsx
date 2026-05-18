@@ -20,7 +20,7 @@ export default function EMedicine() {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [medicineSearchQuery, setMedicineSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('pharmacies');
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
@@ -87,11 +87,6 @@ export default function EMedicine() {
       filtered = filtered.filter(pharm => pharm.pharmacy_type === filterType);
     }
 
-    // Apply verified only filter
-    if (verifiedOnly) {
-      filtered = filtered.filter(pharm => pharm.is_verified);
-    }
-
     // Apply search
     if (searchQuery.trim()) {
       filtered = filtered.filter(pharm =>
@@ -107,7 +102,7 @@ export default function EMedicine() {
 
   useEffect(() => {
     handleSearch();
-  }, [filterType, verifiedOnly]);
+  }, [filterType]);
 
   const getPharmacyTypeLabel = (type) => {
     const types = {
@@ -162,12 +157,24 @@ export default function EMedicine() {
     setSelectedPharmacy(null);
   };
 
+  const filteredMedicines = medicines.filter((medicine) => {
+    const query = medicineSearchQuery.trim().toLowerCase();
+    if (!query) return true;
+
+    return [
+      medicine.name,
+      medicine.generic_name,
+      medicine.medicine_type,
+      medicine.manufacturer,
+      medicine.strength
+    ].some((value) => String(value || '').toLowerCase().includes(query));
+  });
+
   return (
     <div className="emedicine-page">
       <div className="page-header">
         <div className="header-content">
           <h1>Online Medicine Delivery</h1>
-          <p>Get medicines delivered to your doorstep with trusted online pharmacies</p>
         </div>
       </div>
 
@@ -233,16 +240,6 @@ export default function EMedicine() {
                 </button>
               </div>
 
-              <div className="verified-filter">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={verifiedOnly}
-                    onChange={(e) => setVerifiedOnly(e.target.checked)}
-                  />
-                  Verified Pharmacies Only
-                </label>
-              </div>
             </div>
           </div>
 
@@ -275,7 +272,6 @@ export default function EMedicine() {
                       alt={pharmacy.name}
                       onError={(e) => e.target.src = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"}
                     />
-                    {pharmacy.is_verified && <div className="badge">Verified</div>}
                   </div>
                   <div className="pharmacy-header">
                     <div className="pharmacy-name-section">
@@ -287,40 +283,31 @@ export default function EMedicine() {
                         {getPharmacyTypeLabel(pharmacy.pharmacy_type)}
                       </span>
                     </div>
-                    <div className="verification-status">
-                      {pharmacy.is_verified ? (
-                        <span className="verified">✓ Verified</span>
-                      ) : (
-                        <span className="unverified">Unverified</span>
-                      )}
-                    </div>
                   </div>
 
                   <div className="pharmacy-details">
-                    <div className="detail-row">
-                      <div className="detail-item">
-                        <Pill size={16} />
-                        <span className="label">License:</span>
-                        <span className="value">{pharmacy.license_number}</span>
-                      </div>
-                      <div className="detail-item">
-                        <Clock size={16} />
-                        <span className="label">Delivery:</span>
-                        <span className="value">{pharmacy.delivery_time_hours}h</span>
-                      </div>
+                    <div className="detail-item">
+                      <Pill size={16} />
+                      <span className="label">License:</span>
+                      <span className="value">{pharmacy.license_number || 'N/A'}</span>
                     </div>
 
-                    <div className="detail-row">
-                      <div className="detail-item">
-                        <Pill size={16} />
-                        <span className="label">Contact:</span>
-                        <span className="value">{pharmacy.phone_number}</span>
-                      </div>
-                      <div className="detail-item">
-                        <DollarSign size={16} />
-                        <span className="label">Min Order:</span>
-                        <span className="value">BDT {pharmacy.min_order_amount}</span>
-                      </div>
+                    <div className="detail-item">
+                      <Clock size={16} />
+                      <span className="label">Delivery:</span>
+                      <span className="value">{pharmacy.delivery_time_hours ? `${pharmacy.delivery_time_hours}h` : 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <Pill size={16} />
+                      <span className="label">Contact:</span>
+                      <span className="value">{pharmacy.phone_number || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-item">
+                      <DollarSign size={16} />
+                      <span className="label">Min Order:</span>
+                      <span className="value">BDT {pharmacy.min_order_amount || '0'}</span>
                     </div>
 
                     <div className="address-info">
@@ -329,6 +316,7 @@ export default function EMedicine() {
                       <span className="value">{pharmacy.address}</span>
                     </div>
 
+                    {false && (
                     <div className="rating-section">
                       <div className="rating">
                         {[...Array(5)].map((_, i) => (
@@ -346,6 +334,7 @@ export default function EMedicine() {
                         <span className="reviews">({pharmacy.review_count} reviews)</span>
                       </div>
                     </div>
+                    )}
                   </div>
 
                   <div className="action-buttons">
@@ -382,9 +371,18 @@ export default function EMedicine() {
       {activeTab === 'medicines' && (
         <div className="medicines-section">
           <h2>Available Medicines</h2>
+          <div className="medicine-search-box">
+            <Pill size={20} />
+            <input
+              type="text"
+              placeholder="Search medicines by name, generic, type, or manufacturer..."
+              value={medicineSearchQuery}
+              onChange={(e) => setMedicineSearchQuery(e.target.value)}
+            />
+          </div>
           <div className="medicines-grid">
-            {medicines.length > 0 ? (
-              medicines.map(medicine => (
+            {filteredMedicines.length > 0 ? (
+              filteredMedicines.map(medicine => (
                 <div key={medicine.id} className="medicine-card">
                   <div className="medicine-header">
                     <h4>{medicine.name}</h4>
@@ -400,7 +398,7 @@ export default function EMedicine() {
               ))
             ) : (
               <div className="no-results">
-                <p>No medicines available</p>
+                <p>No medicines found</p>
               </div>
             )}
           </div>

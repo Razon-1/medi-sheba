@@ -57,44 +57,55 @@
 /* Header Section */
 .detail-header {
   background: white;
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   overflow: hidden;
-  margin: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 2rem auto;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: minmax(320px, 42%) 1fr;
+  min-height: 280px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
 }
 
 .header-image {
   position: relative;
   width: 100%;
-  height: 300px;
+  min-height: 280px;
+  height: 100%;
   overflow: hidden;
+  background: #eef2f7;
 }
 
 .header-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .emergency-badge {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  top: 1rem;
+  left: 1rem;
   background: #10B981;
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1rem;
   border-radius: 2rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .header-info {
-  padding: 2rem;
+  padding: 2.5rem;
   background: linear-gradient(135deg, rgba(0, 102, 204, 0.02), rgba(0, 169, 145, 0.02));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .header-info h1 {
@@ -355,7 +366,10 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .btn-primary,
@@ -397,10 +411,13 @@
 @media (max-width: 768px) {
   .detail-header {
     margin: 1rem;
+    grid-template-columns: 1fr;
+    min-height: 0;
   }
 
   .header-image {
-    height: 200px;
+    height: 220px;
+    min-height: 220px;
   }
 
   .header-info {
@@ -441,11 +458,14 @@
 
   .cta-buttons {
     flex-direction: column;
+    align-items: center;
   }
 
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
+  .cta-buttons .btn-primary,
+  .cta-buttons .btn-secondary {
+    box-sizing: border-box;
+    flex: 0 0 min(100%, 220px);
+    width: min(100%, 220px);
     justify-content: center;
   }
 
@@ -461,7 +481,8 @@
 
 @media (max-width: 480px) {
   .header-image {
-    height: 150px;
+    height: 180px;
+    min-height: 180px;
   }
 
   .header-info h1 {

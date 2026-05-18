@@ -13,7 +13,6 @@ export default function AboutUs() {
       <div className="page-header">
         <div className="header-content">
           <h1>About Medi Sheba</h1>
-          <p>Revolutionizing Healthcare Access in Bangladesh</p>
         </div>
       </div>
 

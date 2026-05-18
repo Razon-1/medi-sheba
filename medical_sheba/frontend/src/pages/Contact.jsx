@@ -63,7 +63,6 @@ export default function Contact() {
       <div className="page-header">
         <div className="header-content">
           <h1>Contact Us</h1>
-          <p>Get in touch with our support team</p>
         </div>
       </div>
 

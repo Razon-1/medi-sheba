@@ -6,6 +6,12 @@ import { doctorsAPI } from '../api/doctors';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Doctors.css';
 
+const getListData = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
+
 export default function Doctors() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.doctors);
@@ -16,7 +22,7 @@ export default function Doctors() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 21;
+  const ITEMS_PER_PAGE = 16;
 
   useEffect(() => {
     fetchDoctors();
@@ -34,16 +40,15 @@ export default function Doctors() {
         const response = await doctorsAPI.list({ page });
         const data = response.data;
         
-        if (data.results) {
-          allDoctors = [...allDoctors, ...data.results];
+        const pageDoctors = getListData(data);
+
+        if (Array.isArray(data?.results)) {
+          allDoctors = [...allDoctors, ...pageDoctors];
           // Check if there are more pages
           hasMore = !!data.next;
           page++;
-        } else if (Array.isArray(data)) {
-          allDoctors = data;
-          hasMore = false;
         } else {
-          allDoctors = data;
+          allDoctors = pageDoctors;
           hasMore = false;
         }
       }
@@ -67,9 +72,10 @@ export default function Doctors() {
     }
     const filtered = doctors.filter(doctor => {
       const fullName = (doctor.user_name || '').toLowerCase();
+      const specialty = (doctor.specialty || '').toLowerCase();
       return (
         fullName.includes(searchQuery.toLowerCase()) ||
-        doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+        specialty.includes(searchQuery.toLowerCase())
       );
     });
     setFilteredDoctors(filtered);

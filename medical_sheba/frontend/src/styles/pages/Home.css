@@ -53,7 +53,17 @@
 .hero-buttons {
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.hero-buttons .btn-primary,
+.hero-buttons .btn-secondary {
+  box-sizing: border-box;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-buttons .btn-primary {
@@ -61,30 +71,39 @@
   color: var(--primary-blue);
   font-weight: 700;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 0.65rem 2rem;
+  font-size: 0.95rem;
+  border-radius: 0.6rem;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  width: auto;
+  white-space: nowrap;
+  text-decoration: none;
 }
 
 .hero-buttons .btn-primary:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-}
-
-.hero-buttons .btn-primary a {
-  color: var(--primary-blue);
+  background: #e0f2ff;
 }
 
 .hero-buttons .btn-secondary {
   background: rgba(255, 255, 255, 0.15);
   border: 2px solid white;
   color: white;
+  padding: 0.65rem 2rem;
+  font-size: 0.95rem;
+  border-radius: 0.6rem;
+  text-align: center;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: none;
 }
 
 .hero-buttons .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: translateY(-3px);
-}
-
-.hero-buttons .btn-secondary a {
-  color: white;
 }
 
 .hero-image {
@@ -125,6 +144,10 @@
   box-shadow: var(--shadow-md);
   transition: all 0.3s ease;
   border-top: 4px solid var(--primary-blue);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .stat-card:hover {
@@ -135,6 +158,9 @@
 .stat-icon {
   color: var(--primary-blue);
   margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .stat-card h3 {
@@ -188,6 +214,11 @@
   transition: all 0.3s ease;
   text-align: center;
   border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
 }
 
 .feature-card:hover {
@@ -205,6 +236,7 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
+  flex-shrink: 0;
 }
 
 .feature-icon {
@@ -304,6 +336,10 @@
 .cta-content {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .cta-section h2 {
@@ -326,10 +362,24 @@
   color: var(--primary-blue);
   font-weight: 700;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  display: inline-block;
+  padding: 0.65rem 2rem;
+  font-size: 0.95rem;
+  border-radius: 0.6rem;
+  text-align: center;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  width: auto;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
 }
 
-.cta-section .btn-primary a {
-  color: var(--primary-blue);
+.cta-section .btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  background: #e0f2ff;
 }
 
 /* Subscription Section */
@@ -571,9 +621,11 @@
 
   .hero-buttons {
     flex-direction: column;
+    flex-wrap: wrap;
   }
 
-  .hero-buttons button {
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-secondary {
     width: 100%;
   }
 
@@ -582,8 +634,25 @@
     gap: 1.5rem;
   }
 
+  .stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
   .features-grid {
     grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .feature-icon-wrapper {
+    margin: 0 auto 1.5rem;
   }
 
   .benefits-grid {

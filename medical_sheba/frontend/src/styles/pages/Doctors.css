@@ -50,6 +50,14 @@
   margin-bottom: 2.5rem;
 }
 
+.doctors-page .search-section,
+.hospitals-page .search-section {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .search-box {
   display: flex;
   gap: 0;

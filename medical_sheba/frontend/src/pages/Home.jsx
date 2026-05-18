@@ -70,10 +70,18 @@ export default function Home() {
       price: 'Free',
       description: 'Perfect to explore all features',
       features: [
-        'Limited medicine listings (up to 50)',
-        'Basic pharmacy dashboard',
-        'Email support',
-        'Basic order tracking',
+        'Unlimited medicine listings',
+        'Full pharmacy admin dashboard',
+        'Advanced inventory management',
+        'Unlimited medicine listings',
+        'Full pharmacy admin dashboard',
+        'Order processing & management',
+        'Delivery tracking system',       
+        'Priority support 24/7',
+        'Medicine expiry tracking',
+        'Automated low stock alerts',
+        'Monthly performance reports',
+        'Billing & invoice management',
       ],
       cta: 'Start Free Trial',
       popular: false,
@@ -87,11 +95,15 @@ export default function Home() {
         'Unlimited medicine listings',
         'Full pharmacy admin dashboard',
         'Advanced inventory management',
+        'Unlimited medicine listings',
+        'Full pharmacy admin dashboard',
         'Order processing & management',
-        'Delivery tracking system',
-        'Customer reviews & ratings',
-        'Email & chat support',
-        'Sales analytics & reports',
+        'Delivery tracking system',       
+        'Priority support 24/7',
+        'Medicine expiry tracking',
+        'Automated low stock alerts',
+        'Monthly performance reports',
+        'Billing & invoice management',
       ],
       cta: 'Get Started',
       popular: true,
@@ -102,14 +114,18 @@ export default function Home() {
       price: '৳9,999',
       description: '17% savings on annual plan',
       features: [
-        'All Monthly features',
+        'Unlimited medicine listings',
+        'Full pharmacy admin dashboard',
+        'Advanced inventory management',
+        'Unlimited medicine listings',
+        'Full pharmacy admin dashboard',
+        'Order processing & management',
+        'Delivery tracking system',       
         'Priority support 24/7',
-        'Prescription management system',
         'Medicine expiry tracking',
         'Automated low stock alerts',
-        'Multi-branch management',
-        'API access for integration',
         'Monthly performance reports',
+        'Billing & invoice management',
       ],
       cta: 'Subscribe Now',
       popular: false,
@@ -120,14 +136,17 @@ export default function Home() {
       price: 'Custom',
       description: 'Enterprise solutions for chains',
       features: [
-        'All Yearly plan features',
-        'White-label pharmacy portal',
-        'Dedicated account manager',
-        'Custom integrations',
-        'Employee role management',
-        'Real-time inventory sync',
-        'SLA guarantee',
+        'Unlimited medicine listings',
+        'Full pharmacy admin dashboard',
+        'Advanced inventory management',
+        'Order processing & management',
+        'Delivery tracking system',       
+        'Priority support 24/7',
         'Training & onboarding',
+        'Medicine expiry tracking',
+        'Automated low stock alerts',
+        'Monthly performance reports',
+        'Billing & invoice management',
       ],
       cta: 'Contact Sales',
       popular: false,
@@ -141,10 +160,13 @@ export default function Home() {
       price: 'Free',
       description: 'Perfect to explore all features',
       features: [
-        'Basic hospital dashboard',
-        'Limited doctor profiles (up to 10)',
-        'Basic bed management',
-        'Email support',
+        'Complete hospital admin dashboard',
+        'Unlimited doctor profiles',
+        'Patient appointment scheduling',
+        'Medical records digitization',
+        'Priority support 24/7',
+        'Billing & invoice management',
+        'Monthly performance reports',
       ],
       cta: 'Start Free Trial',
       popular: false,
@@ -157,12 +179,11 @@ export default function Home() {
       features: [
         'Complete hospital admin dashboard',
         'Unlimited doctor profiles',
-        'Advanced bed/ward management',
         'Patient appointment scheduling',
-        'Outpatient (OPD) management',
         'Medical records digitization',
-        'Staff management system',
-        'Email & chat support',
+        'Priority support 24/7',
+        'Billing & invoice management',
+        'Monthly performance reports',
       ],
       cta: 'Get Started',
       popular: true,
@@ -173,13 +194,13 @@ export default function Home() {
       price: '৳19,999',
       description: '17% savings on annual plan',
       features: [
-        'All Monthly features',
-        'Inpatient (IPD) management',
-        'Emergency module',
-        'Lab integration & reports',
-        'Billing & invoice management',
+        'Complete hospital admin dashboard',
+        'Unlimited doctor profiles',
+        'Patient appointment scheduling',
+        'Medical records digitization',
         'Priority support 24/7',
-        'Dedicated account manager',
+        'Billing & invoice management',
+        'Monthly performance reports',
       ],
       cta: 'Subscribe Now',
       popular: false,
@@ -190,14 +211,15 @@ export default function Home() {
       price: 'Custom',
       description: 'Complete healthcare solutions',
       features: [
-        'All Yearly plan features',
-        'Multi-hospital management',
+        'Complete hospital admin dashboard',
+        'Unlimited doctor profiles',
+        'Patient appointment scheduling',
+        'Medical records digitization',
+        'Priority support 24/7',
+        'Billing & invoice management',
         'Advanced analytics & dashboards',
-        'Insurance claim processing',
-        'Telemedicine integration',
-        'Mobile app access',
-        'API & custom development',
-        'Dedicated support team',
+        'Monthly performance reports',
+        'Training & onboarding',
       ],
       cta: 'Contact Sales',
       popular: false,
@@ -220,12 +242,8 @@ export default function Home() {
             <h1>Your Trusted Healthcare Partner</h1>
             <p>Connect with experienced doctors, find the best hospitals, and manage your health with Medi Sheba</p>
             <div className="hero-buttons">
-              <button className="btn-primary">
-                <Link to="/doctors">Book Appointment Now</Link>
-              </button>
-              <button className="btn-secondary">
-                <Link to="/hospitals">Find Hospital</Link>
-              </button>
+              <Link to="/doctors" className="btn-primary">Book Appointment Now</Link>
+              <Link to="/hospitals" className="btn-secondary">Find Hospital</Link>
             </div>
           </div>
           <div className="hero-image">
@@ -263,16 +281,16 @@ export default function Home() {
           {features.map((feature, idx) => {
             const Icon = feature.icon;
             return (
-              <div key={idx} className="feature-card">
+              <Link key={idx} to={feature.link} className="feature-card">
                 <div className="feature-icon-wrapper">
                   <Icon size={48} className="feature-icon" />
                 </div>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
-                <Link to={feature.link} className="feature-link">
+                <span className="feature-link">
                   Explore Now →
-                </Link>
-              </div>
+                </span>
+              </Link>
             );
           })}
         </div>
@@ -372,9 +390,7 @@ export default function Home() {
         <div className="cta-content">
           <h2>Ready to Get Started?</h2>
           <p>Join thousands of patients who trust Medi Sheba for their healthcare needs</p>
-          <button className="btn-primary">
-            <Link to="/doctors">Get Started Today</Link>
-          </button>
+          <Link to="/doctors" className="btn-primary">Get Started Today</Link>
         </div>
       </section>
     </div>

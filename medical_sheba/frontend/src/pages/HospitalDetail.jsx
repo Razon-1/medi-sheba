@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Phone, Mail, Users, Bed, Clock, CheckCircle, Star, ArrowLeft, AlertCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Users, Bed, Clock, CheckCircle, ArrowLeft, AlertCircle } from 'lucide-react';
 import { hospitalsAPI } from '../api/hospitals';
 import { doctorsAPI } from '../api/doctors';
 import { updateMetaTags } from '../utils/seo';
@@ -143,8 +143,12 @@ export default function HospitalDetail() {
       <div className="detail-header">
         <div className="header-image">
           <img 
-            src="https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=800&h=400&fit=crop" 
+            src={hospital.image_url || "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=800&h=500&fit=crop"} 
             alt={hospital.name}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=800&h=500&fit=crop";
+            }}
           />
           {hospital.emergency_available && (
             <div className="emergency-badge">
@@ -157,20 +161,6 @@ export default function HospitalDetail() {
         <div className="header-info">
           <h1>{hospital.name}</h1>
           <p className="hospital-type">{getHospitalTypeLabel(hospital.type)}</p>
-          
-          <div className="rating-section">
-            <div className="stars">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  size={20} 
-                  fill={i < Math.round(hospital.rating) ? '#FFA500' : '#ddd'} 
-                  color={i < Math.round(hospital.rating) ? '#FFA500' : '#ddd'}
-                />
-              ))}
-            </div>
-            <span className="rating-text">{hospital.rating} ({hospital.review_count} reviews)</span>
-          </div>
         </div>
       </div>
 

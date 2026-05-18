@@ -17,7 +17,7 @@ export default function Ambulance() {
   const [filterType, setFilterType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 21;
+  const ITEMS_PER_PAGE = 15;
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedAmbulance, setSelectedAmbulance] = useState(null);
   const [requestLoading, setRequestLoading] = useState(false);
@@ -254,7 +254,6 @@ export default function Ambulance() {
       <div className="page-header">
         <div className="header-content">
           <h1>Emergency Ambulance Services</h1>
-          <p>24/7 ambulance services for your medical emergencies</p>
         </div>
       </div>
 
@@ -332,7 +331,6 @@ export default function Ambulance() {
                   alt={ambulance.name || 'Ambulance service'}
                   onError={(e) => e.target.src = "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop"}
                 />
-                {ambulance.is_verified && <div className="badge">Verified</div>}
               </div>
               <div className="ambulance-header">
                 <div className="ambulance-name-section">
@@ -385,6 +383,7 @@ export default function Ambulance() {
                   <span className="value">{ambulance.address || 'Address not provided'}</span>
                 </div>
 
+                {false && (
                 <div className="rating-section">
                   <div className="rating">
                     {[...Array(5)].map((_, i) => (
@@ -402,6 +401,7 @@ export default function Ambulance() {
                     <span className="reviews">({ambulance.review_count || 0} reviews)</span>
                   </div>
                 </div>
+                )}
               </div>
 
               <div className="action-buttons">

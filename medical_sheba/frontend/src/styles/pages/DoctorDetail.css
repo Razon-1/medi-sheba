@@ -28,24 +28,7 @@
   padding: 2rem;
   margin: 0 2rem 2rem 2rem;
   border-radius: 12px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.header-left .doctor-avatar {
-  width: 150px;
-  height: 150px;
-  border-radius: 12px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.header-left .doctor-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .header-right h1 {
@@ -312,13 +295,7 @@
 
 @media (max-width: 768px) {
   .detail-header {
-    grid-template-columns: 1fr;
     margin: 0 1rem 1rem 1rem;
-  }
-
-  .header-left .doctor-avatar {
-    width: 120px;
-    height: 120px;
   }
 
   .header-right h1 {
