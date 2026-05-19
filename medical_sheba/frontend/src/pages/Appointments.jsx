@@ -125,7 +125,7 @@ const getMedicineSummary = (medicines) => {
 const canViewPatientServices = (user) => {
   const roles = user?.roles || [];
   return roles.includes('patient')
-    && !roles.some((role) => ['pharmacy_admin', 'hospital_admin', 'doctor', 'admin'].includes(role));
+    && !roles.some((role) => ['pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin', 'doctor', 'admin'].includes(role));
 };
 
 export default function Appointments() {
@@ -411,6 +411,14 @@ export default function Appointments() {
                 className="inline-flex h-11 items-center justify-center rounded-lg bg-primary-600 px-5 text-sm font-bold text-white transition hover:bg-primary-700"
               >
                 Go to Pharmacy Admin
+              </Link>
+            )}
+            {user?.roles?.includes('ambulance_driver_admin') && (
+              <Link
+                to="/ambulance-admin"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-primary-600 px-5 text-sm font-bold text-white transition hover:bg-primary-700"
+              >
+                Go to Ambulance Admin
               </Link>
             )}
             <Link

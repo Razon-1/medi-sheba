@@ -13,7 +13,10 @@ class MedicineItemSerializer(serializers.ModelSerializer):
             'strength', 'strength_unit', 'price', 'description', 'side_effects',
             'precautions', 'is_available', 'stock', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'pharmacy', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'pharmacy': {'required': False},
+        }
 
 
 class EMedicinePharmacyListSerializer(serializers.ModelSerializer):
@@ -27,10 +30,12 @@ class EMedicinePharmacyListSerializer(serializers.ModelSerializer):
         model = EMedicinePharmacy
         fields = [
             'id', 'name', 'pharmacy_type', 'phone_number', 'email', 'address',
+            'license_number', 'image_url',
             'district_name', 'upazila_name', 'delivery_time_hours', 'min_order_amount',
             'delivery_charge', 'is_available', 'is_verified', 'rating', 'review_count',
             'admin_user_name'
         ]
+        read_only_fields = ['is_verified', 'rating', 'review_count', 'admin_user_name']
 
 
 class EMedicinePharmacyDetailSerializer(serializers.ModelSerializer):
@@ -46,7 +51,7 @@ class EMedicinePharmacyDetailSerializer(serializers.ModelSerializer):
             'id', 'admin_user', 'name', 'pharmacy_type', 'license_number', 'phone_number', 'email',
             'address', 'district', 'district_name', 'upazila', 'upazila_name',
             'latitude', 'longitude', 'delivery_time_hours', 'min_order_amount',
-            'delivery_charge', 'is_available', 'is_verified', 'rating', 'review_count',
+            'delivery_charge', 'image_url', 'is_available', 'is_verified', 'rating', 'review_count',
             'medicines', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'admin_user', 'created_at', 'updated_at', 'is_verified', 'rating', 'review_count']
@@ -63,7 +68,7 @@ class EMedicinePharmacyCreateSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'pharmacy_type', 'license_number', 'phone_number', 'email',
             'address', 'district_name', 'upazila_name', 'delivery_time_hours',
-            'min_order_amount', 'delivery_charge'
+            'min_order_amount', 'delivery_charge', 'image_url'
         ]
     
     def create(self, validated_data):
@@ -110,9 +115,10 @@ class EMedicineOrderDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'order_id', 'patient_name', 'contact_phone', 'delivery_address',
             'pharmacy', 'pharmacy_name', 'pharmacy_phone', 'medicines_list',
-            'delivered_medicines_list', 'total_amount', 'urgency', 'status',
-            'required_date', 'notes', 'created_at', 'updated_at'
+            'delivered_medicines_list', 'total_amount', 'urgency', 'payment_status',
+            'payment', 'status', 'required_date', 'notes', 'created_at', 'updated_at'
         ]
+        read_only_fields = ['order_id', 'payment_status', 'payment', 'created_at', 'updated_at']
 
 
 class EMedicineOrderCreateSerializer(serializers.ModelSerializer):

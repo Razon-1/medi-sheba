@@ -4,6 +4,7 @@ import Pagination from '../components/Pagination';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
 import OrderMedicinesModal from '../components/OrderMedicinesModal';
+import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/EMedicine.css';
 
 export default function EMedicine() {
@@ -26,6 +27,7 @@ export default function EMedicine() {
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 21;
+  const pharmacyFallbackImage = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop";
 
   useEffect(() => {
     fetchPharmacies();
@@ -268,9 +270,9 @@ export default function EMedicine() {
                 <div key={pharmacy.id} className="pharmacy-card">
                   <div className="pharmacy-image">
                     <img 
-                      src={pharmacy.image_url || "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"} 
+                      src={resolveImageUrl(pharmacy.image_url, pharmacyFallbackImage)} 
                       alt={pharmacy.name}
-                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"}
+                      onError={(e) => e.target.src = pharmacyFallbackImage}
                     />
                   </div>
                   <div className="pharmacy-header">

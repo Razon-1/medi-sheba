@@ -4,14 +4,14 @@ from .models import Hospital
 
 @admin.register(Hospital)
 class HospitalAdmin(admin.ModelAdmin):
-    list_display = ['name', 'type', 'district', 'is_verified', 'emergency_available', 'created_at']
-    list_filter = ['type', 'district', 'is_verified', 'emergency_available', 'created_at']
-    search_fields = ['name', 'address', 'phone_primary', 'phone_secondary']
+    list_display = ['name', 'admin_user', 'type', 'district', 'is_verified', 'emergency_available', 'created_at']
+    list_filter = ['type', 'district', 'is_verified', 'emergency_available', 'admin_user', 'created_at']
+    search_fields = ['name', 'address', 'phone_primary', 'phone_secondary', 'admin_user__email']
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'type', 'address')
+            'fields': ('admin_user', 'name', 'type', 'address')
         }),
         ('Contact Details', {
             'fields': ('phone_primary', 'phone_secondary', 'email', 'website')
@@ -26,7 +26,7 @@ class HospitalAdmin(admin.ModelAdmin):
             'fields': ('is_verified', 'is_active', 'rating', 'review_count')
         }),
         ('Image', {
-            'fields': ('image_url',)
+            'fields': ('image_url', 'doctor_image_url', 'ambulance_image_url', 'edoctor_image_url')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),

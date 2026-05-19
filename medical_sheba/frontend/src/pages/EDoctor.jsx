@@ -6,6 +6,7 @@ import paymentsAPI from '../api/payments';
 import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
 import useAuthStore from '../context/authStore';
+import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/EDoctor.css';
 
 export default function EDoctor() {
@@ -26,6 +27,7 @@ export default function EDoctor() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 15;
+  const doctorFallbackImage = "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop";
   const [activeTab, setActiveTab] = useState('doctors');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -385,9 +387,9 @@ export default function EDoctor() {
                 <div key={doctor.id} className="doctor-card">
                   <div className="doctor-image">
                     <img 
-                      src={doctor.image_url || "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"} 
+                      src={resolveImageUrl(doctor.image_url, doctorFallbackImage)} 
                       alt={doctor.name}
-                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"}
+                      onError={(e) => e.target.src = doctorFallbackImage}
                     />
                   </div>
                   <div className="doctor-header">

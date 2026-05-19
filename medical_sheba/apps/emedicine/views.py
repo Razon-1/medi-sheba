@@ -38,8 +38,22 @@ class IsPharmacyAdminOrReadOnly(BasePermission):
         # Read permission for any request
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
-        # Write permission only for the pharmacy admin of that pharmacy
-        return request.user.is_superuser or obj.admin_user == request.user
+
+        if request.user.is_superuser:
+            return True
+
+        pharmacy = obj if isinstance(obj, EMedicinePharmacy) else getattr(obj, 'pharmacy', None)
+        return pharmacy is not None and pharmacy.admin_user == request.user
+
+
+def user_is_pharmacy_admin_for_order(user, order):
+    if user.is_authenticated and user.is_superuser:
+        return True
+    return (
+        user.is_authenticated
+        and 'pharmacy_admin' in getattr(user, 'roles', [])
+        and order.pharmacy.admin_user == user
+    )
 
 
 class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
@@ -56,7 +70,7 @@ class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return EMedicinePharmacyCreateSerializer
-        elif self.action == 'retrieve':
+        elif self.action in ['retrieve', 'update', 'partial_update']:
             return EMedicinePharmacyDetailSerializer
         return EMedicinePharmacyListSerializer
     
@@ -178,6 +192,8 @@ class MedicineItemViewSet(viewsets.ModelViewSet):
         """Auto-assign pharmacy to pharmacy admin's pharmacy"""
         user = self.request.user
         if user.is_superuser:
+            if not serializer.validated_data.get('pharmacy'):
+                raise serializers.ValidationError({'pharmacy': 'Pharmacy is required for super admin medicine creation.'})
             serializer.save()
         elif 'pharmacy_admin' in user.roles:
             try:
@@ -246,11 +262,43 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
         order = serializer.instance
         detail_serializer = EMedicineOrderDetailSerializer(order)
         return Response(detail_serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        order = self.get_object()
+        if not user_is_pharmacy_admin_for_order(request.user, order):
+            return Response(
+                {'error': 'Only this pharmacy admin can update the order.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        order = self.get_object()
+        if not user_is_pharmacy_admin_for_order(request.user, order):
+            return Response(
+                {'error': 'Only this pharmacy admin can update the order.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        order = self.get_object()
+        if not user_is_pharmacy_admin_for_order(request.user, order):
+            return Response(
+                {'error': 'Only this pharmacy admin can delete the order.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
     
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
         """Confirm an order"""
         order = self.get_object()
+        if not user_is_pharmacy_admin_for_order(request.user, order):
+            return Response(
+                {'error': 'Only this pharmacy admin can confirm the order.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         if order.status != 'pending':
             return Response(
                 {'error': 'Only pending orders can be confirmed'},
@@ -281,6 +329,11 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
     def update_status(self, request, pk=None):
         """Update order status"""
         order = self.get_object()
+        if not user_is_pharmacy_admin_for_order(request.user, order):
+            return Response(
+                {'error': 'Only this pharmacy admin can update order status.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         new_status = request.data.get('status')
         
         valid_statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
@@ -299,6 +352,11 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
     def mark_medicine_delivered(self, request, pk=None):
         """Mark a specific medicine as delivered in an order"""
         order = self.get_object()
+        if not user_is_pharmacy_admin_for_order(request.user, order):
+            return Response(
+                {'error': 'Only this pharmacy admin can update delivered medicines.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         medicine_name = request.data.get('medicine_name')
         quantity = request.data.get('quantity', 1)
         
@@ -323,6 +381,11 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
     def unmark_medicine_delivered(self, request, pk=None):
         """Remove a medicine from delivered list"""
         order = self.get_object()
+        if not user_is_pharmacy_admin_for_order(request.user, order):
+            return Response(
+                {'error': 'Only this pharmacy admin can update delivered medicines.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         medicine_name = request.data.get('medicine_name')
         
         if not medicine_name:

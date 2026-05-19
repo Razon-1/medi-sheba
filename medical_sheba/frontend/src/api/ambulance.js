@@ -79,7 +79,7 @@ export const ambulanceAPI = {
   getAmbulanceAdminRequests: (status) => {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
-    return apiClient.get(`/ambulance/requests/hospital_requests/?${params.toString()}`);
+    return apiClient.get(`/ambulance/requests/admin_requests/?${params.toString()}`);
   },
   
   createAmbulance: (data) =>

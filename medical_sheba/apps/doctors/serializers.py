@@ -22,7 +22,7 @@ class DoctorSerializer(serializers.ModelSerializer):
             'follow_up_fee', 'chamber_address', 'available_days', 'available_time_start',
             'available_time_end', 'bio', 'languages', 'rating', 'review_count',
             'is_verified', 'is_available', 'requires_authentication', 'created_at', 'updated_at',
-            'first_name', 'last_name', 'email', 'phone_number'
+            'image_url', 'first_name', 'last_name', 'email', 'phone_number'
         ]
         read_only_fields = ['id', 'rating', 'review_count', 'created_at', 'updated_at']
     

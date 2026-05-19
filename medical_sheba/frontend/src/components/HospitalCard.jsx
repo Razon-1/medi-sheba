@@ -1,5 +1,6 @@
 import { MapPin, Phone, Bed } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { resolveImageUrl } from '../utils/images';
 
 export default function HospitalCard({ hospital }) {
   const navigate = useNavigate();
@@ -21,15 +22,16 @@ export default function HospitalCard({ hospital }) {
   };
 
   const bedOccupancy = hasBedCounts ? Math.round(((bedsTotal - bedsAvailable) / bedsTotal) * 100) : 0;
+  const fallbackImage = "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop";
 
   return (
     <div className="group card overflow-hidden hover:shadow-xl transition-all duration-300 h-full flex flex-col">
       {/* Image Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 h-48 sm:h-56">
         <img 
-          src={hospital.image_url || "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop"} 
+          src={resolveImageUrl(hospital.image_url, fallbackImage)} 
           alt={hospital.name}
-          onError={(e) => e.target.src = "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=400&h=300&fit=crop"}
+          onError={(e) => e.target.src = fallbackImage}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
         {/* Type Badge */}

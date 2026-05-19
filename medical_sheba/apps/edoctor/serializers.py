@@ -44,7 +44,7 @@ class EDoctorProfileDetailSerializer(serializers.ModelSerializer):
             'consultation_address', 'consultation_fee', 'consultation_duration_minutes',
             'languages_spoken', 'available_days', 'available_start_time', 'available_end_time',
             'is_available', 'is_verified', 'rating', 'review_count', 'bio',
-            'specialties', 'created_at', 'updated_at'
+            'specialties', 'image_url', 'created_at', 'updated_at'
         ]
 
 

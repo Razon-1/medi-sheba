@@ -172,8 +172,7 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
     
-    @action(detail=False, methods=['get'])
-    def hospital_requests(self, request):
+    def _get_admin_requests_response(self, request):
         """Get all ambulance requests for the current ambulance admin."""
         roles = getattr(request.user, 'roles', [])
         if not request.user.is_authenticated or (
@@ -190,6 +189,16 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
             requests = requests.filter(status=status_filter)
         serializer = AmbulanceRequestListSerializer(requests, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def admin_requests(self, request):
+        """Get all ambulance requests for the current ambulance admin."""
+        return self._get_admin_requests_response(request)
+
+    @action(detail=False, methods=['get'])
+    def hospital_requests(self, request):
+        """Backward-compatible alias for ambulance admin requests."""
+        return self._get_admin_requests_response(request)
     
     
     @action(detail=True, methods=['post'])

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, MapPin, Phone, Clock } from 'lucide-react';
 import BookAppointmentModal from './BookAppointmentModal';
+import { resolveImageUrl } from '../utils/images';
 
 export default function DoctorCard({ doctor, onAppointmentBooked }) {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function DoctorCard({ doctor, onAppointmentBooked }) {
   const phone = doctor.phone || doctor.phone_number || doctor.user?.phone || 'N/A';
   const hospitalName = doctor.hospital?.name || doctor.hospital_name || 'Multi-specialty Hospital';
   const rating = Number(doctor.rating) || 0;
+  const fallbackImage = "https://images.unsplash.com/photo-1622307479241-21e88c9cb8d8?w=300&h=300&fit=crop";
   
   const formatTime = (time) => {
     if (!time) return 'N/A';
@@ -38,9 +40,9 @@ export default function DoctorCard({ doctor, onAppointmentBooked }) {
         {/* Image Section */}
         <div className="relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 h-48 sm:h-56">
           <img 
-            src={doctor.image_url || "https://images.unsplash.com/photo-1622307479241-21e88c9cb8d8?w=300&h=300&fit=crop"} 
+            src={resolveImageUrl(doctor.image_url, fallbackImage)} 
             alt={doctorName}
-            onError={(e) => e.target.src = "https://images.unsplash.com/photo-1622307479241-21e88c9cb8d8?w=300&h=300&fit=crop"}
+            onError={(e) => e.target.src = fallbackImage}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {/* Experience Badge */}

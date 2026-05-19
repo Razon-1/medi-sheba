@@ -24,5 +24,6 @@ class HospitalListSerializer(serializers.ModelSerializer):
         model = Hospital
         fields = [
             'id', 'name', 'type', 'district', 'phone_primary',
+            'address', 'beds_total', 'beds_available', 'image_url',
             'emergency_available', 'rating', 'is_active', 'admin_user'
         ]

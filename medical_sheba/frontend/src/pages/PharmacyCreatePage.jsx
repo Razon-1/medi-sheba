@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import useAuthStore from '../context/authStore';
 import { medicineAPI } from '../api/emedicine';
+import { uploadImage } from '../api/hospitals';
 import paymentsAPI from '../api/payments';
 import '../styles/pages/PharmacyCreatePage.css';
 import '../styles/App.css';
@@ -26,6 +27,8 @@ export default function PharmacyCreatePage() {
     delivery_time_hours: 24,
     min_order_amount: 100,
     delivery_charge: 50,
+    image_url: '',
+    image_file: null,
   });
 
   const pharmacyTypes = [
@@ -135,10 +138,10 @@ export default function PharmacyCreatePage() {
   };
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, files } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'number' ? parseInt(value) || 0 : value
+      [name]: type === 'file' ? files[0] : (type === 'number' ? parseInt(value) || 0 : value)
     });
   };
 
@@ -175,6 +178,12 @@ export default function PharmacyCreatePage() {
       setLoading(true);
       setError(null);
 
+      let uploadedImageUrl = formData.image_url || '';
+      if (formData.image_file) {
+        const uploadRes = await uploadImage(formData.image_file);
+        uploadedImageUrl = uploadRes.data.image_url;
+      }
+
       const payload = {
         name: formData.name.trim(),
         pharmacy_type: formData.pharmacy_type,
@@ -187,6 +196,7 @@ export default function PharmacyCreatePage() {
         delivery_time_hours: Number(formData.delivery_time_hours) || 24,
         min_order_amount: Number(formData.min_order_amount) || 0,
         delivery_charge: Number(formData.delivery_charge) || 0,
+        image_url: uploadedImageUrl,
       };
 
       const pharmacy = await medicineAPI.createPharmacy(payload);
@@ -441,6 +451,32 @@ export default function PharmacyCreatePage() {
                   onChange={handleChange}
                   min="0"
                   placeholder="50"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h3>Pharmacy Image</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Upload Image</label>
+                <input
+                  type="file"
+                  name="image_file"
+                  accept="image/*"
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Or Image URL</label>
+                <input
+                  type="url"
+                  name="image_url"
+                  value={formData.image_url}
+                  onChange={handleChange}
+                  placeholder="https://example.com/pharmacy.jpg"
                 />
               </div>
             </div>

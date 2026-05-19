@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail, Users, Bed, Clock, CheckCircle, ArrowLeft, AlertCi
 import { hospitalsAPI } from '../api/hospitals';
 import { doctorsAPI } from '../api/doctors';
 import { updateMetaTags } from '../utils/seo';
+import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/HospitalDetail.css';
 
 export default function HospitalDetail() {
@@ -13,6 +14,7 @@ export default function HospitalDetail() {
   const [doctorCount, setDoctorCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const fallbackImage = "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=800&h=500&fit=crop";
 
   useEffect(() => {
     fetchHospitalDetails();
@@ -143,11 +145,11 @@ export default function HospitalDetail() {
       <div className="detail-header">
         <div className="header-image">
           <img 
-            src={hospital.image_url || "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=800&h=500&fit=crop"} 
+            src={resolveImageUrl(hospital.image_url, fallbackImage)} 
             alt={hospital.name}
             onError={(e) => {
               e.currentTarget.onerror = null;
-              e.currentTarget.src = "https://images.unsplash.com/photo-1587745914519-3e0f623fd1b5?w=800&h=500&fit=crop";
+              e.currentTarget.src = fallbackImage;
             }}
           />
           {hospital.emergency_available && (

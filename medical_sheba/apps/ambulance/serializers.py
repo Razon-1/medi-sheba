@@ -5,6 +5,7 @@ from .models import AmbulanceService, AmbulanceRequest
 class AmbulanceServiceListSerializer(serializers.ModelSerializer):
     district_name = serializers.CharField(source='district.name', read_only=True, allow_null=True, required=False)
     upazila_name = serializers.CharField(source='upazila.name', read_only=True, allow_null=True, required=False)
+    admin_user_name = serializers.CharField(source='admin_user.get_full_name', read_only=True, allow_null=True, required=False)
     
     class Meta:
         model = AmbulanceService
@@ -12,21 +13,27 @@ class AmbulanceServiceListSerializer(serializers.ModelSerializer):
             'id', 'name', 'vehicle_type', 'driver_name', 'phone_number',
             'district', 'district_name', 'upazila', 'upazila_name', 'address',
             'cost_per_km', 'is_available', 'is_verified', 'rating', 'review_count',
-            'image_url', 'requires_authentication', 'hospital', 'admin_user'
+            'image_url', 'requires_authentication', 'hospital', 'admin_user', 'admin_user_name'
         ]
         read_only_fields = ['admin_user', 'hospital']
 
 
 class AmbulanceServiceCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating ambulance services with optional district"""
+    district_name = serializers.CharField(source='district.name', read_only=True, allow_null=True, required=False)
+    upazila_name = serializers.CharField(source='upazila.name', read_only=True, allow_null=True, required=False)
+    admin_user_name = serializers.CharField(source='admin_user.get_full_name', read_only=True, allow_null=True, required=False)
+
     class Meta:
         model = AmbulanceService
         fields = [
-            'name', 'vehicle_type', 'driver_name', 'phone_number', 'email',
+            'id', 'name', 'vehicle_type', 'driver_name', 'phone_number', 'email',
             'district', 'upazila', 'address', 'latitude', 'longitude',
-            'cost_per_km', 'hospital', 'admin_user', 'is_available', 'is_verified', 'image_url', 'requires_authentication'
+            'district_name', 'upazila_name', 'cost_per_km', 'hospital', 'admin_user',
+            'admin_user_name', 'is_available', 'is_verified', 'rating', 'review_count',
+            'image_url', 'requires_authentication'
         ]
-        read_only_fields = ['admin_user', 'hospital']
+        read_only_fields = ['id', 'admin_user', 'admin_user_name', 'hospital', 'rating', 'review_count']
         extra_kwargs = {
             'district': {'required': False, 'allow_null': True},
             'upazila': {'required': False, 'allow_null': True},

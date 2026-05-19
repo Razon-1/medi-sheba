@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import useAuthStore from '../context/authStore';
 import { medicineAPI } from '../api/emedicine';
+import { uploadImage } from '../api/hospitals';
 import '../styles/pages/PharmacyAdminDashboard.css';
 
 export default function PharmacyAdminDashboard() {
@@ -1104,8 +1105,8 @@ function EditMedicineForm({ medicine, medicines, setMedicines, onClose }) {
         stock: parseInt(formData.stock),
       };
 
-      await medicineAPI.updateMedicine(medicine.id, payload);
-      setMedicines(medicines.map(m => m.id === medicine.id ? { ...formData } : m));
+      const response = await medicineAPI.updateMedicine(medicine.id, payload);
+      setMedicines(medicines.map(m => m.id === medicine.id ? response.data : m));
       onClose();
     } catch (err) {
       console.error('Error updating medicine:', err);
@@ -1364,6 +1365,8 @@ function EditPharmacyForm({ pharmacy, setPharmacy, onClose }) {
     delivery_time_hours: pharmacy.delivery_time_hours || 24,
     min_order_amount: pharmacy.min_order_amount || 100,
     delivery_charge: pharmacy.delivery_charge || 50,
+    image_url: pharmacy.image_url || '',
+    image_file: null,
     is_available: pharmacy.is_available || true,
   });
   const [error, setError] = useState(null);
@@ -1383,12 +1386,20 @@ function EditPharmacyForm({ pharmacy, setPharmacy, onClose }) {
       setLoading(true);
       setError(null);
 
+      let uploadedImageUrl = formData.image_url || '';
+      if (formData.image_file) {
+        const uploadRes = await uploadImage(formData.image_file);
+        uploadedImageUrl = uploadRes.data.image_url;
+      }
+
       const payload = {
         ...formData,
+        image_url: uploadedImageUrl,
         delivery_time_hours: parseInt(formData.delivery_time_hours),
         min_order_amount: parseFloat(formData.min_order_amount),
         delivery_charge: parseFloat(formData.delivery_charge),
       };
+      delete payload.image_file;
 
       const response = await medicineAPI.updatePharmacy(pharmacy.id, payload);
       setPharmacy(response.data);
@@ -1452,6 +1463,23 @@ function EditPharmacyForm({ pharmacy, setPharmacy, onClose }) {
               onChange={handleChange}
               required
               rows="3"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Pharmacy Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              name="image_file"
+              onChange={(e) => setFormData(prev => ({ ...prev, image_file: e.target.files[0] }))}
+            />
+            <input
+              type="url"
+              name="image_url"
+              value={formData.image_url || ''}
+              onChange={handleChange}
+              placeholder="Or paste image URL"
             />
           </div>
 

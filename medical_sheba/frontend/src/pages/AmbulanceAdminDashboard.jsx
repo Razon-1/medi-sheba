@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
 import * as ambulanceApi from '../api/ambulance';
+import { uploadImage } from '../api/hospitals';
 import { validateBangladeshPhone } from '../utils/validators';
 import '../styles/AdminDashboard.css';
 
@@ -13,6 +14,8 @@ const emptyAmbulance = {
   email: '',
   address: '',
   cost_per_km: '',
+  image_url: '',
+  image_file: null,
   is_available: true,
 };
 
@@ -39,17 +42,20 @@ export default function AmbulanceAdminDashboard() {
   const [success, setSuccess] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [reviewPeriod, setReviewPeriod] = useState('weekly');
+  const canManageAmbulance = Boolean(
+    user?.is_superuser || user?.roles?.includes('admin') || user?.roles?.includes('ambulance_driver_admin')
+  );
 
   useEffect(() => {
-    if (user && !user.roles.includes('ambulance_driver_admin')) {
+    if (user && !canManageAmbulance) {
       navigate('/');
     }
-  }, [navigate, user]);
+  }, [canManageAmbulance, navigate, user]);
 
   useEffect(() => {
-    if (!user?.roles?.includes('ambulance_driver_admin')) return;
+    if (!canManageAmbulance) return;
     loadDashboard();
-  }, [activeTab, statusFilter, user]);
+  }, [activeTab, canManageAmbulance, statusFilter, user]);
 
   const loadDashboard = async () => {
     try {
@@ -291,8 +297,14 @@ export default function AmbulanceAdminDashboard() {
         email: formData.email || '',
         address: formData.address || '',
         cost_per_km: Number.parseFloat(formData.cost_per_km || 0),
+        image_url: formData.image_url || '',
         is_available: formData.is_available !== false,
       };
+
+      if (formData.image_file) {
+        const uploadRes = await uploadImage(formData.image_file);
+        payload.image_url = uploadRes.data.image_url;
+      }
 
       if (editingItem) {
         const response = await ambulanceApi.updateAmbulance(editingItem.id, payload);
@@ -576,7 +588,7 @@ export default function AmbulanceAdminDashboard() {
     );
   };
 
-  if (!user?.roles?.includes('ambulance_driver_admin')) {
+  if (!canManageAmbulance) {
     return null;
   }
 
@@ -717,6 +729,22 @@ export default function AmbulanceAdminDashboard() {
                   Admin sets the taka amount for 1 km. Final fare is calculated from trip distance.
                 </small>
                 {formErrors.cost_per_km && <span className="field-error">{formErrors.cost_per_km}</span>}
+              </div>
+
+              <div className="form-group">
+                <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#333' }}>Ambulance Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setFormData({ ...formData, image_file: event.target.files[0] })}
+                />
+                <input
+                  type="url"
+                  placeholder="Or paste image URL"
+                  value={formData.image_url || ''}
+                  onChange={(event) => setFormData({ ...formData, image_url: event.target.value })}
+                  style={{ marginTop: '8px' }}
+                />
               </div>
 
               <div className="form-group">

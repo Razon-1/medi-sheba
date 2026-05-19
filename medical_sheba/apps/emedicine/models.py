@@ -95,7 +95,6 @@ class MedicineItem(models.Model):
     description = models.TextField(blank=True)
     side_effects = models.TextField(blank=True)
     precautions = models.TextField(blank=True)
-    
     # Availability
     is_available = models.BooleanField(default=True)
     stock = models.IntegerField(default=0)

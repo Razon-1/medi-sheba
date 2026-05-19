@@ -3,6 +3,7 @@ import { PhoneCall, MapPin, DollarSign, AlertCircle, X } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ambulanceAPI } from '../api/ambulance';
 import { useSEO, pageMetadata } from '../utils/seo';
+import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/Ambulance.css';
 
 export default function Ambulance() {
@@ -17,6 +18,7 @@ export default function Ambulance() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 15;
+  const ambulanceFallbackImage = "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop";
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedAmbulance, setSelectedAmbulance] = useState(null);
   const [requestLoading, setRequestLoading] = useState(false);
@@ -300,9 +302,9 @@ export default function Ambulance() {
             <div key={ambulance.id} className="ambulance-card">
               <div className="ambulance-image">
                 <img 
-                  src={ambulance.image_url || "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop"} 
+                  src={resolveImageUrl(ambulance.image_url, ambulanceFallbackImage)} 
                   alt={ambulance.name || 'Ambulance service'}
-                  onError={(e) => e.target.src = "https://images.unsplash.com/photo-1586854692186-e5b8a9dbbd16?w=400&h=300&fit=crop"}
+                  onError={(e) => e.target.src = ambulanceFallbackImage}
                 />
               </div>
               <div className="ambulance-header">
