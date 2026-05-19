@@ -2,6 +2,11 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from .validators import (
+    normalize_phone_number,
+    validate_bangladesh_phone_number,
+    validate_gmail_address,
+)
 
 
 class CustomUserManager(BaseUserManager):
@@ -12,6 +17,9 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Phone is required')
         
         email = self.normalize_email(email)
+        validate_gmail_address(email)
+        phone = normalize_phone_number(phone)
+        validate_bangladesh_phone_number(phone)
         user = self.model(email=email, phone=phone, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -52,8 +60,8 @@ class User(AbstractBaseUser):
     ]
     
     id = models.AutoField(primary_key=True)
-    email = models.EmailField(unique=True, db_index=True)
-    phone = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(unique=True, db_index=True, validators=[validate_gmail_address])
+    phone = models.CharField(max_length=20, unique=True, validators=[validate_bangladesh_phone_number])
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     roles = models.JSONField(default=list, help_text='List of roles for this user')
