@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search, Check, Zap } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import useAuthStore from '../context/authStore';
+import paymentsAPI from '../api/payments';
 import '../styles/pages/Home.css';
 
 export default function Home() {
   const navigate = useNavigate();
   const [adminType, setAdminType] = useState('pharmacy');
+  const [paymentStarting, setPaymentStarting] = useState(null);
   const { user } = useAuthStore();
   // Set SEO metadata for this page
   useSEO(pageMetadata.home);
@@ -92,6 +94,9 @@ export default function Home() {
       name: 'Monthly Plan',
       duration: 'Per Month',
       price: '৳999',
+      priceAmount: 999,
+      durationKey: 'monthly',
+      backendPlan: 'professional',
       description: 'Best for growing pharmacies',
       features: [
         'Unlimited medicine listings',
@@ -115,6 +120,9 @@ export default function Home() {
       name: 'Yearly Plan',
       duration: 'Per Year',
       price: '৳9,999',
+      priceAmount: 9999,
+      durationKey: 'annual',
+      backendPlan: 'professional',
       description: '17% savings on annual plan',
       features: [
         'Unlimited medicine listings',
@@ -182,6 +190,9 @@ export default function Home() {
       name: 'Monthly Plan',
       duration: 'Per Month',
       price: '৳1,999',
+      priceAmount: 1999,
+      durationKey: 'monthly',
+      backendPlan: 'professional',
       description: 'Best for mid-size hospitals',
       features: [
         'Complete hospital admin dashboard',
@@ -200,6 +211,9 @@ export default function Home() {
       name: 'Yearly Plan',
       duration: 'Per Year',
       price: '৳19,999',
+      priceAmount: 19999,
+      durationKey: 'annual',
+      backendPlan: 'professional',
       description: '17% savings on annual plan',
       features: [
         'Complete hospital admin dashboard',
@@ -259,7 +273,10 @@ export default function Home() {
     {
       name: 'Monthly Plan',
       duration: 'Per Month',
-      price: 'à§³1,499',
+      price: '৳1,499',
+      priceAmount: 1499,
+      durationKey: 'monthly',
+      backendPlan: 'professional',
       description: 'Best for independent ambulance operators',
       next: '/ambulance-admin',
       features: [
@@ -277,7 +294,10 @@ export default function Home() {
     {
       name: 'Yearly Plan',
       duration: 'Per Year',
-      price: 'à§³14,999',
+      price: '৳14,999',
+      priceAmount: 14999,
+      durationKey: 'annual',
+      backendPlan: 'professional',
       description: 'Save with annual ambulance service access',
       next: '/ambulance-admin',
       features: [
@@ -323,6 +343,42 @@ export default function Home() {
     { icon: Award, text: 'Top-rated Service' },
     { icon: Users, text: 'Expert Community' },
   ];
+
+  const handlePlanClick = async (plan, planKey) => {
+    if (plan.cta === 'Contact Sales') {
+      navigate('/contact-sales');
+      return;
+    }
+
+    if (!user) {
+      navigate('/login', { state: { next: plan.next || '/' } });
+      return;
+    }
+
+    if (plan.isTrial || !plan.priceAmount) {
+      navigate(plan.next || '/');
+      return;
+    }
+
+    try {
+      setPaymentStarting(planKey);
+      const subscription = await paymentsAPI.createSubscription({
+        plan: plan.backendPlan || 'professional',
+        duration: plan.durationKey || 'monthly',
+        amount: plan.priceAmount,
+      });
+      const checkout = await paymentsAPI.initiateSSLCommerzPayment({
+        amount: subscription.amount || plan.priceAmount,
+        payment_type: 'subscription',
+        reference_type: 'subscription',
+        reference_id: subscription.subscription_id,
+      });
+      window.location.href = checkout.gateway_url;
+    } catch (err) {
+      alert(err.detail || err.message || 'Failed to start SSLCommerz payment');
+      setPaymentStarting(null);
+    }
+  };
 
   return (
     <div className="home">
@@ -421,8 +477,11 @@ export default function Home() {
         </div>
         
         <div className="subscription-grid">
-          {plansByAdminType[adminType].map((plan, idx) => (
-            <div key={idx} className={`subscription-card ${plan.popular ? 'popular' : ''}`}>
+          {plansByAdminType[adminType].map((plan, idx) => {
+            const planKey = `${adminType}-${idx}`;
+
+            return (
+            <div key={planKey} className={`subscription-card ${plan.popular ? 'popular' : ''}`}>
               {plan.popular && (
                 <div className="popular-badge">
                   <Zap size={16} />
@@ -437,21 +496,10 @@ export default function Home() {
               <p className="plan-description">{plan.description}</p>
               <button 
                 className={`btn-plan ${plan.popular ? 'btn-popular' : ''}`}
-                onClick={() => {
-                  if (plan.cta === 'Contact Sales') {
-                    navigate('/contact-sales');
-                    return;
-                  }
-
-                  if (!user) {
-                    navigate('/login', { state: { next: '/payment' } });
-                    return;
-                  }
-
-                  navigate('/payment', { state: { plan, next: plan.next || '/' } });
-                }}
+                onClick={() => handlePlanClick(plan, planKey)}
+                disabled={Boolean(paymentStarting)}
               >
-                {plan.cta}
+                {paymentStarting === planKey ? 'Opening SSLCommerz...' : plan.cta}
               </button>
               <div className="plan-divider"></div>
               <ul className="features-list">
@@ -463,7 +511,8 @@ export default function Home() {
                 ))}
               </ul>
             </div>
-          ))}
+          );
+          })}
         </div>
       </section>
 

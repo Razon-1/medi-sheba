@@ -114,6 +114,7 @@ export default function PharmacyCreatePage() {
         setUser(updated);
         localStorage.setItem('user', JSON.stringify(updated));
       }
+      setAccessState('active');
     } catch (err) {
       // If unauthenticated or forbidden, suggest buying a plan or logging in
       if (err.status === 401) {
@@ -131,10 +132,6 @@ export default function PharmacyCreatePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const goToBuyPlan = () => {
-    navigate('/payment', { state: { plan: { name: 'Free Trial', price: 'Free', isTrial: true }, next: '/pharmacy-create' } });
   };
 
   const handleChange = (e) => {
@@ -250,7 +247,9 @@ export default function PharmacyCreatePage() {
             )}
           </div>
           <div className="subscription-actions">
-              <button className="btn-outline" onClick={goToBuyPlan} disabled={loading}>Continue Free Trial</button>
+              <button className="btn-outline" onClick={handleStartTrial} disabled={loading}>
+                {loading ? 'Starting Trial...' : 'Continue Free Trial'}
+              </button>
           </div>
           {error && <div className="error-banner"><span>{error}</span></div>}
         </div>

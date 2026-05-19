@@ -133,6 +133,22 @@ CORS_ALLOW_CREDENTIALS = True
 # App URL.
 APP_NAME = config('APP_NAME', default='Medi Sheba')
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+API_BASE_URL = config('API_BASE_URL', default='http://localhost:8000')
+
+# SSLCommerz Configuration
+SSLCOMMERZ_SANDBOX = config('SSLCOMMERZ_SANDBOX', default=True, cast=bool)
+SSLCOMMERZ_STORE_ID = config('SSLCOMMERZ_STORE_ID', default='').strip() or 'testbox'
+SSLCOMMERZ_STORE_PASSWORD = config('SSLCOMMERZ_STORE_PASSWORD', default='').strip() or 'qwerty'
+SSLCOMMERZ_INIT_URL = config(
+    'SSLCOMMERZ_INIT_URL',
+    default='https://sandbox.sslcommerz.com/gwprocess/v4/api.php'
+    if SSLCOMMERZ_SANDBOX else 'https://securepay.sslcommerz.com/gwprocess/v4/api.php'
+)
+SSLCOMMERZ_VALIDATION_URL = config(
+    'SSLCOMMERZ_VALIDATION_URL',
+    default='https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php'
+    if SSLCOMMERZ_SANDBOX else 'https://securepay.sslcommerz.com/validator/api/validationserverAPI.php'
+)
 
 # Email Configuration
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@medisheba.com')

@@ -12,7 +12,7 @@ const api = axios.create({
 // Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-  if (token) {
+  if (token && !config.skipAuth) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -26,6 +26,15 @@ export const paymentsAPI = {
       return response.data;
     } catch (error) {
       throw error.response?.data || { detail: 'Failed to initiate payment' };
+    }
+  },
+
+  initiateSSLCommerzPayment: async (paymentData) => {
+    try {
+      const response = await api.post('/payments/sslcommerz/initiate/', paymentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to initiate SSLCommerz payment' };
     }
   },
 
@@ -51,6 +60,18 @@ export const paymentsAPI = {
     }
   },
 
+  getPaymentByTransaction: async (transactionId) => {
+    try {
+      const response = await api.get('/payments/status-by-transaction/', {
+        params: { transaction_id: transactionId },
+        skipAuth: true,
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to load payment details' };
+    }
+  },
+
   // Get all payments for current user
   getMyPayments: async (filters = {}) => {
     try {
@@ -72,6 +93,52 @@ export const paymentsAPI = {
       return response.data;
     } catch (error) {
       throw error.response?.data || { detail: 'Failed to refund payment' };
+    }
+  },
+
+  downloadPaymentReport: async (paymentId) => {
+    try {
+      const response = await api.get(`/payments/${paymentId}/download-report/`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to download payment report' };
+    }
+  },
+
+  downloadPaymentReportByTransaction: async (transactionId) => {
+    try {
+      const response = await api.get('/payments/download-report-by-transaction/', {
+        params: { transaction_id: transactionId },
+        responseType: 'blob',
+        skipAuth: true,
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to download payment report' };
+    }
+  },
+
+  emailPaymentReport: async (paymentId) => {
+    try {
+      const response = await api.post(`/payments/${paymentId}/email-report/`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to email payment report' };
+    }
+  },
+
+  emailPaymentReportByTransaction: async (transactionId) => {
+    try {
+      const response = await api.post('/payments/email-report-by-transaction/', {
+        transaction_id: transactionId,
+      }, {
+        skipAuth: true,
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to email payment report' };
     }
   },
 

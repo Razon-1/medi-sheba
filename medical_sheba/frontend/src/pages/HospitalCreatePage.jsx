@@ -105,6 +105,7 @@ const HospitalCreatePage = () => {
         setUser(updated);
         localStorage.setItem('user', JSON.stringify(updated));
       }
+      setAccessState('active');
     } catch (err) {
       if (err.status === 401) {
         setError('You must be logged in to start a trial. Redirecting to login...');
@@ -121,10 +122,6 @@ const HospitalCreatePage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const goToBuyPlan = () => {
-    navigate('/payment', { state: { plan: { name: 'Free Trial', price: 'Free', isTrial: true }, next: '/hospital-create' } });
   };
 
   const handleChange = (e) => {
@@ -211,7 +208,9 @@ const HospitalCreatePage = () => {
             )}
           </div>
           <div className="subscription-actions">
-              <button className="btn-outline" onClick={goToBuyPlan} disabled={loading}>Continue Free Trial</button>
+              <button className="btn-outline" onClick={handleStartTrial} disabled={loading}>
+                {loading ? 'Starting Trial...' : 'Continue Free Trial'}
+              </button>
           </div>
           {error && <div className="error-message">{error}</div>}
         </div>

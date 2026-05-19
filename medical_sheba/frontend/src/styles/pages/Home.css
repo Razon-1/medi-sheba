@@ -504,12 +504,20 @@
 
 .plan-price {
   margin: 1.5rem 0 1rem;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .plan-price .price {
-  font-size: 2.5rem;
+  display: block;
+  max-width: 100%;
+  font-size: clamp(2rem, 6vw, 2.5rem);
   font-weight: 800;
   color: var(--primary-blue);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .plan-description {

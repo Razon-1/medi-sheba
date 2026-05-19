@@ -43,6 +43,9 @@ class PaymentListSerializer(serializers.ModelSerializer):
             'status_display', 'created_at', 'paid_at'
         ]
 
+    def get_user_name(self, obj):
+        return obj.user.get_full_name() or obj.user.email
+
 
 class PaymentInitiateSerializer(serializers.ModelSerializer):
     """For initiating/creating a new payment"""

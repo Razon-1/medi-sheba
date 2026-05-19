@@ -10,6 +10,7 @@ class Payment(models.Model):
         ('nagad', 'Nagad'),
         ('card', 'Card'),
         ('rocket', 'Rocket'),
+        ('sslcommerz', 'SSLCommerz'),
     ]
     
     PAYMENT_TYPE_CHOICES = [
