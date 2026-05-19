@@ -13,8 +13,8 @@ const Payment = ({
   patientName = '',
   serviceName = ''
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState('bkash');
-  const [step, setStep] = useState(1); // 1: select method, 2: enter details, 3: verify
+  const [paymentMethod, setPaymentMethod] = useState('sslcommerz');
+  const [step, setStep] = useState(1); // 1: SSLCommerz checkout, 3: success
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -33,10 +33,7 @@ const Payment = ({
   });
 
   const paymentMethods = [
-    { id: 'bkash', name: 'bKash', iconUrl: 'https://my.easycommerce.dev/wp-content/uploads/2025/03/Bkash-1.png', color: '#E2144F' },
-    { id: 'nagad', name: 'Nagad', iconUrl: 'https://www.bssnews.net/assets/news_photos/2022/02/04/image-42525-1643965434.jpg', color: '#FE6D00' },
-    { id: 'card', name: 'Card', icon: '💳', color: '#2563EB' },
-    { id: 'rocket', name: 'Rocket', iconUrl: 'https://my.easycommerce.dev/wp-content/uploads/2025/04/Rocket-Payment-Integration.png', color: '#8E3BA1' },
+    { id: 'sslcommerz', name: 'SSLCommerz', icon: 'SSL', color: '#0F766E' },
   ];
 
   const currentMethod = paymentMethods.find(m => m.id === paymentMethod);
@@ -65,6 +62,18 @@ const Payment = ({
         reference_type: referenceType || paymentType,
         ...paymentDetails,
       };
+
+      if (paymentMethod === 'sslcommerz') {
+        const response = await paymentsAPI.initiateSSLCommerzPayment(paymentData);
+        const checkoutUrl = response.gateway_url || response.redirect_url || response.GatewayPageURL;
+
+        if (!checkoutUrl) {
+          throw { detail: 'SSLCommerz did not return a checkout URL' };
+        }
+
+        window.location.href = checkoutUrl;
+        return;
+      }
 
       const response = await paymentsAPI.initiatePayment(paymentData);
 
@@ -161,7 +170,7 @@ const Payment = ({
   const renderPaymentMethodStep = () => (
     <div className="payment-modal-content">
       <div className="payment-header">
-        <h3>Select Payment Method</h3>
+        <h3>Pay with SSLCommerz</h3>
         <p>{getPaymentTypeDisplay()}</p>
       </div>
 
@@ -171,27 +180,13 @@ const Payment = ({
         {patientName && <p className="patient-name">Patient: {patientName}</p>}
       </div>
 
-      <div className="payment-methods-grid">
-        {paymentMethods.map(method => (
-          <button
-            key={method.id}
-            className={`payment-method-btn ${paymentMethod === method.id ? 'active' : ''}`}
-            style={{
-              borderColor: paymentMethod === method.id ? method.color : '#ddd',
-              backgroundColor: paymentMethod === method.id ? method.color + '10' : '#f9f9f9',
-            }}
-            onClick={() => setPaymentMethod(method.id)}
-          >
-            <div className="method-icon">
-              {method.iconUrl ? (
-                <img src={method.iconUrl} alt={method.name} className="method-img" />
-              ) : (
-                method.icon
-              )}
-            </div>
-            <div className="method-name">{method.name}</div>
-          </button>
-        ))}
+      <div className="payment-instructions">
+        <h4>Secure Checkout</h4>
+        <ol>
+          <li>Click the button below to open SSLCommerz hosted checkout.</li>
+          <li>Choose card, mobile banking, or net banking on SSLCommerz.</li>
+          <li>After payment, you will return to Medi Sheba automatically.</li>
+        </ol>
       </div>
 
       <button
@@ -199,7 +194,7 @@ const Payment = ({
         onClick={handleInitiatePayment}
         disabled={loading}
       >
-        {loading ? 'Processing...' : 'Continue'}
+        {loading ? 'Processing...' : 'Pay with SSLCommerz'}
       </button>
 
       {error && <div className="error-message">{error}</div>}

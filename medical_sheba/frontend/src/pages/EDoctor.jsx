@@ -3,7 +3,6 @@ import { Star, Clock, MapPin, Phone, AlertCircle } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { edoctorAPI } from '../api/edoctor';
 import paymentsAPI from '../api/payments';
-import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
 import useAuthStore from '../context/authStore';
 import { resolveImageUrl } from '../utils/images';
@@ -47,7 +46,6 @@ export default function EDoctor() {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
-  const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
     fetchDoctors();
@@ -252,41 +250,22 @@ export default function EDoctor() {
       });
       
       fetchConsultations();
+      const checkoutResponse = await paymentsAPI.initiateSSLCommerzPayment({
+        amount: Number(response.data.fee_amount ?? selectedDoctor.consultation_fee) || 0,
+        payment_type: 'edoctor',
+        reference_id: response.data.id,
+        reference_type: 'edoctor_consultation',
+      });
+      const checkoutUrl = checkoutResponse.gateway_url || checkoutResponse.redirect_url || checkoutResponse.GatewayPageURL;
+
+      if (!checkoutUrl) {
+        throw { detail: 'Consultation booked, but SSLCommerz did not return a checkout URL' };
+      }
+
+      window.location.href = checkoutUrl;
     } catch (err) {
       console.error('Error booking consultation:', err);
-      alert('Failed to book consultation');
-    }
-  };
-
-  const handlePaymentSuccess = async (paymentData) => {
-    try {
-      // Update consultation with payment reference
-      await edoctorAPI.updateConsultation(bookingConfirmation.id, {
-        payment_status: 'paid',
-        payment: paymentData.id,
-      });
-      
-      setShowPayment(false);
-      
-      // Close confirmation modal after a moment
-      setTimeout(() => {
-        setBookingConfirmation(null);
-        setShowBookingForm(false);
-        setBookingData({
-          patient_name: '',
-          patient_email: '',
-          patient_phone: '',
-          patient_age: '',
-          chief_complaint: '',
-          medical_history: '',
-          scheduled_date: '',
-          scheduled_time: '',
-          urgency: 'routine'
-        });
-      }, 1500);
-    } catch (err) {
-      console.error('Error updating consultation after payment:', err);
-      alert('Payment successful but failed to update consultation. Please contact support.');
+      alert(err.detail || err.response?.data?.detail || 'Failed to book consultation');
     }
   };
 
@@ -748,13 +727,6 @@ export default function EDoctor() {
             <div className="modal-actions">
               <button 
                 className="btn-submit"
-                onClick={() => setShowPayment(true)}
-                style={{ backgroundColor: '#3498db', marginRight: '10px' }}
-              >
-                Proceed to Payment - BDT {parseFloat(bookingConfirmation.fee).toFixed(2)}
-              </button>
-              <button 
-                className="btn-submit"
                 onClick={() => {
                   setBookingConfirmation(null);
                   setShowBookingForm(false);
@@ -776,20 +748,6 @@ export default function EDoctor() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Payment Modal for E-Doctor Consultation */}
-      {showPayment && bookingConfirmation && (
-        <Payment
-          isOpen={showPayment}
-          onClose={() => setShowPayment(false)}
-          paymentType="edoctor"
-          amount={parseFloat(bookingConfirmation.fee)}
-          referenceId={bookingConfirmation.id}
-          referenceType="edoctor_consultation"
-          serviceName={`E-Doctor Consultation with ${bookingConfirmation.doctor_name}`}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
       )}
     </div>
   );

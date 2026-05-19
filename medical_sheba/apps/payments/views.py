@@ -363,14 +363,29 @@ class PaymentViewSet(viewsets.ModelViewSet):
         """Get hospital based on payment type and reference_id"""
         try:
             if payment_type == 'appointment' and reference_id:
-                # Find doctor appointment and get hospital
-                doctor = Doctor.objects.get(id=reference_id)
-                return doctor.hospital
+                from apps.appointments.models import Appointment
+
+                try:
+                    appointment = Appointment.objects.select_related(
+                        'hospital',
+                        'doctor__hospital',
+                    ).get(id=reference_id)
+                    return appointment.hospital or (appointment.doctor.hospital if appointment.doctor else None)
+                except Appointment.DoesNotExist:
+                    # Backward compatibility for older callers that passed doctor id.
+                    doctor = Doctor.objects.get(id=reference_id)
+                    return doctor.hospital
             
             elif payment_type == 'edoctor' and reference_id:
-                # Find e-doctor and get hospital
-                edoctor = EDoctorProfile.objects.get(id=reference_id)
-                return edoctor.hospital
+                from apps.edoctor.models import EDoctorConsultation
+
+                try:
+                    consultation = EDoctorConsultation.objects.select_related('doctor__hospital').get(id=reference_id)
+                    return consultation.doctor.hospital if consultation.doctor else None
+                except EDoctorConsultation.DoesNotExist:
+                    # Backward compatibility for older callers that passed e-doctor profile id.
+                    edoctor = EDoctorProfile.objects.get(id=reference_id)
+                    return edoctor.hospital
             
             elif payment_type == 'ambulance' and reference_id:
                 ambulance_request = AmbulanceRequest.objects.select_related('ambulance__hospital').get(id=reference_id)
@@ -627,49 +642,53 @@ class PaymentViewSet(viewsets.ModelViewSet):
     
     def _handle_appointment_payment(self, payment):
         """Update appointment payment status"""
-        if payment.reference_id and payment.reference_type == 'appointment':
+        reference_type = payment.reference_type or payment.payment_type
+        if payment.reference_id and reference_type in ['appointment', 'doctor_appointment']:
             try:
                 from apps.appointments.models import Appointment
                 appointment = Appointment.objects.get(id=payment.reference_id)
                 appointment.payment = payment
                 appointment.payment_status = 'paid'
-                appointment.save()
+                appointment.save(update_fields=['payment', 'payment_status', 'updated_at'])
             except Appointment.DoesNotExist:
                 pass
     
     def _handle_edoctor_payment(self, payment):
         """Update e-doctor consultation payment status"""
-        if payment.reference_id and payment.reference_type == 'edoctor':
+        reference_type = payment.reference_type or payment.payment_type
+        if payment.reference_id and reference_type in ['edoctor', 'edoctor_consultation', 'consultation']:
             try:
                 from apps.edoctor.models import EDoctorConsultation
                 consultation = EDoctorConsultation.objects.get(id=payment.reference_id)
                 consultation.payment = payment
                 consultation.payment_status = 'paid'
-                consultation.save()
-            except:
+                consultation.is_paid = True
+                consultation.save(update_fields=['payment', 'payment_status', 'is_paid', 'updated_at'])
+            except EDoctorConsultation.DoesNotExist:
                 pass
     
     def _handle_ambulance_payment(self, payment):
         """Update ambulance request payment status"""
-        if payment.reference_id and payment.reference_type in ['ambulance', 'ambulance_request']:
+        reference_type = payment.reference_type or payment.payment_type
+        if payment.reference_id and reference_type in ['ambulance', 'ambulance_request']:
             try:
                 request_obj = AmbulanceRequest.objects.get(id=payment.reference_id)
                 request_obj.payment = payment
                 request_obj.payment_status = 'paid'
-                request_obj.save()
-            except:
+                request_obj.save(update_fields=['payment', 'payment_status', 'updated_at'])
+            except AmbulanceRequest.DoesNotExist:
                 pass
     
     def _handle_medicine_payment(self, payment):
         """Update medicine order payment status"""
-        if payment.reference_id and payment.reference_type in ['medicine', 'medicine_order']:
+        reference_type = payment.reference_type or payment.payment_type
+        if payment.reference_id and reference_type in ['medicine', 'medicine_order']:
             try:
-                from apps.emedicine.models import EMedicineOrder
                 order = EMedicineOrder.objects.get(id=payment.reference_id)
                 order.payment = payment
                 order.payment_status = 'paid'
-                order.save()
-            except:
+                order.save(update_fields=['payment', 'payment_status', 'updated_at'])
+            except EMedicineOrder.DoesNotExist:
                 pass
     
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])

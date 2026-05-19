@@ -3,7 +3,6 @@ import { X, AlertCircle, CheckCircle, Plus, Minus, Trash2, Phone } from 'lucide-
 import { useNavigate } from 'react-router-dom';
 import { emedicineAPI } from '../api/emedicine';
 import paymentsAPI from '../api/payments';
-import Payment from './Payment';
 import useAuthStore from '../context/authStore';
 import '../styles/components/OrderMedicinesModal.css';
 
@@ -16,7 +15,6 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [prescriptionNotes, setPrescriptionNotes] = useState('');
-  const [showPayment, setShowPayment] = useState(false);
   const [orderData, setOrderData] = useState(null);
   
   // Patient Information
@@ -150,10 +148,19 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
         delivery_address: '',
       });
 
-      // Show payment modal for payment
-      setTimeout(() => {
-        setShowPayment(true);
-      }, 2000);
+      const checkoutResponse = await paymentsAPI.initiateSSLCommerzPayment({
+        amount: Number(createdOrder.total_amount ?? totalPrice) || 0,
+        payment_type: 'medicine',
+        reference_id: createdOrder.id,
+        reference_type: 'medicine_order',
+      });
+      const checkoutUrl = checkoutResponse.gateway_url || checkoutResponse.redirect_url || checkoutResponse.GatewayPageURL;
+
+      if (!checkoutUrl) {
+        throw { detail: 'Order placed, but SSLCommerz did not return a checkout URL' };
+      }
+
+      window.location.href = checkoutUrl;
 
     } catch (err) {
       console.error('Error placing order:', err);
@@ -161,7 +168,9 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
 
       let errorMessage = 'Failed to place order. Please try again.';
 
-      if (err.response?.data) {
+      if (err.detail) {
+        errorMessage = err.detail;
+      } else if (err.response?.data) {
         if (typeof err.response.data === 'string') {
           errorMessage = err.response.data;
         } else if (err.response.data.detail) {
@@ -199,23 +208,6 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
     navigate('/login');
   };
 
-  const handlePaymentSuccess = async () => {
-    try {
-      setShowPayment(false);
-      
-      // Close modal after a moment
-      setTimeout(() => {
-        onClose();
-        if (onSuccess) {
-          onSuccess(orderData);
-        }
-      }, 1500);
-    } catch (err) {
-      console.error('Error closing medicine payment flow:', err);
-      setError('Payment successful. Please close this window if it does not close automatically.');
-    }
-  };
-
   if (!isOpen || !pharmacy) return null;
 
   return (
@@ -229,35 +221,14 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
         </div>
 
         <div className="modal-body">
-          {showPayment && orderData ? (
-            <Payment
-              isOpen={showPayment}
-              onClose={() => {
-                setShowPayment(false);
-                onClose();
-              }}
-              paymentType="medicine"
-              amount={getOrderTotal()}
-              referenceId={orderData.id}
-              referenceType="medicine_order"
-              serviceName={`Medicine Order from ${pharmacy.name}`}
-              onPaymentSuccess={handlePaymentSuccess}
-            />
-          ) : success ? (
+          {success ? (
             <div className="success-message">
               <CheckCircle size={48} color="#10B981" />
               <h3>Order Placed Successfully! 🎉</h3>
               <p>Thank you for your order at {pharmacy.name}</p>
               <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: '#666' }}>
-                You will receive a confirmation call shortly. Estimated delivery: {pharmacy.delivery_time_hours} hours
+                Redirecting to SSLCommerz secure checkout...
               </p>
-              <button 
-                className="btn-proceed-payment"
-                onClick={() => setShowPayment(true)}
-                style={{ marginTop: '1.5rem' }}
-              >
-                Proceed to Payment - BDT {getOrderTotal().toFixed(2)}
-              </button>
             </div>
           ) : (
             <>

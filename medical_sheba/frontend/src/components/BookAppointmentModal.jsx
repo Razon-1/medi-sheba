@@ -79,11 +79,6 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
         message: '',
       });
 
-      // Show payment modal for payment
-      setTimeout(() => {
-        setShowPayment(true);
-      }, 2000);
-
     } catch (err) {
       console.error('Error booking appointment:', err);
       console.error('Error response:', err.response?.data);
@@ -144,6 +139,9 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
 
   if (!isOpen) return null;
 
+  const paymentAmount = parseFloat(appointmentData?.fee_amount ?? doctor.consultation_fee) || 0;
+  const appointmentDoctorName = appointmentData?.doctor_name || doctor.user_name || doctor.name;
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -163,10 +161,10 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
                 onClose();
               }}
               paymentType="appointment"
-              amount={parseFloat(doctor.consultation_fee) || 0}
+              amount={paymentAmount}
               referenceId={appointmentData.id}
               referenceType="appointment"
-              serviceName={`Appointment with Dr. ${doctor.user_name || doctor.name}`}
+              serviceName={`Appointment with Dr. ${appointmentDoctorName}`}
               onPaymentSuccess={handlePaymentSuccess}
             />
           ) : success ? (
