@@ -33,8 +33,8 @@ export default function Login() {
         return;
       }
       
-      await login(formData.email, formData.password, selectedRole);
-      navigate('/');
+      const data = await login(formData.email, formData.password, selectedRole);
+      navigate(data.user?.is_superuser || data.user?.roles?.includes('admin') ? '/super-admin' : '/');
     } catch (err) {
       console.error('Login error:', err);
       console.error('Error response:', err.response?.data);

@@ -11,7 +11,7 @@ export const hospitalsAPI = {
     client.post('/hospitals/', data),
   
   update: (id, data) =>
-    client.put(`/hospitals/${id}/`, data),
+    client.patch(`/hospitals/${id}/`, data),
   
   delete: (id) =>
     client.delete(`/hospitals/${id}/`),
@@ -36,3 +36,4 @@ export const getMyHospital = () => hospitalsAPI.myHospital();
 export const updateHospital = (id, data) => hospitalsAPI.update(id, data);
 export const getHospitals = () => hospitalsAPI.list();
 export const createHospital = (data) => hospitalsAPI.create(data);
+export const uploadImage = (imageFile) => hospitalsAPI.uploadImage(imageFile);

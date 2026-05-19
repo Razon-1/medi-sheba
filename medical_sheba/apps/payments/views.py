@@ -120,7 +120,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, 'role') and user.role == 'admin':
+        if user.is_superuser or (hasattr(user, 'role') and user.role == 'admin'):
             return Payment.objects.all()
         return Payment.objects.filter(user=user)
     
@@ -791,7 +791,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, 'role') and user.role == 'admin':
+        if user.is_superuser or (hasattr(user, 'role') and user.role == 'admin'):
             return Subscription.objects.all()
         return Subscription.objects.filter(user=user)
     
@@ -995,7 +995,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         """Cancel a subscription"""
         subscription = self.get_object()
         
-        if subscription.user != request.user:
+        if subscription.user != request.user and not request.user.is_superuser:
             return Response(
                 {'detail': 'Permission denied'},
                 status=status.HTTP_403_FORBIDDEN

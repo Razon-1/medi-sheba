@@ -20,7 +20,9 @@ from .serializers import (
 class IsPharmacyAdmin(BasePermission):
     """Permission check for pharmacy admin"""
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and 'pharmacy_admin' in request.user.roles
+        return request.user and request.user.is_authenticated and (
+            request.user.is_superuser or 'pharmacy_admin' in request.user.roles
+        )
 
 
 class IsPharmacyAdminOrReadOnly(BasePermission):
@@ -28,14 +30,16 @@ class IsPharmacyAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
-        return request.user and request.user.is_authenticated and 'pharmacy_admin' in request.user.roles
+        return request.user and request.user.is_authenticated and (
+            request.user.is_superuser or 'pharmacy_admin' in request.user.roles
+        )
     
     def has_object_permission(self, request, view, obj):
         # Read permission for any request
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
         # Write permission only for the pharmacy admin of that pharmacy
-        return obj.admin_user == request.user
+        return request.user.is_superuser or obj.admin_user == request.user
 
 
 class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
@@ -59,6 +63,8 @@ class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Pharmacy admins only see their own pharmacy
+        if user.is_authenticated and user.is_superuser:
+            return EMedicinePharmacy.objects.all()
         if user.is_authenticated and 'pharmacy_admin' in user.roles:
             return EMedicinePharmacy.objects.filter(admin_user=user)
         # Others see all available pharmacies
@@ -67,29 +73,37 @@ class EMedicinePharmacyViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Auto-assign current user as pharmacy admin"""
         user = self.request.user
-        if 'pharmacy_admin' not in user.roles:
+        if not user.is_superuser and 'pharmacy_admin' not in user.roles:
             raise serializers.ValidationError("Only pharmacy admins can create pharmacies")
         # Require an active subscription or trial access window
-        if not user.has_active_subscription_access():
+        if not user.is_superuser and not user.has_active_subscription_access():
             raise serializers.ValidationError("Active subscription required. Please start a trial or purchase a plan before creating a pharmacy.")
         
         # Check if user already has a pharmacy
-        if EMedicinePharmacy.objects.filter(admin_user=user).exists():
+        if not user.is_superuser and EMedicinePharmacy.objects.filter(admin_user=user).exists():
             raise serializers.ValidationError("You already have a pharmacy. One pharmacy admin can manage only one pharmacy.")
         
-        serializer.save(admin_user=user)
+        if user.is_superuser:
+            serializer.save()
+        else:
+            serializer.save(admin_user=user)
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_pharmacy(self, request):
         """Get the current user's pharmacy (for pharmacy admin)"""
-        if 'pharmacy_admin' not in request.user.roles:
+        if not request.user.is_superuser and 'pharmacy_admin' not in request.user.roles:
             return Response(
                 {'error': 'Only pharmacy admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            pharmacy = EMedicinePharmacy.objects.get(admin_user=request.user)
+            if request.user.is_superuser:
+                pharmacy = EMedicinePharmacy.objects.order_by('-created_at').first()
+                if not pharmacy:
+                    raise EMedicinePharmacy.DoesNotExist
+            else:
+                pharmacy = EMedicinePharmacy.objects.get(admin_user=request.user)
             serializer = EMedicinePharmacyDetailSerializer(pharmacy)
             return Response(serializer.data)
         except EMedicinePharmacy.DoesNotExist:
@@ -149,6 +163,8 @@ class MedicineItemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Pharmacy admins only see medicines from their pharmacy
+        if user.is_authenticated and user.is_superuser:
+            return MedicineItem.objects.all()
         if user.is_authenticated and 'pharmacy_admin' in user.roles:
             try:
                 pharmacy = EMedicinePharmacy.objects.get(admin_user=user)
@@ -161,7 +177,9 @@ class MedicineItemViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Auto-assign pharmacy to pharmacy admin's pharmacy"""
         user = self.request.user
-        if 'pharmacy_admin' in user.roles:
+        if user.is_superuser:
+            serializer.save()
+        elif 'pharmacy_admin' in user.roles:
             try:
                 pharmacy = EMedicinePharmacy.objects.get(admin_user=user)
                 serializer.save(pharmacy=pharmacy)
@@ -173,7 +191,7 @@ class MedicineItemViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_medicines(self, request):
         """Get all medicines for the current pharmacy admin"""
-        if 'pharmacy_admin' not in request.user.roles:
+        if not request.user.is_superuser and 'pharmacy_admin' not in request.user.roles:
             return Response(
                 {'error': 'Only pharmacy admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
@@ -198,6 +216,8 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter orders by pharmacy admin's pharmacy"""
         user = self.request.user
+        if user.is_authenticated and user.is_superuser:
+            return EMedicineOrder.objects.all()
         if user.is_authenticated and 'pharmacy_admin' in user.roles:
             try:
                 pharmacy = EMedicinePharmacy.objects.get(admin_user=user)

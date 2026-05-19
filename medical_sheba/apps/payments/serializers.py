@@ -31,6 +31,9 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 class PaymentListSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    hospital_name = serializers.CharField(source='hospital.name', read_only=True)
+    pharmacy_name = serializers.CharField(source='pharmacy.name', read_only=True)
     payment_type_display = serializers.CharField(source='get_payment_type_display', read_only=True)
     gateway_display = serializers.CharField(source='get_gateway_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -38,9 +41,10 @@ class PaymentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = [
-            'id', 'transaction_id', 'user_name', 'amount', 'currency', 'gateway',
-            'gateway_display', 'payment_type', 'payment_type_display', 'status',
-            'status_display', 'created_at', 'paid_at'
+            'id', 'transaction_id', 'user', 'user_name', 'user_email', 'hospital_name',
+            'pharmacy_name', 'amount', 'currency', 'gateway', 'gateway_display',
+            'payment_type', 'payment_type_display', 'reference_id', 'reference_type',
+            'status', 'status_display', 'created_at', 'paid_at'
         ]
 
     def get_user_name(self, obj):
@@ -90,6 +94,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionListSerializer(serializers.ModelSerializer):
+    user = serializers.IntegerField(source='user_id', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
     plan_display = serializers.CharField(source='get_plan_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     is_active = serializers.SerializerMethodField()
@@ -97,8 +103,9 @@ class SubscriptionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = [
-            'id', 'plan', 'plan_display', 'duration', 'amount', 'status',
-            'status_display', 'is_active', 'start_date', 'end_date', 'created_at'
+            'id', 'user', 'user_email', 'plan', 'plan_display', 'duration', 'amount',
+            'status', 'status_display', 'is_active', 'is_trial', 'start_date',
+            'end_date', 'created_at'
         ]
     
     def get_is_active(self, obj):

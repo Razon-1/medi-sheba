@@ -16,7 +16,9 @@ from .serializers import HospitalSerializer, HospitalListSerializer
 class IsHospitalAdmin(BasePermission):
     """Permission check for hospital admin"""
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated and 'hospital_admin' in request.user.roles
+        return request.user and request.user.is_authenticated and (
+            request.user.is_superuser or 'hospital_admin' in request.user.roles
+        )
 
 
 class IsHospitalAdminOrReadOnly(BasePermission):
@@ -24,14 +26,16 @@ class IsHospitalAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
-        return request.user and request.user.is_authenticated and 'hospital_admin' in request.user.roles
+        return request.user and request.user.is_authenticated and (
+            request.user.is_superuser or 'hospital_admin' in request.user.roles
+        )
     
     def has_object_permission(self, request, view, obj):
         # Read permission for any request
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
         # Write permission only for the hospital admin of that hospital
-        return obj.admin_user == request.user
+        return request.user.is_superuser or obj.admin_user == request.user
 
 
 class HospitalViewSet(viewsets.ModelViewSet):
@@ -47,6 +51,8 @@ class HospitalViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Hospital admins only see their own hospital
+        if user.is_authenticated and user.is_superuser:
+            return Hospital.objects.all()
         if user.is_authenticated and 'hospital_admin' in user.roles:
             return Hospital.objects.filter(admin_user=user)
         # Others see all active hospitals
@@ -60,21 +66,23 @@ class HospitalViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """Custom create method to assign hospital to current admin user"""
         # Only hospital admins can create hospitals
-        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'hospital_admin' not in getattr(request.user, 'roles', [])
+        ):
             return Response(
                 {'error': 'Only hospital admins can create hospitals'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
         # Require an active subscription or trial access window
-        if not request.user.has_active_subscription_access():
+        if not request.user.is_superuser and not request.user.has_active_subscription_access():
             return Response(
                 {'error': 'Active subscription required. Please start a trial or purchase a plan before creating a hospital.'},
                 status=status.HTTP_402_PAYMENT_REQUIRED
             )
         
         # Check if user already has a hospital
-        if Hospital.objects.filter(admin_user=request.user).exists():
+        if not request.user.is_superuser and Hospital.objects.filter(admin_user=request.user).exists():
             return Response(
                 {'error': 'You already have a hospital assigned. Only one hospital per admin is allowed.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -93,7 +101,8 @@ class HospitalViewSet(viewsets.ModelViewSet):
         
         # Set admin_user to current user
         hospital_data = serializer.validated_data
-        hospital_data['admin_user'] = request.user
+        if not request.user.is_superuser:
+            hospital_data['admin_user'] = request.user
         
         hospital = Hospital.objects.create(**hospital_data)
         
@@ -104,14 +113,21 @@ class HospitalViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my_hospital(self, request):
         """Get the current user's hospital (for hospital admin)"""
-        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'hospital_admin' not in getattr(request.user, 'roles', [])
+        ):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = Hospital.objects.get(admin_user=request.user)
+            if request.user.is_superuser:
+                hospital = Hospital.objects.order_by('-created_at').first()
+                if not hospital:
+                    raise Hospital.DoesNotExist
+            else:
+                hospital = Hospital.objects.get(admin_user=request.user)
             serializer = HospitalSerializer(hospital)
             return Response(serializer.data)
         except Hospital.DoesNotExist:

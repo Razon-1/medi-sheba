@@ -14,13 +14,17 @@ class IsHospitalAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
-        return request.user and request.user.is_authenticated and 'hospital_admin' in request.user.roles
+        return request.user and request.user.is_authenticated and (
+            request.user.is_superuser or 'hospital_admin' in request.user.roles
+        )
     
     def has_object_permission(self, request, view, obj):
         # Read permission for any request
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
         # Write permission only for hospital admin of that doctor's hospital
+        if request.user.is_authenticated and request.user.is_superuser:
+            return True
         if request.user.is_authenticated and 'hospital_admin' in getattr(request.user, 'roles', []) and obj.hospital:
             return obj.hospital.admin_user == request.user
         return False
@@ -59,6 +63,8 @@ class DoctorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Hospital admins only see doctors from their hospital
+        if user.is_authenticated and user.is_superuser:
+            return Doctor.objects.all()
         if user.is_authenticated and 'hospital_admin' in user.roles:
             try:
                 hospital = Hospital.objects.get(admin_user=user)
@@ -76,15 +82,20 @@ class DoctorViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def my_doctors(self, request):
         """Get doctors for hospital admin's hospital"""
-        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'hospital_admin' not in getattr(request.user, 'roles', [])
+        ):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = Hospital.objects.get(admin_user=request.user)
-            doctors = Doctor.objects.filter(hospital=hospital)
+            if request.user.is_superuser:
+                doctors = Doctor.objects.all()
+            else:
+                hospital = Hospital.objects.get(admin_user=request.user)
+                doctors = Doctor.objects.filter(hospital=hospital)
             serializer = DoctorSerializer(doctors, many=True)
             return Response(serializer.data)
         except Hospital.DoesNotExist:

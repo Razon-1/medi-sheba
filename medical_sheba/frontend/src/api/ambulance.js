@@ -86,7 +86,7 @@ export const ambulanceAPI = {
     apiClient.post('/ambulance/services/', data),
   
   updateAmbulance: (id, data) =>
-    apiClient.put(`/ambulance/services/${id}/`, data),
+    apiClient.patch(`/ambulance/services/${id}/`, data),
   
   deleteAmbulance: (id) =>
     apiClient.delete(`/ambulance/services/${id}/`),

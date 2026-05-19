@@ -23,7 +23,7 @@ class IsAmbulanceAdminOrReadOnly(BasePermission):
         return (
             request.user
             and request.user.is_authenticated
-            and 'ambulance_driver_admin' in roles
+            and (request.user.is_superuser or 'ambulance_driver_admin' in roles)
         )
     
     def has_object_permission(self, request, view, obj):
@@ -31,6 +31,8 @@ class IsAmbulanceAdminOrReadOnly(BasePermission):
             return True
 
         roles = getattr(request.user, 'roles', [])
+        if request.user.is_authenticated and request.user.is_superuser:
+            return True
         if request.user.is_authenticated and 'ambulance_driver_admin' in roles:
             return obj.admin_user == request.user
         return False
@@ -50,6 +52,8 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
         roles = getattr(user, 'roles', [])
 
         # Ambulance admins only see their own ambulances.
+        if user.is_authenticated and user.is_superuser:
+            return AmbulanceService.objects.all()
         if user.is_authenticated and 'ambulance_driver_admin' in roles:
             return AmbulanceService.objects.filter(admin_user=user)
 
@@ -67,13 +71,15 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
     def my_ambulances(self, request):
         """Get ambulances managed by the current ambulance admin."""
         roles = getattr(request.user, 'roles', [])
-        if not request.user.is_authenticated or 'ambulance_driver_admin' not in roles:
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'ambulance_driver_admin' not in roles
+        ):
             return Response(
                 {'error': 'Only ambulance admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        ambulances = AmbulanceService.objects.filter(admin_user=request.user)
+        ambulances = AmbulanceService.objects.all() if request.user.is_superuser else AmbulanceService.objects.filter(admin_user=request.user)
         serializer = AmbulanceServiceListSerializer(ambulances, many=True)
         return Response(serializer.data)
 
@@ -81,10 +87,14 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
         user = self.request.user
         roles = getattr(user, 'roles', [])
 
-        if not user.has_active_subscription_access():
+        if not user.is_superuser and not user.has_active_subscription_access():
             raise serializers.ValidationError(
                 "Active subscription required. Please start a trial or purchase a plan before creating an ambulance service."
             )
+
+        if user.is_superuser:
+            serializer.save(hospital=None)
+            return
 
         if 'ambulance_driver_admin' in roles:
             serializer.save(admin_user=user, hospital=None)
@@ -95,6 +105,10 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         roles = getattr(user, 'roles', [])
+
+        if user.is_superuser:
+            serializer.save()
+            return
 
         if 'ambulance_driver_admin' in roles:
             serializer.save(admin_user=user, hospital=None)
@@ -144,6 +158,8 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
         roles = getattr(user, 'roles', [])
 
         # Ambulance admins see requests for their own ambulances.
+        if user.is_authenticated and user.is_superuser:
+            return AmbulanceRequest.objects.all().order_by('-created_at')
         if user.is_authenticated and 'ambulance_driver_admin' in roles:
             return AmbulanceRequest.objects.filter(ambulance__admin_user=user).order_by('-created_at')
 
@@ -160,13 +176,15 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
     def hospital_requests(self, request):
         """Get all ambulance requests for the current ambulance admin."""
         roles = getattr(request.user, 'roles', [])
-        if not request.user.is_authenticated or 'ambulance_driver_admin' not in roles:
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'ambulance_driver_admin' not in roles
+        ):
             return Response(
                 {'error': 'Only ambulance admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        requests = AmbulanceRequest.objects.filter(ambulance__admin_user=request.user).order_by('-created_at')
+        requests = AmbulanceRequest.objects.all().order_by('-created_at') if request.user.is_superuser else AmbulanceRequest.objects.filter(ambulance__admin_user=request.user).order_by('-created_at')
         status_filter = request.query_params.get('status')
         if status_filter:
             requests = requests.filter(status=status_filter)
@@ -186,9 +204,9 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
         try:
             ambulance = AmbulanceService.objects.get(id=ambulance_id)
             roles = getattr(request.user, 'roles', [])
-            if 'ambulance_driver_admin' not in roles:
+            if not request.user.is_superuser and 'ambulance_driver_admin' not in roles:
                 return Response({'error': 'Only ambulance admins can accept ambulance requests'}, status=status.HTTP_403_FORBIDDEN)
-            if ambulance.admin_user != request.user:
+            if not request.user.is_superuser and ambulance.admin_user != request.user:
                 return Response({'error': 'You can only assign your own ambulance'}, status=status.HTTP_403_FORBIDDEN)
 
             ambulance_request.ambulance = ambulance
@@ -221,12 +239,12 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
         """Set trip distance and calculate final fare for an ambulance request."""
         ambulance_request = self.get_object()
         roles = getattr(request.user, 'roles', [])
-        if 'ambulance_driver_admin' not in roles:
+        if not request.user.is_superuser and 'ambulance_driver_admin' not in roles:
             return Response(
                 {'error': 'Only ambulance admins can update ambulance request fare'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        if not ambulance_request.ambulance or ambulance_request.ambulance.admin_user != request.user:
+        if not request.user.is_superuser and (not ambulance_request.ambulance or ambulance_request.ambulance.admin_user != request.user):
             return Response(
                 {'error': 'You can only update fare for your own ambulance requests'},
                 status=status.HTTP_403_FORBIDDEN
@@ -253,12 +271,12 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
         """Update ambulance request status"""
         ambulance_request = self.get_object()
         roles = getattr(request.user, 'roles', [])
-        if 'ambulance_driver_admin' not in roles:
+        if not request.user.is_superuser and 'ambulance_driver_admin' not in roles:
             return Response(
                 {'error': 'Only ambulance admins can update ambulance request status'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        if not ambulance_request.ambulance or ambulance_request.ambulance.admin_user != request.user:
+        if not request.user.is_superuser and (not ambulance_request.ambulance or ambulance_request.ambulance.admin_user != request.user):
             return Response(
                 {'error': 'You can only update requests for your own ambulance'},
                 status=status.HTTP_403_FORBIDDEN

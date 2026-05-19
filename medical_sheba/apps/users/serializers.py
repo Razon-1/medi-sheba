@@ -28,10 +28,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'phone', 'phone_number', 'first_name', 'last_name', 'password', 'full_name',
             'roles', 'blood_group', 'date_of_birth', 'gender', 'profile_image',
-            'address', 'district', 'upazila', 'is_active', 'is_verified',
+            'address', 'district', 'upazila', 'is_active', 'is_verified', 'is_staff', 'is_superuser',
             'last_login', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'last_login', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'is_staff', 'is_superuser', 'last_login', 'created_at', 'updated_at']
         extra_kwargs = {
             'first_name': {'required': False, 'allow_blank': False},
             'last_name': {'required': False, 'allow_blank': False},

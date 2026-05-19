@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Building2, CalendarDays, ChevronDown, LogOut, Menu, Pill, Truck, UserCircle, X } from 'lucide-react';
+import { Building2, CalendarDays, ChevronDown, Crown, LogOut, Menu, Pill, Truck, UserCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../context/authStore';
 
@@ -8,6 +8,7 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const userRoles = user?.roles || [];
+  const isSuperAdmin = user?.is_superuser || userRoles.includes('admin');
   const isPatientOnly = userRoles.includes('patient')
     && !userRoles.some((role) => ['pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin', 'doctor', 'admin'].includes(role));
   const displayName = user?.first_name && user?.last_name
@@ -172,6 +173,16 @@ export default function Navbar() {
                           My Care Services
                         </Link>
                       )}
+                      {isSuperAdmin && (
+                        <Link
+                          to="/super-admin"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-purple-50 hover:text-purple-700"
+                        >
+                          <Crown size={17} />
+                          Super Admin
+                        </Link>
+                      )}
                       {user?.roles?.includes('pharmacy_admin') && (
                         <Link
                           to="/pharmacy-admin"
@@ -252,6 +263,16 @@ export default function Navbar() {
                 >
                   <CalendarDays size={20} />
                   My Care Services
+                </Link>
+              )}
+              {isSuperAdmin && (
+                <Link
+                  to="/super-admin"
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-purple-50 hover:text-purple-700"
+                >
+                  <Crown size={20} />
+                  Super Admin
                 </Link>
               )}
               {user?.roles?.includes('pharmacy_admin') && (
@@ -357,6 +378,16 @@ export default function Navbar() {
                   className="block w-full px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 font-medium text-sm"
                 >
                   My Care Services
+                </Link>
+              )}
+
+              {isSuperAdmin && (
+                <Link
+                  to="/super-admin"
+                  onClick={closeMenu}
+                  className="block w-full px-4 py-3 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors duration-200 font-medium text-sm"
+                >
+                  Super Admin
                 </Link>
               )}
 

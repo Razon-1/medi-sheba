@@ -18,5 +18,16 @@ export const authAPI = {
   
   getCurrentUser: () =>
     client.get('/users/me/'),
-};
 
+  listUsers: (params = {}) =>
+    client.get('/users/', { params }),
+
+  createUser: (userData) =>
+    client.post('/users/', userData),
+
+  updateUser: (id, userData) =>
+    client.patch(`/users/${id}/`, userData),
+
+  deleteUser: (id) =>
+    client.delete(`/users/${id}/`),
+};

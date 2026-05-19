@@ -20,6 +20,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
+        if user.is_superuser or user.role == 'admin':
+            return Appointment.objects.all()
         if user.role == 'patient':
             return user.appointments.all()
         elif user.role == 'doctor':
@@ -31,8 +33,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 return Appointment.objects.filter(hospital=hospital)
             except Hospital.DoesNotExist:
                 return Appointment.objects.none()
-        elif user.role == 'admin':
-            return Appointment.objects.all()
         return Appointment.objects.none()
     
     def get_serializer_class(self):
@@ -108,15 +108,20 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def hospital_appointments(self, request):
         """Get all appointments for hospital admin's hospital"""
-        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'hospital_admin' not in getattr(request.user, 'roles', [])
+        ):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = Hospital.objects.get(admin_user=request.user)
-            appointments = Appointment.objects.filter(hospital=hospital).order_by('-created_at')
+            if request.user.is_superuser:
+                appointments = Appointment.objects.all().order_by('-created_at')
+            else:
+                hospital = Hospital.objects.get(admin_user=request.user)
+                appointments = Appointment.objects.filter(hospital=hospital).order_by('-created_at')
             
             # Filter by status if provided
             status_filter = request.query_params.get('status')
@@ -137,10 +142,11 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         appointment = self.get_object()
         
         # Check authorization
+        is_superuser = request.user.is_authenticated and request.user.is_superuser
         is_hospital_admin = request.user.is_authenticated and 'hospital_admin' in getattr(request.user, 'roles', []) and appointment.hospital and appointment.hospital.admin_user == request.user
         is_patient = request.user.is_authenticated and appointment.patient == request.user
         
-        if not (is_hospital_admin or is_patient):
+        if not (is_superuser or is_hospital_admin or is_patient):
             return Response(
                 {'error': 'You do not have permission to confirm this appointment'},
                 status=status.HTTP_403_FORBIDDEN
@@ -155,7 +161,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         appointment.status = 'confirmed'
         
         # Hospital admin can set appointment date and time
-        if is_hospital_admin:
+        if is_superuser or is_hospital_admin:
             appointment_date = request.data.get('appointment_date')
             appointment_time = request.data.get('appointment_time')
             if appointment_date:

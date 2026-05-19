@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 
 const roleOptions = [
   { value: 'patient', label: 'Patient' },
+  { value: 'admin', label: 'Super Admin' },
   { value: 'pharmacy_admin', label: 'Pharmacy Admin' },
   { value: 'hospital_admin', label: 'Hospital Admin' },
   { value: 'ambulance_driver_admin', label: 'Ambulance Driver Admin' },
 ];
 
+const registrationRoleOptions = roleOptions.filter((role) => role.value !== 'admin');
 const adminRoles = ['pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin'];
 
 export default function AuthForm({ type = 'login', onSubmit, loading = false }) {
@@ -193,7 +195,7 @@ export default function AuthForm({ type = 'login', onSubmit, loading = false }) 
           <fieldset>
             <legend className="mb-3 text-sm font-semibold text-gray-700">Account Type</legend>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {roleOptions.map((role) => {
+              {registrationRoleOptions.map((role) => {
                 const checked = formData.roles.includes(role.value);
                 return (
                   <label

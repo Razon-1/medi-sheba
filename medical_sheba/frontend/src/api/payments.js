@@ -96,6 +96,33 @@ export const paymentsAPI = {
     }
   },
 
+  listPayments: async (filters = {}) => {
+    try {
+      const response = await api.get('/payments/', { params: filters });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to fetch payments' };
+    }
+  },
+
+  updatePayment: async (paymentId, paymentData) => {
+    try {
+      const response = await api.patch(`/payments/${paymentId}/`, paymentData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to update payment' };
+    }
+  },
+
+  deletePayment: async (paymentId) => {
+    try {
+      const response = await api.delete(`/payments/${paymentId}/`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to delete payment' };
+    }
+  },
+
   downloadPaymentReport: async (paymentId) => {
     try {
       const response = await api.get(`/payments/${paymentId}/download-report/`, {
@@ -170,6 +197,42 @@ export const paymentsAPI = {
       return response.data;
     } catch (error) {
       throw error.response?.data || { detail: 'Failed to fetch subscriptions' };
+    }
+  },
+
+  listSubscriptions: async (filters = {}) => {
+    try {
+      const response = await api.get('/subscriptions/', { params: filters });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to fetch subscriptions' };
+    }
+  },
+
+  createSubscriptionRecord: async (subscriptionData) => {
+    try {
+      const response = await api.post('/subscriptions/', subscriptionData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to create subscription' };
+    }
+  },
+
+  updateSubscription: async (subscriptionId, subscriptionData) => {
+    try {
+      const response = await api.patch(`/subscriptions/${subscriptionId}/`, subscriptionData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to update subscription' };
+    }
+  },
+
+  deleteSubscription: async (subscriptionId) => {
+    try {
+      const response = await api.delete(`/subscriptions/${subscriptionId}/`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { detail: 'Failed to delete subscription' };
     }
   },
 

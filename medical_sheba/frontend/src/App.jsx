@@ -30,6 +30,7 @@ import PharmacyCreatePage from './pages/PharmacyCreatePage';
 import HospitalAdminDashboard from './pages/HospitalAdminDashboard';
 import HospitalCreatePage from './pages/HospitalCreatePage';
 import AmbulanceAdminDashboard from './pages/AmbulanceAdminDashboard';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 
 import './styles/App.css';
 import './styles/Responsive.css';
@@ -63,6 +64,7 @@ function App() {
             <Route path="/hospital-admin" element={<HospitalAdminDashboard />} />
             <Route path="/hospital-create" element={<HospitalCreatePage />} />
             <Route path="/ambulance-admin" element={<AmbulanceAdminDashboard />} />
+            <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/edoctor" element={<EDoctor />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/login" element={<Login />} />

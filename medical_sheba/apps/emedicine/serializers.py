@@ -94,7 +94,8 @@ class EMedicineOrderListSerializer(serializers.ModelSerializer):
         model = EMedicineOrder
         fields = [
             'id', 'order_id', 'patient_name', 'contact_phone', 'pharmacy_name',
-            'medicines_list', 'delivered_medicines_list', 'total_amount', 'urgency', 'status', 'required_date', 'created_at'
+            'medicines_list', 'delivered_medicines_list', 'total_amount', 'urgency',
+            'payment_status', 'status', 'required_date', 'created_at'
         ]
 
 

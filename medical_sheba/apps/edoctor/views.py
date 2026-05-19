@@ -22,13 +22,17 @@ class IsHospitalAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
-        return request.user and request.user.is_authenticated and 'hospital_admin' in request.user.roles
+        return request.user and request.user.is_authenticated and (
+            request.user.is_superuser or 'hospital_admin' in request.user.roles
+        )
     
     def has_object_permission(self, request, view, obj):
         # Read permission for any request
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
         # Write permission only for hospital admin of that edoctor's hospital
+        if request.user.is_authenticated and request.user.is_superuser:
+            return True
         if request.user.is_authenticated and 'hospital_admin' in getattr(request.user, 'roles', []) and obj.hospital:
             return obj.hospital.admin_user == request.user
         return False
@@ -47,6 +51,8 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Hospital admins only see e-doctors from their hospital
+        if user.is_authenticated and user.is_superuser:
+            return EDoctorProfile.objects.all()
         if user.is_authenticated and 'hospital_admin' in user.roles:
             try:
                 hospital = Hospital.objects.get(admin_user=user)
@@ -66,15 +72,20 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def my_edoctors(self, request):
         """Get e-doctors for hospital admin's hospital"""
-        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'hospital_admin' not in getattr(request.user, 'roles', [])
+        ):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = Hospital.objects.get(admin_user=request.user)
-            edoctors = EDoctorProfile.objects.filter(hospital=hospital)
+            if request.user.is_superuser:
+                edoctors = EDoctorProfile.objects.all()
+            else:
+                hospital = Hospital.objects.get(admin_user=request.user)
+                edoctors = EDoctorProfile.objects.filter(hospital=hospital)
             serializer = EDoctorProfileListSerializer(edoctors, many=True)
             return Response(serializer.data)
         except Hospital.DoesNotExist:
@@ -151,6 +162,15 @@ class IsPatientOrReadOnly(BasePermission):
         # Read permission for any request
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
+        if request.user.is_authenticated and request.user.is_superuser:
+            return True
+        if (
+            request.user.is_authenticated
+            and 'hospital_admin' in getattr(request.user, 'roles', [])
+            and obj.doctor
+            and obj.doctor.hospital
+        ):
+            return obj.doctor.hospital.admin_user == request.user
         # Write permission only for the patient who booked the consultation
         return obj.patient_email == request.user.email if request.user.is_authenticated else False
 
@@ -168,6 +188,8 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         # Hospital admins see consultations for their e-doctors
+        if user.is_authenticated and user.is_superuser:
+            return EDoctorConsultation.objects.all().order_by('-created_at')
         if user.is_authenticated and 'hospital_admin' in user.roles:
             try:
                 hospital = Hospital.objects.get(admin_user=user)
@@ -193,15 +215,20 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def hospital_consultations(self, request):
         """Get all consultations for hospital admin's e-doctors"""
-        if not request.user.is_authenticated or 'hospital_admin' not in getattr(request.user, 'roles', []):
+        if not request.user.is_authenticated or (
+            not request.user.is_superuser and 'hospital_admin' not in getattr(request.user, 'roles', [])
+        ):
             return Response(
                 {'error': 'Only hospital admins can access this endpoint'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         try:
-            hospital = Hospital.objects.get(admin_user=request.user)
-            consultations = EDoctorConsultation.objects.filter(doctor__hospital=hospital).order_by('-created_at')
+            if request.user.is_superuser:
+                consultations = EDoctorConsultation.objects.all().order_by('-created_at')
+            else:
+                hospital = Hospital.objects.get(admin_user=request.user)
+                consultations = EDoctorConsultation.objects.filter(doctor__hospital=hospital).order_by('-created_at')
             
             # Filter by status if provided
             status_filter = request.query_params.get('status')

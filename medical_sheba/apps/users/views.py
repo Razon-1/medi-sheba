@@ -17,6 +17,14 @@ from .serializers import UserSerializer, UserDetailSerializer
 logger = logging.getLogger(__name__)
 
 
+SUPERUSER_FRONTEND_ROLES = [
+    'admin',
+    'hospital_admin',
+    'pharmacy_admin',
+    'ambulance_driver_admin',
+]
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -26,6 +34,14 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['email', 'phone', 'first_name', 'last_name']
     ordering_fields = ['created_at', 'first_name']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and user.is_superuser:
+            return User.objects.all()
+        if user.is_authenticated:
+            return User.objects.filter(pk=user.pk)
+        return User.objects.none()
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -72,17 +88,20 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        if role not in user.roles:
+        if role not in user.roles and not user.is_superuser:
             return Response(
                 {'detail': 'This account is not registered for the selected role.'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         refresh = RefreshToken.for_user(user)
+        user_data = UserSerializer(user).data
+        if user.is_superuser:
+            user_data['roles'] = list(dict.fromkeys([*SUPERUSER_FRONTEND_ROLES, *user_data.get('roles', [])]))
         return Response({
             'access': str(refresh.access_token),
             'refresh': str(refresh),
-            'user': UserSerializer(user).data
+            'user': user_data
         })
     
     @action(detail=False, methods=['post'], permission_classes=[AllowAny()])
@@ -303,8 +322,10 @@ Medi Sheba Team
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
         """Get current logged-in user details"""
-        serializer = UserDetailSerializer(request.user)
-        return Response(serializer.data)
+        data = UserDetailSerializer(request.user).data
+        if request.user.is_superuser:
+            data['roles'] = list(dict.fromkeys([*SUPERUSER_FRONTEND_ROLES, *data.get('roles', [])]))
+        return Response(data)
     
     @action(detail=True, methods=['post'])
     def change_password(self, request, pk=None):
