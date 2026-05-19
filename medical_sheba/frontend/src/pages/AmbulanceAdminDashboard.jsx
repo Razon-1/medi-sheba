@@ -38,6 +38,7 @@ export default function AmbulanceAdminDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formErrors, setFormErrors] = useState({});
+  const [reviewPeriod, setReviewPeriod] = useState('weekly');
 
   useEffect(() => {
     if (user && !user.roles.includes('ambulance_driver_admin')) {
@@ -59,7 +60,7 @@ export default function AmbulanceAdminDashboard() {
         const response = await ambulanceApi.getMyAmbulances();
         setAmbulances(getData(response));
       } else {
-        const response = await ambulanceApi.getAmbulanceAdminRequests(statusFilter || null);
+        const response = await ambulanceApi.getAmbulanceAdminRequests(activeTab === 'requests' ? statusFilter || null : null);
         const requestList = getData(response);
         setRequests(requestList);
         setDistanceInputs(
@@ -82,6 +83,121 @@ export default function AmbulanceAdminDashboard() {
       .filter((request) => request.payment_status === 'paid' || request.status === 'completed')
       .reduce((total, request) => total + Number.parseFloat(request.final_fare || request.estimated_fare || 0), 0);
   }, [requests]);
+
+  const getPeriodStart = (period) => {
+    const now = new Date();
+    if (period === 'weekly') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 7);
+      return start;
+    }
+    if (period === 'monthly') {
+      const start = new Date(now);
+      start.setMonth(now.getMonth() - 1);
+      return start;
+    }
+    if (period === 'yearly') {
+      const start = new Date(now);
+      start.setFullYear(now.getFullYear() - 1);
+      return start;
+    }
+    return new Date(0);
+  };
+
+  const parseDateValue = (value) => {
+    const date = value ? new Date(value) : null;
+    return date instanceof Date && !Number.isNaN(date) ? date : null;
+  };
+
+  const formatCurrency = (amount) => {
+    return `BDT ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const getPeriodRequests = () => {
+    const periodStart = getPeriodStart(reviewPeriod);
+    return requests.filter((request) => {
+      const created = parseDateValue(request.created_at || request.updated_at);
+      return created && created >= periodStart;
+    });
+  };
+
+  const getRevenueBreakdown = () => {
+    const periodRequests = getPeriodRequests();
+    const paidRevenue = periodRequests
+      .filter((request) => request.payment_status === 'paid')
+      .reduce((sum, request) => sum + Number.parseFloat(request.final_fare || request.estimated_fare || 0), 0);
+    const completedRevenue = periodRequests
+      .filter((request) => request.payment_status !== 'paid' && request.status === 'completed')
+      .reduce((sum, request) => sum + Number.parseFloat(request.final_fare || request.estimated_fare || 0), 0);
+    const pendingRevenue = periodRequests
+      .filter((request) => request.payment_status !== 'paid' && request.status !== 'completed')
+      .reduce((sum, request) => sum + Number.parseFloat(request.final_fare || request.estimated_fare || 0), 0);
+
+    return [
+      { label: 'Paid', value: paidRevenue, color: '#28a745' },
+      { label: 'Completed', value: completedRevenue, color: '#1d72b8' },
+      { label: 'Pending', value: pendingRevenue, color: '#f59e0b' }
+    ];
+  };
+
+  const renderPieChart = (breakdown) => {
+    const total = breakdown.reduce((sum, item) => sum + item.value, 0);
+    const center = 110;
+    const radius = 82;
+    let currentAngle = -90;
+
+    const getCoordinates = (angle) => {
+      const angleInRadians = (Math.PI / 180) * angle;
+      return {
+        x: center + radius * Math.cos(angleInRadians),
+        y: center + radius * Math.sin(angleInRadians)
+      };
+    };
+
+    return (
+      <svg className="revenue-pie-chart" width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="Revenue pie chart">
+        {!total && (
+          <circle cx={center} cy={center} r={radius} fill="#d0d7e6">
+            <title>No revenue found for this period</title>
+          </circle>
+        )}
+        {breakdown.map((item) => {
+          if (!total || item.value <= 0) return null;
+
+          const sliceAngle = (item.value / total) * 360;
+          const start = getCoordinates(currentAngle);
+          const end = getCoordinates(currentAngle + sliceAngle);
+          const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+          const pathData = sliceAngle >= 360
+            ? [
+                `M ${center} ${center}`,
+                `L ${center} ${center - radius}`,
+                `A ${radius} ${radius} 0 1 1 ${center - 0.01} ${center - radius}`,
+                'Z'
+              ].join(' ')
+            : [
+                `M ${center} ${center}`,
+                `L ${start.x} ${start.y}`,
+                `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`,
+                'Z'
+              ].join(' ');
+
+          currentAngle += sliceAngle;
+
+          return (
+            <path key={item.label} d={pathData} fill={item.color}>
+              <title>{`${item.label}: ${formatCurrency(item.value)} (${Math.round((item.value / total) * 100)}%)`}</title>
+            </path>
+          );
+        })}
+      </svg>
+    );
+  };
+
+  const getRevenuePercentage = (value, total) => {
+    if (!total || value <= 0) return 0;
+    return Math.round((value / total) * 100);
+  };
 
   const handleAddClick = () => {
     setEditingItem(null);
@@ -383,6 +499,83 @@ export default function AmbulanceAdminDashboard() {
     </div>
   );
 
+  const RevenueReviewTab = () => {
+    const periodRequests = getPeriodRequests();
+    const breakdown = getRevenueBreakdown();
+    const paidRevenue = breakdown.find((item) => item.label === 'Paid')?.value || 0;
+    const completedRevenue = breakdown.find((item) => item.label === 'Completed')?.value || 0;
+    const pendingRevenue = breakdown.find((item) => item.label === 'Pending')?.value || 0;
+    const totalRevenue = paidRevenue + completedRevenue;
+    const chartTotal = breakdown.reduce((sum, item) => sum + item.value, 0);
+
+    return (
+      <div className="review-tab">
+        <div className="review-header">
+          <div>
+            <h2>Revenue Review</h2>
+            <p>View ambulance booking earnings by period and payment status.</p>
+          </div>
+          <div className="review-periods">
+            {['weekly', 'monthly', 'yearly'].map((period) => (
+              <button
+                key={period}
+                type="button"
+                className={`period-button ${reviewPeriod === period ? 'active' : ''}`}
+                onClick={() => setReviewPeriod(period)}
+              >
+                {period.charAt(0).toUpperCase() + period.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="review-grid">
+          <div className="review-summary">
+            <div className="revenue-card">
+              <p>Total Revenue</p>
+              <strong>{formatCurrency(totalRevenue)}</strong>
+              <small>{periodRequests.length} requests in period</small>
+            </div>
+            <div className="revenue-card">
+              <p>Paid Revenue</p>
+              <strong>{formatCurrency(paidRevenue)}</strong>
+            </div>
+            <div className="revenue-card">
+              <p>Completed Earnings</p>
+              <strong>{formatCurrency(completedRevenue)}</strong>
+              <small>Completed requests without paid status</small>
+            </div>
+            <div className="revenue-card">
+              <p>Pending Fare</p>
+              <strong>{formatCurrency(pendingRevenue)}</strong>
+            </div>
+          </div>
+
+          <div className="review-chart-card">
+            <div className="review-chart-title">Revenue by Payment Status</div>
+            {renderPieChart(breakdown)}
+            <div className="pie-legend">
+              {breakdown.map((item) => (
+                <div key={item.label} className="pie-legend-item">
+                  <div className="pie-legend-main">
+                    <span className="pie-dot" style={{ backgroundColor: item.color }} />
+                    <span>{item.label}</span>
+                  </div>
+                  <strong className="pie-legend-value">
+                    {formatCurrency(item.value)} - {getRevenuePercentage(item.value, chartTotal)}%
+                  </strong>
+                </div>
+              ))}
+            </div>
+            {chartTotal === 0 && (
+              <div className="empty-pie">Add paid or completed ambulance bookings to see the pie split dynamically.</div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (!user?.roles?.includes('ambulance_driver_admin')) {
     return null;
   }
@@ -410,6 +603,12 @@ export default function AmbulanceAdminDashboard() {
         >
           Requests
         </button>
+        <button
+          className={`tab-button ${activeTab === 'review' ? 'active' : ''}`}
+          onClick={() => setActiveTab('review')}
+        >
+          Revenue Review
+        </button>
       </div>
 
       {loading ? (
@@ -418,6 +617,7 @@ export default function AmbulanceAdminDashboard() {
         <div className="tab-content">
           {activeTab === 'ambulances' && <AmbulancesTab />}
           {activeTab === 'requests' && <RequestsTab />}
+          {activeTab === 'review' && <RevenueReviewTab />}
         </div>
       )}
 
