@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Loader2, Lock, Mail, Phone, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const roleOptions = [
   { value: 'patient', label: 'Patient' },
@@ -150,6 +151,17 @@ export default function AuthForm({ type = 'login', onSubmit, loading = false }) 
           </button>
         </div>
       </label>
+
+      {!isRegister && (
+        <div className="flex justify-end">
+          <Link
+            to="/forgot-password"
+            className="text-sm font-semibold text-primary-600 transition hover:text-primary-700 hover:underline"
+          >
+            Forgot Password?
+          </Link>
+        </div>
+      )}
 
       {isRegister && (
         <>

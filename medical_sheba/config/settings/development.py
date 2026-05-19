@@ -31,8 +31,28 @@ DATABASES = {
     }
 }
 
-# Email - Console backend for development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email Configuration for development
+
+# Get credentials from .env file
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@medisheba.com')
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
+# Choose ONE email backend below:
+
+# OPTION 1: Real Emails via Gmail SMTP (Requires valid app password from Google Account) - ACTIVE
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+# OPTION 2: File-based Backend (emails saved locally to folder - good for testing without SMTP)
+# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+# OPTION 3: Console Backend (emails printed to terminal)
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Disable SSL in development
 SECURE_SSL_REDIRECT = False

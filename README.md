@@ -136,11 +136,7 @@ cd medical_sheba
 # Run with uv (default port 8000)
 uv run manage.py runserver
 
-# Or specify port with uv
-uv run manage.py runserver 8000
 
-# Run with custom host and port
-uv run manage.py runserver 0.0.0.0:8000
 ```
 
 Backend will be available at: `http://localhost:8000`

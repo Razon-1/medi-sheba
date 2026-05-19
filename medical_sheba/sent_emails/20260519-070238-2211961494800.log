@@ -1,0 +1,24 @@
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Password Reset Request - Medi Sheba
+From: support.medisheba@gmail.com
+To: ahmedrazon58@gmail.com
+Date: Tue, 19 May 2026 01:02:38 -0000
+Message-ID: <177915255814.8072.13991264030045211725@DESKTOP-MN18L0L>
+
+
+Dear Ahmed Razon,
+
+We received a request to reset your password. Click the link below to reset your password:
+
+http://localhost:3000/reset-password?token=asomYBswzI0RsOikw4pLBzNg_GxL6SxdoKr8Z2rH2Mg
+
+This link will expire in 24 hours.
+
+If you did not request a password reset, please ignore this email.
+
+Best regards,
+Medi Sheba Team
+
+-------------------------------------------------------------------------------

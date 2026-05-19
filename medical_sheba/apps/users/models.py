@@ -144,3 +144,32 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         """Check if user has any permissions in app_label"""
         return self.is_superuser or self.is_staff
+
+
+class PasswordResetToken(models.Model):
+    """Model to store password reset tokens with expiration"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.CharField(max_length=100, unique=True, db_index=True)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    
+    class Meta:
+        db_table = 'password_reset_tokens'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['user', 'is_used']),
+        ]
+    
+    def __str__(self):
+        return f"Reset token for {self.user.email}"
+    
+    def is_valid(self):
+        """Check if token is valid (not used and not expired)"""
+        return not self.is_used and timezone.now() < self.expires_at
+    
+    def mark_as_used(self):
+        """Mark token as used"""
+        self.is_used = True
+        self.save(update_fields=['is_used'])
