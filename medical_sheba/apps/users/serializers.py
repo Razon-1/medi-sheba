@@ -13,7 +13,7 @@ from .validators import (
 )
 
 
-ADMIN_ROLES = {'pharmacy_admin', 'hospital_admin'}
+ADMIN_ROLES = {'pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin'}
 MAX_AGE_YEARS = 120
 
 
@@ -155,7 +155,7 @@ class UserSerializer(serializers.ModelSerializer):
             unique_roles = list(dict.fromkeys(roles))
             if 'patient' in unique_roles and ADMIN_ROLES.intersection(unique_roles):
                 raise serializers.ValidationError({
-                    'roles': 'Patient role cannot be combined with pharmacy admin or hospital admin.'
+                    'roles': 'Patient role cannot be combined with admin roles.'
                 })
             data['roles'] = unique_roles
         

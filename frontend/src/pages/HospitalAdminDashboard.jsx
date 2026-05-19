@@ -4,7 +4,6 @@ import useAuthStore from '../context/authStore';
 import '../styles/AdminDashboard.css';
 import * as hospitalApi from '../api/hospitals';
 import * as doctorApi from '../api/doctors';
-import * as ambulanceApi from '../api/ambulance';
 import * as edoctorApi from '../api/edoctor';
 
 const HospitalAdminDashboard = () => {
@@ -13,7 +12,6 @@ const HospitalAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('doctors');
   const [hospital, setHospital] = useState(null);
   const [doctors, setDoctors] = useState([]);
-  const [ambulances, setAmbulances] = useState([]);
   const [edoctors, setEdoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,9 +66,6 @@ const HospitalAdminDashboard = () => {
         const doctorsData = await doctorApi.getMyDoctors();
         console.log('Doctors data:', doctorsData);
         setDoctors(doctorsData);
-      } else if (activeTab === 'ambulances') {
-        const ambulancesData = await ambulanceApi.getMyAmbulances();
-        setAmbulances(ambulancesData);
       } else if (activeTab === 'edoctors') {
         const edoctorsData = await edoctorApi.getMyEdoctors();
         setEdoctors(edoctorsData);
@@ -125,9 +120,6 @@ const HospitalAdminDashboard = () => {
       if (activeTab === 'doctors') {
         await doctorApi.deleteDoctor(id);
         setDoctors(doctors.filter(d => d.id !== id));
-      } else if (activeTab === 'ambulances') {
-        await ambulanceApi.deleteAmbulance(id);
-        setAmbulances(ambulances.filter(a => a.id !== id));
       } else if (activeTab === 'edoctors') {
         await edoctorApi.deleteEdoctor(id);
         setEdoctors(edoctors.filter(e => e.id !== id));
@@ -169,16 +161,6 @@ const HospitalAdminDashboard = () => {
           // Refresh doctors list to get the complete data with user info
           const updatedDoctors = await doctorApi.getMyDoctors();
           setDoctors(updatedDoctors);
-        }
-      } else if (activeTab === 'ambulances') {
-        if (editingItem) {
-          const updated = await ambulanceApi.updateAmbulance(editingItem.id, submitData);
-          setAmbulances(ambulances.map(a => a.id === updated.id ? updated : a));
-        } else {
-          await ambulanceApi.addAmbulance({...submitData, hospital: hospital.id});
-          // Refresh ambulances list to get complete data
-          const updatedAmbulances = await ambulanceApi.getMyAmbulances();
-          setAmbulances(updatedAmbulances);
         }
       } else if (activeTab === 'edoctors') {
         // Ensure required fields for edoctors
@@ -248,40 +230,6 @@ const HospitalAdminDashboard = () => {
               </td>
             </tr>
           )) : null}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  const AmbulancesTab = () => (
-    <div className="admin-content">
-      <h2>🚑 Manage Ambulances</h2>
-      <button className="btn btn-primary" onClick={handleAddClick}>+ Add Ambulance</button>
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Vehicle Type</th>
-            <th>Driver</th>
-            <th>Phone</th>
-            <th>Cost/KM</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ambulances.map(ambulance => (
-            <tr key={ambulance.id}>
-              <td>{ambulance.name}</td>
-              <td>{ambulance.vehicle_type}</td>
-              <td>{ambulance.driver_name}</td>
-              <td>{ambulance.phone_number}</td>
-              <td>৳{parseFloat(ambulance.cost_per_km).toFixed(2)}</td>
-              <td>
-                <button className="btn-edit" onClick={() => handleEditClick(ambulance)}>Edit</button>
-                <button className="btn-delete" onClick={() => handleDelete(ambulance.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
         </tbody>
       </table>
     </div>
@@ -364,12 +312,6 @@ const HospitalAdminDashboard = () => {
           🩺 Doctors
         </button>
         <button
-          className={`tab-button ${activeTab === 'ambulances' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ambulances')}
-        >
-          🚑 Ambulances
-        </button>
-        <button
           className={`tab-button ${activeTab === 'edoctors' ? 'active' : ''}`}
           onClick={() => setActiveTab('edoctors')}
         >
@@ -385,7 +327,6 @@ const HospitalAdminDashboard = () => {
 
       <div className="tab-content">
         {activeTab === 'doctors' && <DoctorsTab />}
-        {activeTab === 'ambulances' && <AmbulancesTab />}
         {activeTab === 'edoctors' && <EdoctorsTab />}
         {activeTab === 'info' && <HospitalInfoTab />}
       </div>
@@ -492,49 +433,6 @@ const HospitalAdminDashboard = () => {
                     placeholder="Phone"
                     value={formData.phone_number || ''}
                     onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-                  />
-                </>
-              )}
-              {activeTab === 'ambulances' && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                  <select
-                    value={formData.vehicle_type || ''}
-                    onChange={(e) => setFormData({...formData, vehicle_type: e.target.value})}
-                    required
-                  >
-                    <option>Select Vehicle Type</option>
-                    <option value="basic">Basic Ambulance</option>
-                    <option value="advanced">Advanced Life Support</option>
-                    <option value="icu">ICU Ambulance</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Driver Name"
-                    value={formData.driver_name || ''}
-                    onChange={(e) => setFormData({...formData, driver_name: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Phone"
-                    value={formData.phone_number || ''}
-                    onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Cost Per KM"
-                    step="0.01"
-                    value={formData.cost_per_km || ''}
-                    onChange={(e) => setFormData({...formData, cost_per_km: e.target.value})}
-                    required
                   />
                 </>
               )}

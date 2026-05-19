@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Building2, CalendarDays, ChevronDown, LogOut, Menu, Pill, UserCircle, X } from 'lucide-react';
+import { Building2, CalendarDays, ChevronDown, LogOut, Menu, Pill, Truck, UserCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../context/authStore';
 
@@ -9,7 +9,7 @@ export default function Navbar() {
   const { user, logout } = useAuthStore();
   const userRoles = user?.roles || [];
   const isPatientOnly = userRoles.includes('patient')
-    && !userRoles.some((role) => ['pharmacy_admin', 'hospital_admin', 'doctor', 'admin'].includes(role));
+    && !userRoles.some((role) => ['pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin', 'doctor', 'admin'].includes(role));
   const displayName = user?.first_name && user?.last_name
     ? `${user.first_name} ${user.last_name}`
     : user?.email || 'Account';
@@ -192,6 +192,16 @@ export default function Navbar() {
                           My Hospital
                         </Link>
                       )}
+                      {user?.roles?.includes('ambulance_driver_admin') && (
+                        <Link
+                          to="/ambulance-admin"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Truck size={17} />
+                          My Ambulance
+                        </Link>
+                      )}
                       <button
                         type="button"
                         onClick={handleLogout}
@@ -262,6 +272,16 @@ export default function Navbar() {
                 >
                   <Building2 size={20} />
                   My Hospital
+                </Link>
+              )}
+              {user?.roles?.includes('ambulance_driver_admin') && (
+                <Link
+                  to="/ambulance-admin"
+                  onClick={closeMenu}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-gray-700 transition hover:bg-red-50 hover:text-red-700"
+                >
+                  <Truck size={20} />
+                  My Ambulance
                 </Link>
               )}
               <button
@@ -357,6 +377,15 @@ export default function Navbar() {
                   className="block w-full px-4 py-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 font-medium text-sm"
                 >
                   My Hospital
+                </Link>
+              )}
+              {user?.roles?.includes('ambulance_driver_admin') && (
+                <Link
+                  to="/ambulance-admin"
+                  onClick={closeMenu}
+                  className="block w-full px-4 py-3 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors duration-200 font-medium text-sm"
+                >
+                  My Ambulance
                 </Link>
               )}
 

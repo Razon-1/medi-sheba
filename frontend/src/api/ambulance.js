@@ -27,7 +27,12 @@ export const addAmbulance = async (data) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error('Failed to create ambulance');
+  if (!response.ok) {
+    const errorData = await response.json();
+    const error = new Error();
+    error.response = { data: errorData, status: response.status };
+    throw error;
+  }
   return response.json();
 };
 
@@ -37,7 +42,12 @@ export const updateAmbulance = async (id, data) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error('Failed to update ambulance');
+  if (!response.ok) {
+    const errorData = await response.json();
+    const error = new Error();
+    error.response = { data: errorData, status: response.status };
+    throw error;
+  }
   return response.json();
 };
 
@@ -46,7 +56,12 @@ export const deleteAmbulance = async (id) => {
     method: 'DELETE',
     headers: getAuthHeaders(),
   });
-  if (!response.ok) throw new Error('Failed to delete ambulance');
+  if (!response.ok) {
+    const errorData = await response.json();
+    const error = new Error();
+    error.response = { data: errorData, status: response.status };
+    throw error;
+  }
 };
 
 export const getAmbulances = async () => {
@@ -57,7 +72,23 @@ export const getAmbulances = async () => {
   return response.json();
 };
 
-// Ambulance Request Management for Hospital Admins
+// Ambulance request management for ambulance admins
+export const getAmbulanceAdminRequests = async (status = null) => {
+  let url = `${API_URL}/ambulance/requests/hospital_requests/`;
+  if (status) {
+    url += `?status=${status}`;
+  }
+  const response = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || errorData.message || 'Failed to fetch ambulance requests');
+  }
+  const data = await response.json();
+  return Array.isArray(data) ? data : (data.results || data);
+};
+
 export const getHospitalAmbulanceRequests = async (status = null) => {
   let url = `${API_URL}/ambulance/requests/hospital_requests/`;
   if (status) {

@@ -247,6 +247,32 @@
   border-left: 4px solid #c62828;
 }
 
+.success-message {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #2e7d32;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-error {
+  border-color: #c62828 !important;
+  background-color: #ffebee;
+}
+
+.field-error {
+  color: #c62828;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
 .loading {
   display: flex;
   justify-content: center;

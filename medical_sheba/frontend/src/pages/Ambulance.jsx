@@ -27,7 +27,7 @@ export default function Ambulance() {
     contact_phone: '',
     pickup_location: '',
     dropoff_location: '',
-    vehicle_type_required: 'basic',
+    vehicle_type_required: '',
     urgency: 'normal',
     required_date: new Date().toISOString().slice(0, 16),
     notes: '',
@@ -118,11 +118,13 @@ export default function Ambulance() {
     return colors[type] || '#333';
   };
 
+  const formatFarePerKm = (fare) => `BDT ${Number.parseFloat(fare || 0).toFixed(2)} per km`;
+
   const handleOpenRequestModal = (ambulance) => {
     setSelectedAmbulance(ambulance);
     setFormData(prev => ({
       ...prev,
-      vehicle_type_required: ambulance.vehicle_type,
+      vehicle_type_required: ambulance.vehicle_type || '',
     }));
     setShowRequestModal(true);
     setRequestError('');
@@ -137,7 +139,7 @@ export default function Ambulance() {
       contact_phone: '',
       pickup_location: '',
       dropoff_location: '',
-      vehicle_type_required: 'basic',
+      vehicle_type_required: '',
       urgency: 'normal',
       required_date: new Date().toISOString().slice(0, 16),
       notes: '',
@@ -182,6 +184,7 @@ export default function Ambulance() {
       const requestData = {
         ...formData,
         ambulance: selectedAmbulance?.id || null,
+        vehicle_type_required: selectedAmbulance?.vehicle_type || formData.vehicle_type_required,
         pickup_address: formData.pickup_location.trim(),
         required_date: requiredDateTime,
       };
@@ -343,8 +346,8 @@ export default function Ambulance() {
                   </div>
                   <div className="detail-item">
                     <DollarSign size={16} />
-                    <span className="label">Rate:</span>
-                    <span className="value">BDT {ambulance.cost_per_km || '0.00'}/km</span>
+                    <span className="label">Fare:</span>
+                    <span className="value">{formatFarePerKm(ambulance.cost_per_km)}</span>
                   </div>
                 </div>
 
@@ -426,7 +429,8 @@ export default function Ambulance() {
               <div className="selected-ambulance-info">
                 <p><strong>Selected Ambulance:</strong> {selectedAmbulance.name}</p>
                 <p><strong>Type:</strong> {getVehicleTypeLabel(selectedAmbulance.vehicle_type)}</p>
-                <p><strong>Rate:</strong> BDT {selectedAmbulance.cost_per_km}/km</p>
+                <p><strong>Fare:</strong> {formatFarePerKm(selectedAmbulance.cost_per_km)}</p>
+                <p><strong>Note:</strong> Admin sets this per-km fare. Final cost depends on trip distance.</p>
               </div>
             )}
 
@@ -506,9 +510,13 @@ export default function Ambulance() {
                     value={formData.vehicle_type_required}
                     onChange={handleFormChange}
                   >
-                    <option value="basic">Basic Ambulance</option>
-                    <option value="advanced">Advanced Life Support</option>
-                    <option value="icu">ICU Ambulance</option>
+                    {selectedAmbulance?.vehicle_type ? (
+                      <option value={selectedAmbulance.vehicle_type}>
+                        {getVehicleTypeLabel(selectedAmbulance.vehicle_type)}
+                      </option>
+                    ) : (
+                      <option value="">Selected ambulance type</option>
+                    )}
                   </select>
                 </div>
 

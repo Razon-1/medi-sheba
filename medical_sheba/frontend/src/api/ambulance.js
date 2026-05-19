@@ -57,6 +57,11 @@ export const ambulanceAPI = {
     return apiClient.post(`/ambulance/requests/${id}/update_status/`, { status });
   },
 
+  // Update request distance and calculate final fare
+  updateFare: async (id, distanceKm) => {
+    return apiClient.post(`/ambulance/requests/${id}/update_fare/`, { distance_km: distanceKm });
+  },
+
   // Update request (for payment and other fields)
   updateRequest: async (id, data) => {
     return apiClient.patch(`/ambulance/requests/${id}/`, data);
@@ -67,11 +72,11 @@ export const ambulanceAPI = {
     return apiClient.post(`/ambulance/requests/${id}/accept/`, { ambulance_id: ambulanceId });
   },
 
-  // Hospital admin methods
+  // Admin methods
   myAmbulances: () =>
     apiClient.get('/ambulance/services/my_ambulances/'),
   
-  getHospitalAmbulanceRequests: (status) => {
+  getAmbulanceAdminRequests: (status) => {
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     return apiClient.get(`/ambulance/requests/hospital_requests/?${params.toString()}`);
@@ -87,10 +92,14 @@ export const ambulanceAPI = {
     apiClient.delete(`/ambulance/services/${id}/`),
 };
 
-// Convenience functions for hospital admin
+// Convenience functions for ambulance admin
 export const getMyAmbulances = () => ambulanceAPI.myAmbulances();
-export const getHospitalAmbulanceRequests = (status) => ambulanceAPI.getHospitalAmbulanceRequests(status);
+export const getAmbulanceAdminRequests = (status) => ambulanceAPI.getAmbulanceAdminRequests(status);
+export const getHospitalAmbulanceRequests = (status) => ambulanceAPI.getAmbulanceAdminRequests(status);
 export const addAmbulance = (data) => ambulanceAPI.createAmbulance(data);
 export const updateAmbulance = (id, data) => ambulanceAPI.updateAmbulance(id, data);
 export const deleteAmbulance = (id) => ambulanceAPI.deleteAmbulance(id);
 export const getAmbulances = () => ambulanceAPI.listServices();
+export const acceptAmbulanceRequest = (requestId, ambulanceId) => ambulanceAPI.acceptRequest(requestId, ambulanceId);
+export const updateAmbulanceRequestStatus = (requestId, status) => ambulanceAPI.updateStatus(requestId, status);
+export const updateAmbulanceRequestFare = (requestId, distanceKm) => ambulanceAPI.updateFare(requestId, distanceKm);

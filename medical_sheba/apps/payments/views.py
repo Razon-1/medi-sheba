@@ -501,12 +501,12 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def start_trial(self, request):
-        """Grant a one-time free trial (3 days) to a hospital_admin or pharmacy_admin user."""
+        """Grant a one-time free trial (3 days) to an admin user."""
         user = request.user
 
-        # Only hospital_admin or pharmacy_admin can request a trial
-        if not (('hospital_admin' in user.roles) or ('pharmacy_admin' in user.roles)):
-            return Response({'detail': 'Only hospital or pharmacy admins can request a trial.'}, status=status.HTTP_403_FORBIDDEN)
+        # Only business admins can request a trial.
+        if not ({'hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin'} & set(user.roles)):
+            return Response({'detail': 'Only hospital, pharmacy, or ambulance admins can request a trial.'}, status=status.HTTP_403_FORBIDDEN)
 
         # Check if user already received a trial
         existing = Subscription.objects.filter(user=user, is_trial=True).exists()

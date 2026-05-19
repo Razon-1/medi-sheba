@@ -12,8 +12,9 @@ class AmbulanceServiceListSerializer(serializers.ModelSerializer):
             'id', 'name', 'vehicle_type', 'driver_name', 'phone_number',
             'district', 'district_name', 'upazila', 'upazila_name', 'address',
             'cost_per_km', 'is_available', 'is_verified', 'rating', 'review_count',
-            'image_url', 'requires_authentication'
+            'image_url', 'requires_authentication', 'hospital', 'admin_user'
         ]
+        read_only_fields = ['admin_user', 'hospital']
 
 
 class AmbulanceServiceCreateSerializer(serializers.ModelSerializer):
@@ -23,8 +24,9 @@ class AmbulanceServiceCreateSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'vehicle_type', 'driver_name', 'phone_number', 'email',
             'district', 'upazila', 'address', 'latitude', 'longitude',
-            'cost_per_km', 'hospital', 'is_verified', 'image_url', 'requires_authentication'
+            'cost_per_km', 'hospital', 'admin_user', 'is_available', 'is_verified', 'image_url', 'requires_authentication'
         ]
+        read_only_fields = ['admin_user', 'hospital']
         extra_kwargs = {
             'district': {'required': False, 'allow_null': True},
             'upazila': {'required': False, 'allow_null': True},
@@ -45,9 +47,9 @@ class AmbulanceServiceDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'vehicle_type', 'driver_name', 'phone_number', 'email',
             'district', 'district_name', 'upazila', 'upazila_name', 'address',
             'latitude', 'longitude', 'cost_per_km', 'is_available', 'is_verified',
-            'rating', 'review_count', 'created_at', 'updated_at'
+            'rating', 'review_count', 'hospital', 'admin_user', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['admin_user', 'hospital', 'created_at', 'updated_at']
 
 
 class AmbulanceRequestListSerializer(serializers.ModelSerializer):
@@ -61,7 +63,7 @@ class AmbulanceRequestListSerializer(serializers.ModelSerializer):
             'pickup_location', 'dropoff_location', 'vehicle_type_required',
             'urgency', 'status', 'required_date', 'ambulance',
             'ambulance_name', 'ambulance_phone', 'estimated_fare',
-            'final_fare', 'payment_status', 'created_at'
+            'final_fare', 'distance_km', 'payment_status', 'created_at'
         ]
 
 
@@ -78,7 +80,7 @@ class AmbulanceRequestDetailSerializer(serializers.ModelSerializer):
             'vehicle_type_required', 'urgency', 'notes', 'status',
             'required_date', 'ambulance', 'ambulance_name', 'ambulance_phone',
             'ambulance_type', 'estimated_fare', 'final_fare', 'payment_status',
-            'payment', 'created_at', 'updated_at'
+            'distance_km', 'payment', 'created_at', 'updated_at'
         ]
         read_only_fields = ['request_id', 'created_at', 'updated_at']
 

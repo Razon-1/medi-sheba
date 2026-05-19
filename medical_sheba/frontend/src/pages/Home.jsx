@@ -69,6 +69,8 @@ export default function Home() {
       duration: 'Trial Period',
       price: 'Free',
       description: 'Perfect to explore all features',
+      isTrial: true,
+      next: '/pharmacy-admin',
       features: [
         'Unlimited medicine listings',
         'Full pharmacy admin dashboard',
@@ -107,6 +109,7 @@ export default function Home() {
       ],
       cta: 'Get Started',
       popular: true,
+      next: '/pharmacy-admin',
     },
     {
       name: 'Yearly Plan',
@@ -129,6 +132,7 @@ export default function Home() {
       ],
       cta: 'Subscribe Now',
       popular: false,
+      next: '/pharmacy-admin',
     },
     {
       name: 'Custom Plan',
@@ -150,6 +154,7 @@ export default function Home() {
       ],
       cta: 'Contact Sales',
       popular: false,
+      next: '/contact-sales',
     },
   ];
 
@@ -159,6 +164,8 @@ export default function Home() {
       duration: 'Trial Period',
       price: 'Free',
       description: 'Perfect to explore all features',
+      isTrial: true,
+      next: '/hospital-create',
       features: [
         'Complete hospital admin dashboard',
         'Unlimited doctor profiles',
@@ -187,6 +194,7 @@ export default function Home() {
       ],
       cta: 'Get Started',
       popular: true,
+      next: '/hospital-create',
     },
     {
       name: 'Yearly Plan',
@@ -204,6 +212,7 @@ export default function Home() {
       ],
       cta: 'Subscribe Now',
       popular: false,
+      next: '/hospital-create',
     },
     {
       name: 'Enterprise Plan',
@@ -223,8 +232,90 @@ export default function Home() {
       ],
       cta: 'Contact Sales',
       popular: false,
+      next: '/contact-sales',
     },
   ];
+
+  const ambulancePlans = [
+    {
+      name: '3 Days Trial',
+      duration: 'Trial Period',
+      price: 'Free',
+      description: 'Open your ambulance service and test requests',
+      isTrial: true,
+      next: '/ambulance-admin',
+      features: [
+        'Ambulance driver admin dashboard',
+        'Create and update ambulance listings',
+        'Control availability and service details',
+        'View assigned ambulance requests',
+        'Update request status from accepted to completed',
+        'Revenue review from paid/completed requests',
+        'Priority support 24/7',
+      ],
+      cta: 'Start Free Trial',
+      popular: false,
+    },
+    {
+      name: 'Monthly Plan',
+      duration: 'Per Month',
+      price: 'à§³1,499',
+      description: 'Best for independent ambulance operators',
+      next: '/ambulance-admin',
+      features: [
+        'Ambulance driver admin dashboard',
+        'Create and update ambulance listings',
+        'Control availability and service details',
+        'View assigned ambulance requests',
+        'Update request status from accepted to completed',
+        'Revenue review from paid/completed requests',
+        'Priority support 24/7',
+      ],
+      cta: 'Get Started',
+      popular: true,
+    },
+    {
+      name: 'Yearly Plan',
+      duration: 'Per Year',
+      price: 'à§³14,999',
+      description: 'Save with annual ambulance service access',
+      next: '/ambulance-admin',
+      features: [
+        'Ambulance driver admin dashboard',
+        'Create and update ambulance listings',
+        'Control availability and service details',
+        'View assigned ambulance requests',
+        'Update request status from accepted to completed',
+        'Revenue review from paid/completed requests',
+        'Priority support 24/7',
+      ],
+      cta: 'Subscribe Now',
+      popular: false,
+    },
+    {
+      name: 'Fleet Plan',
+      duration: 'Flexible',
+      price: 'Custom',
+      description: 'For ambulance fleets and service companies',
+      next: '/contact-sales',
+      features: [
+        'Multi-ambulance fleet management',
+        'Request tracking and dispatch support',
+        'Custom onboarding and training',
+        'Priority support 24/7',
+        'Monthly performance reports',
+        'Billing & invoice management',
+      ],
+      cta: 'Contact Sales',
+      popular: false,
+    },
+  ];
+
+  const plansByAdminType = {
+    pharmacy: pharmacyPlans,
+    hospital: hospitalPlans,
+    ambulance: ambulancePlans,
+  };
 
   const benefits = [
     { icon: Clock, text: '24/7 Availability' },
@@ -319,11 +410,18 @@ export default function Home() {
               <Building2 size={20} />
               <span>Hospital Admin</span>
             </button>
+            <button 
+              className={`toggle-btn ${adminType === 'ambulance' ? 'active' : ''}`}
+              onClick={() => setAdminType('ambulance')}
+            >
+              <Truck size={20} />
+              <span>Ambulance Driver Admin</span>
+            </button>
           </div>
         </div>
         
         <div className="subscription-grid">
-          {(adminType === 'pharmacy' ? pharmacyPlans : hospitalPlans).map((plan, idx) => (
+          {plansByAdminType[adminType].map((plan, idx) => (
             <div key={idx} className={`subscription-card ${plan.popular ? 'popular' : ''}`}>
               {plan.popular && (
                 <div className="popular-badge">
@@ -350,7 +448,7 @@ export default function Home() {
                     return;
                   }
 
-                  navigate('/payment', { state: { plan } });
+                  navigate('/payment', { state: { plan, next: plan.next || '/' } });
                 }}
               >
                 {plan.cta}

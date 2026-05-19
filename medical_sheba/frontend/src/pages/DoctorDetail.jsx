@@ -16,7 +16,7 @@ export default function DoctorDetail() {
   const isAuthenticated = !!user;
   const userRoles = user?.roles || [];
   const isPatientUser = userRoles.includes('patient')
-    && !userRoles.some((role) => ['pharmacy_admin', 'hospital_admin', 'doctor', 'admin'].includes(role));
+    && !userRoles.some((role) => ['pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin', 'doctor', 'admin'].includes(role));
   const [doctor, setDoctor] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);

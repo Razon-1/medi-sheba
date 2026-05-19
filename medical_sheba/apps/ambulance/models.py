@@ -14,6 +14,7 @@ class AmbulanceService(models.Model):
     ]
 
     hospital = models.ForeignKey('hospitals.Hospital', on_delete=models.SET_NULL, null=True, blank=True, related_name='ambulances')
+    admin_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ambulance_admin_services')
     name = models.CharField(max_length=200)
     vehicle_type = models.CharField(max_length=20, choices=VEHICLE_TYPE_CHOICES)
     driver_name = models.CharField(max_length=100)
@@ -21,7 +22,7 @@ class AmbulanceService(models.Model):
     email = models.EmailField(blank=True, null=True)
     
     # Location information
-    district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True)
+    district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True, blank=True)
     upazila = models.ForeignKey(Upazila, on_delete=models.SET_NULL, null=True, blank=True)
     address = models.TextField(blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -107,6 +108,7 @@ class AmbulanceRequest(models.Model):
     ]
     estimated_fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     final_fare = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    distance_km = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(0)])
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True, blank=True, related_name='ambulance_requests')
     

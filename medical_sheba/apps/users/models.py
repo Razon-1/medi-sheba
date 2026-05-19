@@ -37,6 +37,7 @@ class User(AbstractBaseUser):
         ('patient', 'Patient'),
         ('pharmacy_admin', 'Pharmacy Admin'),
         ('hospital_admin', 'Hospital Admin'),
+        ('ambulance_driver_admin', 'Ambulance Driver Admin'),
         ('doctor', 'Doctor'),
         ('admin', 'Admin'),
         ('donor', 'Donor'),

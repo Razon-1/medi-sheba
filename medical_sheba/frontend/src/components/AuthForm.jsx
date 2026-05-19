@@ -6,9 +6,10 @@ const roleOptions = [
   { value: 'patient', label: 'Patient' },
   { value: 'pharmacy_admin', label: 'Pharmacy Admin' },
   { value: 'hospital_admin', label: 'Hospital Admin' },
+  { value: 'ambulance_driver_admin', label: 'Ambulance Driver Admin' },
 ];
 
-const adminRoles = ['pharmacy_admin', 'hospital_admin'];
+const adminRoles = ['pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin'];
 
 export default function AuthForm({ type = 'login', onSubmit, loading = false }) {
   const isRegister = type === 'register';

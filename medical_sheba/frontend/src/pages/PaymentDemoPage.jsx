@@ -160,7 +160,7 @@ const PaymentDemoPage = () => {
               <div style={{ fontSize: 14, opacity: 0.9, fontWeight: 700, letterSpacing: 0.4 }}>Free Trial Activation</div>
               <h1 style={{ margin: '10px 0 8px', fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.1 }}>Activate your 3-day free trial</h1>
               <p style={{ margin: 0, fontSize: 17, opacity: 0.95, maxWidth: 640 }}>
-                Unlock {nextPath.includes('pharmacy') ? 'pharmacy' : 'hospital'} creation instantly with no upfront payment.
+                Unlock {nextPath.includes('pharmacy') ? 'pharmacy' : nextPath.includes('ambulance') ? 'ambulance' : 'hospital'} setup instantly with no upfront payment.
               </p>
             </div>
 
