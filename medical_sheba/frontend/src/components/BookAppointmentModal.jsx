@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, AlertCircle, CheckCircle, Clock, Calendar, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { appointmentsAPI } from '../api/appointments';
@@ -7,11 +7,70 @@ import useAuthStore from '../context/authStore';
 import Payment from './Payment';
 import '../styles/components/BookAppointmentModal.css';
 
+const DAY_INDEX_BY_NAME = {
+  sun: 0,
+  sunday: 0,
+  mon: 1,
+  monday: 1,
+  tue: 2,
+  tuesday: 2,
+  wed: 3,
+  wednesday: 3,
+  thu: 4,
+  thursday: 4,
+  fri: 5,
+  friday: 5,
+  sat: 6,
+  saturday: 6,
+};
+
+const formatDateValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getAvailableDayIndexes = (availableDays) => {
+  if (!availableDays) return [];
+
+  return availableDays
+    .split(/[,/|]+/)
+    .map((day) => day.trim().toLowerCase())
+    .map((day) => DAY_INDEX_BY_NAME[day])
+    .filter((dayIndex) => dayIndex !== undefined);
+};
+
+const getBookingDateOptions = (availableDays, optionLimit = 4, daysAhead = 60) => {
+  const availableDayIndexes = getAvailableDayIndexes(availableDays);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: daysAhead }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + index);
+    return date;
+  })
+    .filter((date) => (
+      availableDayIndexes.length === 0 || availableDayIndexes.includes(date.getDay())
+    ))
+    .slice(0, optionLimit)
+    .map((date) => ({
+      value: formatDateValue(date),
+      label: date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+      }),
+    }));
+};
+
 export default function BookAppointmentModal({ doctor, isOpen, onClose, onSuccess }) {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     type: 'new',
+    appointment_date: '',
     message: '', // Patient's preferred time or symptoms
   });
   
@@ -29,6 +88,21 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
       setError(null);
     }
   }, [isOpen, user]);
+
+  const bookingDateOptions = useMemo(
+    () => getBookingDateOptions(doctor.available_days),
+    [doctor.available_days]
+  );
+
+  useEffect(() => {
+    if (!isOpen || bookingDateOptions.length === 0) return;
+    if (bookingDateOptions.some((date) => date.value === formData.appointment_date)) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      appointment_date: bookingDateOptions[0].value,
+    }));
+  }, [isOpen, formData.appointment_date, bookingDateOptions]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -50,6 +124,16 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
     }
 
     // Validate message
+    if (!formData.appointment_date) {
+      setError('Please select an available appointment date');
+      return;
+    }
+
+    if (!bookingDateOptions.some((date) => date.value === formData.appointment_date)) {
+      setError('Please select a date when this doctor is available');
+      return;
+    }
+
     if (!formData.message || !formData.message.trim()) {
       setError('Please provide your preferred appointment time or describe your medical concern');
       return;
@@ -61,6 +145,7 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
       const appointmentData = {
         doctor_id: doctor.id,
         type: formData.type,
+        appointment_date: formData.appointment_date,
         symptoms: formData.message, // Store message in symptoms field
         notes: 'Pending phone confirmation - patient request',
         fee_amount: parseFloat(doctor.consultation_fee) || 0,
@@ -69,13 +154,15 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
       console.log('Submitting appointment request:', appointmentData);
       
       const response = await appointmentsAPI.create(appointmentData);
+      const createdAppointment = response.data || response;
       
-      console.log('Appointment created successfully:', response);
+      console.log('Appointment created successfully:', createdAppointment);
       
-      setAppointmentData(response);
+      setAppointmentData(createdAppointment);
       setSuccess(true);
       setFormData({
         type: 'new',
+        appointment_date: bookingDateOptions[0]?.value || '',
         message: '',
       });
 
@@ -141,6 +228,8 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
 
   const paymentAmount = parseFloat(appointmentData?.fee_amount ?? doctor.consultation_fee) || 0;
   const appointmentDoctorName = appointmentData?.doctor_name || doctor.user_name || doctor.name;
+  const contactPhone = doctor.phone_number || doctor.phone || doctor.user?.phone_number || doctor.user?.phone || doctor.hospital?.phone_primary || doctor.hospital_phone || '';
+  const hasAvailableDates = bookingDateOptions.length > 0;
 
   return (
     <div className="modal-overlay">
@@ -220,8 +309,15 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
               <div className="phone-notice">
                 <Phone size={18} className="icon" />
                 <div>
-                  <strong>How it works:</strong>
-                  <p>Share your preferred time or medical concern, and our team will call you to confirm the appointment.</p>
+                  <strong>Need any information? Call</strong>
+                  <p>
+                    Share your preferred time or medical concern, and our team will call you to confirm the appointment.
+                    {contactPhone && (
+                      <>
+                        {' '}Phone: <a href={`tel:${contactPhone}`}>{contactPhone}</a>
+                      </>
+                    )}
+                  </p>
                 </div>
               </div>
 
@@ -258,6 +354,29 @@ export default function BookAppointmentModal({ doctor, isOpen, onClose, onSucces
                       <option value="follow_up">Follow-up Consultation</option>
                       <option value="emergency">Emergency</option>
                     </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="appointment_date">Appointment Date *</label>
+                    <select
+                      id="appointment_date"
+                      name="appointment_date"
+                      value={formData.appointment_date}
+                      onChange={handleInputChange}
+                      required
+                      disabled={!hasAvailableDates}
+                    >
+                      {hasAvailableDates ? (
+                        bookingDateOptions.map((date) => (
+                          <option key={date.value} value={date.value}>
+                            {date.label}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No available dates found</option>
+                      )}
+                    </select>
+                    <small>Only the doctor's available days are shown. Past dates cannot be booked.</small>
                   </div>
 
                   <div className="form-group">

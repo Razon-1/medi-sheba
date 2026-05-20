@@ -444,7 +444,7 @@ export default function Home() {
       </section>
 
       {/* Subscription Plans Section */}
-      <section className="subscription">
+      <section className="subscription" id="subscription-plans">
         <div className="subscription-header">
           <h2 className="section-title">Subscription Plans</h2>
           <p className="section-subtitle">Choose Your Admin Type</p>

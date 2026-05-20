@@ -275,6 +275,66 @@
   width: auto;
 }
 
+.modal-content .admin-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+  color: #1f2937;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.modal-content .admin-switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-content .admin-switch-control {
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background 0.2s ease;
+}
+
+.modal-content .admin-switch-control::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.modal-content .admin-switch input[type="checkbox"]:checked + .admin-switch-control {
+  background: #2563eb;
+}
+
+.modal-content .admin-switch input[type="checkbox"]:checked + .admin-switch-control::after {
+  transform: translateX(20px);
+}
+
+.modal-content .admin-switch input[type="checkbox"]:focus-visible + .admin-switch-control {
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+.modal-content .admin-switch-text {
+  min-width: 0;
+}
+
 .modal-content .form-group {
   display: flex;
   flex-direction: column;

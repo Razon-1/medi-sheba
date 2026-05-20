@@ -97,6 +97,10 @@ class AmbulanceServiceViewSet(viewsets.ModelViewSet):
             return
 
         if 'ambulance_driver_admin' in roles:
+            if AmbulanceService.objects.filter(admin_user=user).exists():
+                raise serializers.ValidationError(
+                    "You already added an ambulance. One ambulance driver admin can manage only one ambulance."
+                )
             serializer.save(admin_user=user, hospital=None)
             return
 
@@ -231,9 +235,9 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
     def cancel(self, request, pk=None):
         """Cancel ambulance request"""
         ambulance_request = self.get_object()
-        if ambulance_request.status in ['completed', 'cancelled']:
+        if ambulance_request.status != 'pending':
             return Response(
-                {'error': f'Cannot cancel request with status {ambulance_request.status}'},
+                {'error': 'Ambulance requests can be cancelled while pending only.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -257,6 +261,11 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
             return Response(
                 {'error': 'You can only update fare for your own ambulance requests'},
                 status=status.HTTP_403_FORBIDDEN
+            )
+        if ambulance_request.status in ['completed', 'cancelled']:
+            return Response(
+                {'error': 'Completed or cancelled ambulance requests cannot be updated.'},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         distance_value = request.data.get('distance_km')
@@ -297,9 +306,18 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
         if new_status not in valid_statuses:
             return Response({'error': f'Invalid status. Valid options: {valid_statuses}'}, 
                           status=status.HTTP_400_BAD_REQUEST)
+        if ambulance_request.status in ['completed', 'cancelled']:
+            return Response(
+                {'error': 'Completed or cancelled ambulance requests cannot be updated.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
+        update_fields = ['status', 'updated_at']
         ambulance_request.status = new_status
-        ambulance_request.save()
+        if new_status == 'completed':
+            ambulance_request.payment_status = 'paid'
+            update_fields.append('payment_status')
+        ambulance_request.save(update_fields=update_fields)
         
         serializer = self.get_serializer(ambulance_request)
         return Response(serializer.data)

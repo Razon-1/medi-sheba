@@ -250,6 +250,23 @@ class PaymentViewSet(viewsets.ModelViewSet):
         )
 
         user = request.user
+        customer_name = user.get_full_name() or user.email or 'Medi Sheba Patient'
+        customer_email = user.email or 'patient@medisheba.local'
+        customer_phone = getattr(user, 'phone', None) or '01700000000'
+        customer_address = getattr(user, 'address', None) or 'Bangladesh'
+        customer_city = getattr(user, 'district', None) or 'Dhaka'
+
+        if payment_type == 'edoctor' and reference_id:
+            try:
+                from apps.edoctor.models import EDoctorConsultation
+
+                consultation = EDoctorConsultation.objects.get(id=reference_id)
+                customer_name = consultation.patient_name or customer_name
+                customer_email = consultation.patient_email or customer_email
+                customer_phone = consultation.patient_phone or customer_phone
+            except EDoctorConsultation.DoesNotExist:
+                pass
+
         config = self._sslcommerz_config()
         payload = {
             'store_id': config['store_id'],
@@ -261,12 +278,12 @@ class PaymentViewSet(viewsets.ModelViewSet):
             'fail_url': _absolute_api_url('/api/payments/payments/sslcommerz/fail/'),
             'cancel_url': _absolute_api_url('/api/payments/payments/sslcommerz/cancel/'),
             'ipn_url': _absolute_api_url('/api/payments/payments/sslcommerz/ipn/'),
-            'cus_name': user.get_full_name() or user.email,
-            'cus_email': user.email,
-            'cus_add1': user.address or 'Bangladesh',
-            'cus_city': user.district or 'Dhaka',
+            'cus_name': customer_name,
+            'cus_email': customer_email,
+            'cus_add1': customer_address,
+            'cus_city': customer_city,
             'cus_country': 'Bangladesh',
-            'cus_phone': user.phone,
+            'cus_phone': customer_phone,
             'shipping_method': 'NO',
             'product_name': payment.get_payment_type_display(),
             'product_category': payment.payment_type,
@@ -285,7 +302,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
-        gateway_url = response_data.get('GatewayPageURL')
+        gateway_url = response_data.get('GatewayPageURL') or response_data.get('redirectGatewayURL')
         payment.gateway_response = response_data
         payment.save(update_fields=['gateway_response', 'updated_at'])
 
@@ -631,7 +648,15 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 subscription = Subscription.objects.get(id=payment.reference_id)
                 subscription.payment = payment
                 subscription.status = 'active'
-                subscription.save()
+                if subscription.end_date <= timezone.now():
+                    start_date = timezone.now()
+                    if subscription.duration == 'yearly':
+                        subscription.end_date = start_date + timedelta(days=365)
+                    elif subscription.duration == 'quarterly':
+                        subscription.end_date = start_date + timedelta(days=90)
+                    else:
+                        subscription.end_date = start_date + timedelta(days=30)
+                subscription.save(update_fields=['payment', 'status', 'end_date', 'updated_at'])
 
                 user = subscription.user
                 if not getattr(user, 'has_made_first_payment', False):

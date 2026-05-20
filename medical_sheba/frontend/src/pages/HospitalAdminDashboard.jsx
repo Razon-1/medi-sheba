@@ -6,10 +6,26 @@ import * as hospitalApi from '../api/hospitals';
 import * as doctorApi from '../api/doctors';
 import * as edoctorApi from '../api/edoctor';
 import { appointmentsAPI } from '../api/appointments';
+import { validateBangladeshPhone, validateEmail, validateNumberRange, validateRequired } from '../utils/validators';
+import { AdminSubscriptionPrompt, useAdminSubscriptionAccess } from '../components/AdminSubscriptionAccess';
+
+const weekdayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const createEmptyAvailabilityRow = () => ({
+  day: '',
+  slots: [{ start_time: '10:00', end_time: '10:15' }],
+});
 
 const HospitalAdminDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const {
+    checkingAccess,
+    accessState,
+    accessError,
+    trialLoading,
+    startTrial,
+  } = useAdminSubscriptionAccess('hospital_admin');
   const [activeTab, setActiveTab] = useState('doctors');
   const [hospital, setHospital] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -21,6 +37,7 @@ const HospitalAdminDashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
+  const [formErrors, setFormErrors] = useState({});
   const [editingHospital, setEditingHospital] = useState(false);
   const [reviewPeriod, setReviewPeriod] = useState('weekly');
   const [revenueSummary, setRevenueSummary] = useState({
@@ -40,10 +57,10 @@ const HospitalAdminDashboard = () => {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (user && user.roles.includes('hospital_admin')) {
+    if (accessState === 'active' && user && user.roles.includes('hospital_admin')) {
       loadHospitalData();
     }
-  }, [activeTab, user]);
+  }, [activeTab, accessState, user]);
 
   const loadHospitalData = async () => {
     try {
@@ -174,12 +191,51 @@ const HospitalAdminDashboard = () => {
   const handleAddClick = () => {
     setEditingItem(null);
     setFormData({});
+    setFormErrors({});
+    setError(null);
     setShowForm(true);
   };
 
   const formatTimeForInput = (value) => {
     if (!value) return '';
     return String(value).slice(0, 5);
+  };
+
+  const formatAvailabilityTime = (start, end) => {
+    if (!start || !end) return '-';
+    return `${formatTimeForInput(start)} - ${formatTimeForInput(end)}`;
+  };
+
+  const normalizeAvailabilitySchedule = (doctor = {}) => {
+    if (Array.isArray(doctor.availability_schedule) && doctor.availability_schedule.length > 0) {
+      return doctor.availability_schedule.map((item) => ({
+        day: item.day || '',
+        slots: Array.isArray(item.slots) && item.slots.length > 0
+          ? item.slots.map((slot) => ({
+              start_time: formatTimeForInput(slot.start_time),
+              end_time: formatTimeForInput(slot.end_time),
+            }))
+          : [{
+              start_time: formatTimeForInput(item.start_time) || '10:00',
+              end_time: formatTimeForInput(item.end_time) || '10:15',
+            }],
+      }));
+    }
+
+    const days = String(doctor.available_days || '')
+      .split(',')
+      .map((day) => day.trim())
+      .filter(Boolean);
+
+    if (days.length === 0) return [createEmptyAvailabilityRow()];
+
+    return days.map((day) => ({
+      day,
+      slots: [{
+        start_time: formatTimeForInput(doctor.available_start_time) || '10:00',
+        end_time: formatTimeForInput(doctor.available_end_time) || '10:15',
+      }],
+    }));
   };
 
   const normalizeDoctorFormData = (doctor) => {
@@ -198,6 +254,7 @@ const HospitalAdminDashboard = () => {
 
   const normalizeEDoctorFormData = (doctor) => ({
     ...doctor,
+    availability_schedule: normalizeAvailabilitySchedule(doctor),
     available_start_time: formatTimeForInput(doctor.available_start_time),
     available_end_time: formatTimeForInput(doctor.available_end_time),
   });
@@ -227,7 +284,7 @@ const HospitalAdminDashboard = () => {
     'registration_number', 'email', 'phone_number', 'hospital_name',
     'consultation_address', 'consultation_fee', 'consultation_duration_minutes',
     'languages_spoken', 'available_days', 'available_start_time',
-    'available_end_time', 'is_available', 'requires_authentication', 'bio',
+    'available_end_time', 'availability_schedule', 'is_available', 'requires_authentication', 'bio',
     'specialties', 'image_url'
   ];
 
@@ -248,6 +305,8 @@ const HospitalAdminDashboard = () => {
 
   const handleEditClick = async (item) => {
     setEditingItem(item);
+    setFormErrors({});
+    setError(null);
 
     if (activeTab === 'doctors') {
       setFormData(normalizeDoctorFormData(item));
@@ -406,13 +465,7 @@ const HospitalAdminDashboard = () => {
 
   const handleConfirmAppointment = async (appointment) => {
     try {
-      const appointmentDate = window.prompt('Enter appointment date (YYYY-MM-DD):', appointment.appointment_date || '');
-      if (!appointmentDate) return;
-      
-      const appointmentTime = window.prompt('Enter appointment time (HH:MM):', appointment.appointment_time || '');
-      if (!appointmentTime) return;
-      
-      await appointmentsAPI.confirm(appointment.id, appointmentDate, appointmentTime);
+      await appointmentsAPI.confirm(appointment.id);
       // Reload appointments
       const appointmentsRes = await appointmentsAPI.hospitalAppointments();
       const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : (Array.isArray(appointmentsRes) ? appointmentsRes : []);
@@ -420,6 +473,21 @@ const HospitalAdminDashboard = () => {
       alert('Appointment confirmed successfully!');
     } catch (err) {
       alert('Failed to confirm appointment: ' + err.message);
+    }
+  };
+
+  const handleCompleteAppointment = async (appointment) => {
+    if (!window.confirm('Mark this appointment as completed?')) return;
+
+    try {
+      await appointmentsAPI.complete(appointment.id);
+      const appointmentsRes = await appointmentsAPI.hospitalAppointments();
+      const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : (Array.isArray(appointmentsRes) ? appointmentsRes : []);
+      setAppointments(appointmentsData);
+      alert('Appointment marked as completed!');
+    } catch (err) {
+      const message = err.response?.data?.error || err.response?.data?.detail || err.message;
+      alert('Failed to complete appointment: ' + message);
     }
   };
 
@@ -449,6 +517,21 @@ const HospitalAdminDashboard = () => {
       alert('Consultation confirmed successfully!');
     } catch (err) {
       alert('Failed to confirm consultation: ' + err.message);
+    }
+  };
+
+  const handleCompleteConsultation = async (consultation) => {
+    if (!window.confirm('Mark this consultation as completed?')) return;
+
+    try {
+      await edoctorApi.edoctorAPI.completeConsultation(consultation.id);
+      const consultationsRes = await edoctorApi.edoctorAPI.hospitalConsultations();
+      const consultationsData = Array.isArray(consultationsRes.data) ? consultationsRes.data : (Array.isArray(consultationsRes) ? consultationsRes : []);
+      setConsultations(consultationsData);
+      alert('Consultation marked as completed!');
+    } catch (err) {
+      const message = err.response?.data?.error || err.response?.data?.detail || err.message;
+      alert('Failed to complete consultation: ' + message);
     }
   };
 
@@ -483,9 +566,217 @@ const HospitalAdminDashboard = () => {
     }
   };
 
+  const setFieldValue = (field, value) => {
+    setFormData((current) => ({ ...current, [field]: value }));
+    setError(null);
+    setFormErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const getFieldClassName = (field) => formErrors[field] ? 'input-error' : '';
+
+  const renderFieldError = (field) => (
+    formErrors[field] ? <span className="field-error">{formErrors[field]}</span> : null
+  );
+
+  const getAvailabilitySchedule = () => (
+    Array.isArray(formData.availability_schedule) && formData.availability_schedule.length > 0
+      ? formData.availability_schedule
+      : [createEmptyAvailabilityRow()]
+  );
+
+  const syncAvailabilitySchedule = (schedule) => {
+    const cleanedSchedule = schedule.map((item) => ({
+      day: item.day || '',
+      slots: Array.isArray(item.slots) && item.slots.length > 0
+        ? item.slots.map((slot) => ({
+            start_time: slot.start_time || '',
+            end_time: slot.end_time || '',
+          }))
+        : [{ start_time: '', end_time: '' }],
+    }));
+    const validSchedule = cleanedSchedule
+      .map((item) => ({
+        ...item,
+        slots: item.slots.filter((slot) => slot.start_time && slot.end_time),
+      }))
+      .filter((item) => item.day && item.slots.length > 0);
+    const firstValid = validSchedule[0] || cleanedSchedule[0] || createEmptyAvailabilityRow();
+    const firstSlot = firstValid.slots?.[0] || {};
+
+    setFormData((current) => ({
+      ...current,
+      availability_schedule: cleanedSchedule,
+      available_days: validSchedule.map((item) => item.day).join(', '),
+      available_start_time: firstSlot.start_time || '',
+      available_end_time: firstSlot.end_time || '',
+    }));
+    setFormErrors((current) => {
+      const next = { ...current };
+      delete next.availability_schedule;
+      delete next.available_days;
+      delete next.available_start_time;
+      delete next.available_end_time;
+      return next;
+    });
+  };
+
+  const updateAvailabilityRow = (index, field, value) => {
+    const nextSchedule = getAvailabilitySchedule().map((item, itemIndex) => (
+      itemIndex === index ? { ...item, [field]: value } : item
+    ));
+    syncAvailabilitySchedule(nextSchedule);
+  };
+
+  const updateAvailabilitySlot = (dayIndex, slotIndex, field, value) => {
+    const nextSchedule = getAvailabilitySchedule().map((item, itemIndex) => {
+      if (itemIndex !== dayIndex) return item;
+      const slots = (item.slots || [{ start_time: '', end_time: '' }]).map((slot, currentSlotIndex) => (
+        currentSlotIndex === slotIndex ? { ...slot, [field]: value } : slot
+      ));
+      return { ...item, slots };
+    });
+    syncAvailabilitySchedule(nextSchedule);
+  };
+
+  const addAvailabilitySlot = (dayIndex) => {
+    const nextSchedule = getAvailabilitySchedule().map((item, itemIndex) => (
+      itemIndex === dayIndex
+        ? { ...item, slots: [...(item.slots || []), { start_time: '10:00', end_time: '10:15' }] }
+        : item
+    ));
+    syncAvailabilitySchedule(nextSchedule);
+  };
+
+  const removeAvailabilitySlot = (dayIndex, slotIndex) => {
+    const nextSchedule = getAvailabilitySchedule().map((item, itemIndex) => {
+      if (itemIndex !== dayIndex) return item;
+      const slots = (item.slots || []).filter((_, currentSlotIndex) => currentSlotIndex !== slotIndex);
+      return { ...item, slots: slots.length > 0 ? slots : [{ start_time: '', end_time: '' }] };
+    });
+    syncAvailabilitySchedule(nextSchedule);
+  };
+
+  const addAvailabilityRow = () => {
+    syncAvailabilitySchedule([...getAvailabilitySchedule(), createEmptyAvailabilityRow()]);
+  };
+
+  const removeAvailabilityRow = (index) => {
+    const nextSchedule = getAvailabilitySchedule().filter((_, itemIndex) => itemIndex !== index);
+    syncAvailabilitySchedule(nextSchedule.length > 0 ? nextSchedule : [createEmptyAvailabilityRow()]);
+  };
+
+  const validateDoctorForm = (data) => {
+    const errors = {};
+
+    if (!validateRequired(data.first_name)) errors.first_name = 'First name is required';
+    if (!validateRequired(data.last_name)) errors.last_name = 'Last name is required';
+    if (!validateRequired(data.email)) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(data.email)) {
+      errors.email = 'Enter a valid email address';
+    }
+    if (!validateRequired(data.phone_number)) {
+      errors.phone_number = 'Phone number is required';
+    } else if (!validateBangladeshPhone(data.phone_number)) {
+      errors.phone_number = 'Enter a valid Bangladesh phone number, e.g. 01712345678 or +8801712345678';
+    }
+    if (!validateRequired(data.bmdc_number)) errors.bmdc_number = 'BMDC number is required';
+    if (!validateRequired(data.specialty)) errors.specialty = 'Specialty is required';
+    if (!validateRequired(data.qualifications)) errors.qualifications = 'Qualifications are required';
+    if (!validateNumberRange(data.experience_years || 0, 0)) {
+      errors.experience_years = 'Experience cannot be negative';
+    }
+    if (!validateRequired(data.consultation_fee)) {
+      errors.consultation_fee = 'Consultation fee is required';
+    } else if (!validateNumberRange(data.consultation_fee, 1)) {
+      errors.consultation_fee = 'Consultation fee must be greater than 0';
+    }
+    if (data.follow_up_fee && !validateNumberRange(data.follow_up_fee, 0)) {
+      errors.follow_up_fee = 'Follow-up fee cannot be negative';
+    }
+
+    return errors;
+  };
+
+  const validateEDoctorForm = (data) => {
+    const errors = {};
+
+    if (!validateRequired(data.name)) errors.name = 'Name is required';
+    if (!validateRequired(data.specialization)) errors.specialization = 'Specialization is required';
+    if (!validateRequired(data.qualification)) errors.qualification = 'Qualification is required';
+    if (!validateNumberRange(data.experience_years, 0)) {
+      errors.experience_years = 'Experience cannot be negative';
+    }
+    if (!validateRequired(data.registration_number)) errors.registration_number = 'Registration number is required';
+    if (!validateRequired(data.email)) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(data.email)) {
+      errors.email = 'Enter a valid email address';
+    }
+    if (!validateRequired(data.phone_number)) {
+      errors.phone_number = 'Phone number is required';
+    } else if (!validateBangladeshPhone(data.phone_number)) {
+      errors.phone_number = 'Enter a valid Bangladesh phone number, e.g. 01712345678 or +8801712345678';
+    }
+    const availabilitySchedule = Array.isArray(data.availability_schedule) ? data.availability_schedule : [];
+    const validAvailabilityRows = availabilitySchedule.filter((item) => (
+      item.day
+      && Array.isArray(item.slots)
+      && item.slots.some((slot) => slot.start_time && slot.end_time)
+    ));
+    if (validAvailabilityRows.length === 0) {
+      errors.availability_schedule = 'Add at least one consultation day with one complete time slot';
+    }
+    if (!validateRequired(data.consultation_fee)) {
+      errors.consultation_fee = 'Consultation fee is required';
+    } else if (!validateNumberRange(data.consultation_fee, 1)) {
+      errors.consultation_fee = 'Consultation fee must be greater than 0';
+    }
+
+    return errors;
+  };
+
+  const getApiFieldErrors = (err) => {
+    const data = err?.response?.data || err?.data;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return {};
+
+    return Object.entries(data).reduce((errors, [field, value]) => {
+      if (['detail', 'error', 'message', 'non_field_errors'].includes(field)) return errors;
+      if (Array.isArray(value)) {
+        errors[field] = value.join(' ');
+      } else if (typeof value === 'string') {
+        errors[field] = value;
+      }
+      return errors;
+    }, {});
+  };
+
+  const getSubmitErrorMessage = (err) => {
+    const status = err?.response?.status || err?.status;
+    const data = err?.response?.data || err?.data;
+
+    if (typeof data === 'string') return data;
+    if (data?.detail) return data.detail;
+    if (data?.error) return data.error;
+    if (data?.message) return data.message;
+    if (Array.isArray(data?.non_field_errors) && data.non_field_errors.length > 0) {
+      return data.non_field_errors[0];
+    }
+    if (status >= 500) {
+      return 'Unable to save. Please check the highlighted fields and try again.';
+    }
+    return err.message || 'Unable to save. Please check the form and try again.';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setError(null);
       if (editingHospital) {
         // Handle hospital info update
         let submitData = { ...formData };
@@ -536,6 +827,13 @@ const HospitalAdminDashboard = () => {
         setFormData({});
         setError(null);
       } else if (activeTab === 'doctors') {
+        const validationErrors = validateDoctorForm(formData);
+        if (Object.keys(validationErrors).length > 0) {
+          setFormErrors(validationErrors);
+          return;
+        }
+        setFormErrors({});
+
         let submitData = pickEditableFields(
           { ...formData, hospital: hospital.id },
           doctorEditableFields
@@ -566,6 +864,13 @@ const HospitalAdminDashboard = () => {
           setDoctors([...doctors, newDoctor]);
         }
       } else if (activeTab === 'edoctors') {
+        const validationErrors = validateEDoctorForm(formData);
+        if (Object.keys(validationErrors).length > 0) {
+          setFormErrors(validationErrors);
+          return;
+        }
+        setFormErrors({});
+
         let submitData = pickEditableFields(
           { ...formData, hospital: hospital.id },
           edoctorEditableFields
@@ -598,9 +903,16 @@ const HospitalAdminDashboard = () => {
       }
       setShowForm(false);
       setFormData({});
+      setFormErrors({});
       setEditingItem(null);
     } catch (err) {
-      setError(err.message);
+      const apiFieldErrors = getApiFieldErrors(err);
+      if (Object.keys(apiFieldErrors).length > 0) {
+        setFormErrors(apiFieldErrors);
+        setError(null);
+        return;
+      }
+      setError(getSubmitErrorMessage(err));
     }
   };
 
@@ -616,7 +928,6 @@ const HospitalAdminDashboard = () => {
             <th>Qualification</th>
             <th>Phone</th>
             <th>Public</th>
-            <th>Verified</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -628,7 +939,6 @@ const HospitalAdminDashboard = () => {
               <td>{doctor.qualifications}</td>
               <td>{doctor.user?.phone_number}</td>
               <td>{doctor.is_available ? '✓' : '✗'}</td>
-              <td>{doctor.is_verified ? '✓ Verified' : '✗ Not Verified'}</td>
               <td>
                 <button className="btn-edit" onClick={() => handleEditClick(doctor)}>Edit</button>
                 <button className="btn-delete" onClick={() => handleDelete(doctor.id)}>Delete</button>
@@ -650,9 +960,10 @@ const HospitalAdminDashboard = () => {
             <th>Name</th>
             <th>Specialization</th>
             <th>Phone</th>
+            <th>Available Days</th>
+            <th>Time</th>
             <th>Consultation Fee</th>
             <th>Public</th>
-            <th>Verified</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -662,9 +973,10 @@ const HospitalAdminDashboard = () => {
               <td>{edoctor.name}</td>
               <td>{edoctor.specialization}</td>
               <td>{edoctor.phone_number}</td>
+              <td>{(Array.isArray(edoctor.availability_schedule) && edoctor.availability_schedule.length > 0) ? edoctor.availability_schedule.map((item) => item.day).join(', ') : (edoctor.available_days || '-')}</td>
+              <td>{(Array.isArray(edoctor.availability_schedule) && edoctor.availability_schedule.length > 0) ? edoctor.availability_schedule.map((item) => `${item.day}: ${(item.slots || [{ start_time: item.start_time, end_time: item.end_time }]).map((slot) => formatAvailabilityTime(slot.start_time, slot.end_time)).join(', ')}`).join('; ') : formatAvailabilityTime(edoctor.available_start_time, edoctor.available_end_time)}</td>
               <td>৳{parseFloat(edoctor.consultation_fee).toFixed(2)}</td>
               <td>{edoctor.is_available ? '✓' : '✗'}</td>
-              <td>{edoctor.is_verified ? '✓ Verified' : '✗ Not Verified'}</td>
               <td>
                 <button className="btn-edit" onClick={() => handleEditClick(edoctor)}>Edit</button>
                 <button className="btn-delete" onClick={() => handleDelete(edoctor.id)}>Delete</button>
@@ -679,6 +991,8 @@ const HospitalAdminDashboard = () => {
   const handleEditHospital = () => {
     setFormData(normalizeHospitalFormData(hospital));
     setEditingHospital(true);
+    setFormErrors({});
+    setError(null);
     setShowForm(true);
   };
 
@@ -741,7 +1055,12 @@ const HospitalAdminDashboard = () => {
                   {appointment.status === 'pending' && (
                     <button className="btn-edit" onClick={() => handleConfirmAppointment(appointment)}>Confirm</button>
                   )}
-                  <button className="btn-delete" onClick={() => handleCancelAppointment(appointment.id)}>Cancel</button>
+                  {appointment.status === 'confirmed' && (
+                    <button className="btn-edit" onClick={() => handleCompleteAppointment(appointment)}>Complete</button>
+                  )}
+                  {!['cancelled', 'completed'].includes(appointment.status) && (
+                    <button className="btn-delete" onClick={() => handleCancelAppointment(appointment.id)}>Cancel</button>
+                  )}
                 </td>
               </tr>
             ))
@@ -786,7 +1105,15 @@ const HospitalAdminDashboard = () => {
                   {consultation.status === 'scheduled' && (
                     <button className="btn-edit" onClick={() => handleConfirmConsultation(consultation)}>Confirm</button>
                   )}
-                  <button className="btn-delete" onClick={() => handleCancelConsultation(consultation.id)}>Cancel</button>
+                  {consultation.status === 'scheduled' && (
+                    <button className="btn-delete" onClick={() => handleCancelConsultation(consultation.id)}>Cancel</button>
+                  )}
+                  {consultation.status === 'confirmed' && (
+                    <button className="btn-edit" onClick={() => handleCompleteConsultation(consultation)}>Complete</button>
+                  )}
+                  {consultation.status === 'completed' && (
+                    <span style={{ color: '#198754', fontWeight: 700 }}>Completed</span>
+                  )}
                 </td>
               </tr>
             ))
@@ -795,6 +1122,20 @@ const HospitalAdminDashboard = () => {
       </table>
     </div>
   );
+
+  if (checkingAccess || accessState !== 'active') {
+    return (
+      <AdminSubscriptionPrompt
+        accessState={checkingAccess ? 'checking' : accessState}
+        accessError={accessError}
+        trialLoading={trialLoading}
+        onStartTrial={startTrial}
+        serviceName="hospital admin services"
+        loadingTitle="Loading Hospital Access"
+        loadingText="Checking your subscription and hospital access..."
+      />
+    );
+  }
 
   if (loading && !hospital) {
     return <div className="loading">Loading Hospital Dashboard...</div>;
@@ -862,12 +1203,19 @@ const HospitalAdminDashboard = () => {
         <div className="modal-overlay" onClick={() => {
           setShowForm(false);
           setEditingHospital(false);
+          setFormErrors({});
+          setError(null);
         }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>
               {editingHospital ? 'Edit Hospital Information' : (editingItem ? 'Edit Item' : 'Add New Item')}
             </h3>
-            <form onSubmit={handleSubmit} encType="multipart/form-data">
+            <form
+              onSubmit={handleSubmit}
+              encType="multipart/form-data"
+              noValidate={!editingHospital && (activeTab === 'doctors' || activeTab === 'edoctors')}
+            >
+              {error && <div className="error-message">{error}</div>}
               {activeTab === 'doctors' && (
                 <>
                   <div className="form-group">
@@ -893,18 +1241,24 @@ const HospitalAdminDashboard = () => {
                     <input
                       type="email"
                       value={formData.email || ''}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      onChange={(e) => setFieldValue('email', e.target.value)}
+                      className={getFieldClassName('email')}
+                      aria-invalid={Boolean(formErrors.email)}
                       required
                     />
+                    {renderFieldError('email')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Phone Number *</label>
                     <input
-                      type="text"
+                      type="tel"
                       value={formData.phone_number || ''}
-                      onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
+                      onChange={(e) => setFieldValue('phone_number', e.target.value)}
+                      className={getFieldClassName('phone_number')}
+                      aria-invalid={Boolean(formErrors.phone_number)}
                       required
                     />
+                    {renderFieldError('phone_number')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">BMDC Number *</label>
@@ -1009,13 +1363,14 @@ const HospitalAdminDashboard = () => {
                       onChange={(e) => setFormData({...formData, bio: e.target.value})}
                     />
                   </div>
-                  <label>
+                  <label className="admin-switch">
                     <input
                       type="checkbox"
                       checked={formData.is_available !== false}
                       onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
                     />
-                    Make available for public (visible without login)
+                    <span className="admin-switch-control" aria-hidden="true"></span>
+                    <span className="admin-switch-text">Make available for public (visible without login)</span>
                   </label>
                   <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                     <h4 style={{ marginTop: 0 }}>📸 Doctor Image (Optional)</h4>
@@ -1097,18 +1452,24 @@ const HospitalAdminDashboard = () => {
                     <input
                       type="email"
                       value={formData.email || ''}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      onChange={(e) => setFieldValue('email', e.target.value)}
+                      className={getFieldClassName('email')}
+                      aria-invalid={Boolean(formErrors.email)}
                       required
                     />
+                    {renderFieldError('email')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Phone *</label>
                     <input
-                      type="text"
+                      type="tel"
                       value={formData.phone_number || ''}
-                      onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
+                      onChange={(e) => setFieldValue('phone_number', e.target.value)}
+                      className={getFieldClassName('phone_number')}
+                      aria-invalid={Boolean(formErrors.phone_number)}
                       required
                     />
+                    {renderFieldError('phone_number')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Consultation Fee *</label>
@@ -1121,41 +1482,140 @@ const HospitalAdminDashboard = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Available Days (e.g., Monday, Tuesday, Wednesday)</label>
-                    <input
-                      type="text"
-                      value={formData.available_days || ''}
-                      onChange={(e) => setFormData({...formData, available_days: e.target.value})}
-                    />
-                  </div>
-                  <div style={{ marginTop: '10px' }}>
-                    <label className="form-label">Consultation Hours</label>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <div style={{ flex: 1 }}>
-                        <label className="form-label" style={{ marginBottom: '5px', fontSize: '12px' }}>Start Time</label>
-                        <input
-                          type="time"
-                          value={formData.available_start_time || ''}
-                          onChange={(e) => setFormData({...formData, available_start_time: e.target.value})}
-                        />
+                    <label className="form-label">Consultation Availability *</label>
+                    {getAvailabilitySchedule().map((availability, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '14px',
+                          padding: '16px',
+                          marginBottom: '10px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '8px',
+                          backgroundColor: '#f8fafc',
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start' }}>
+                            <div style={{ flex: 1 }}>
+                              <label className="form-label" style={{ marginBottom: '5px', fontSize: '12px' }}>Consultation Day</label>
+                              <select
+                                value={availability.day || ''}
+                                onChange={(e) => updateAvailabilityRow(index, 'day', e.target.value)}
+                                required
+                                style={{ maxWidth: '260px' }}
+                              >
+                                <option value="">Select day</option>
+                                {weekdayOptions.map((day) => (
+                                  <option key={day} value={day}>{day}</option>
+                                ))}
+                              </select>
+                            </div>
+                            {getAvailabilitySchedule().length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeAvailabilityRow(index)}
+                                style={{
+                                  border: '1px solid #fecaca',
+                                  backgroundColor: '#fff5f5',
+                                  color: '#b91c1c',
+                                  borderRadius: '6px',
+                                  padding: '8px 12px',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                Remove Day
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 1fr 90px',
+                              gap: '8px',
+                              marginBottom: '6px',
+                              color: '#64748b',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span>Start Time</span>
+                            <span>End Time</span>
+                            <span>Action</span>
+                          </div>
+                          {(availability.slots || [{ start_time: '', end_time: '' }]).map((slot, slotIndex) => (
+                            <div
+                              key={slotIndex}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr 90px',
+                                gap: '8px',
+                                alignItems: 'center',
+                                marginBottom: '8px',
+                              }}
+                            >
+                              <input
+                                type="time"
+                                value={slot.start_time || ''}
+                                onChange={(e) => updateAvailabilitySlot(index, slotIndex, 'start_time', e.target.value)}
+                                required
+                              />
+                              <input
+                                type="time"
+                                value={slot.end_time || ''}
+                                onChange={(e) => updateAvailabilitySlot(index, slotIndex, 'end_time', e.target.value)}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeAvailabilitySlot(index, slotIndex)}
+                                disabled={(availability.slots || []).length === 1}
+                                aria-label="Remove time slot"
+                                title="Remove time slot"
+                                style={{
+                                  height: '38px',
+                                  border: '1px solid #fecaca',
+                                  backgroundColor: (availability.slots || []).length === 1 ? '#f8fafc' : '#fff5f5',
+                                  color: (availability.slots || []).length === 1 ? '#94a3b8' : '#b91c1c',
+                                  borderRadius: '6px',
+                                  fontSize: '18px',
+                                  fontWeight: 700,
+                                  cursor: (availability.slots || []).length === 1 ? 'not-allowed' : 'pointer',
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => addAvailabilitySlot(index)}
+                            style={{ padding: '8px 12px', fontSize: '13px', borderRadius: '6px', width: '100%' }}
+                          >
+                            + Add Time Slot
+                          </button>
+                        </div>
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <label className="form-label" style={{ marginBottom: '5px', fontSize: '12px' }}>End Time</label>
-                        <input
-                          type="time"
-                          value={formData.available_end_time || ''}
-                          onChange={(e) => setFormData({...formData, available_end_time: e.target.value})}
-                        />
-                      </div>
-                    </div>
+                    ))}
+                    <button type="button" className="btn btn-secondary" onClick={addAvailabilityRow} style={{ width: '100%', borderRadius: '8px', padding: '10px 12px' }}>
+                      + Add Another Day
+                    </button>
+                    {renderFieldError('availability_schedule')}
                   </div>
-                  <label>
+                  <label className="admin-switch">
                     <input
                       type="checkbox"
                       checked={formData.is_available !== false}
                       onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
                     />
-                    Make available for public (visible without login)
+                    <span className="admin-switch-control" aria-hidden="true"></span>
+                    <span className="admin-switch-text">Make available for public (visible without login)</span>
                   </label>
                   <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                     <h4 style={{ marginTop: 0 }}>📸 E-Doctor Image (Optional)</h4>
@@ -1295,21 +1755,23 @@ const HospitalAdminDashboard = () => {
                       onChange={(e) => setFormData({...formData, special_facilities: e.target.value})}
                     />
                   </div>
-                  <label>
+                  <label className="admin-switch">
                     <input
                       type="checkbox"
                       checked={formData.emergency_available || false}
                       onChange={(e) => setFormData({...formData, emergency_available: e.target.checked})}
                     />
-                    Emergency Available (24/7)
+                    <span className="admin-switch-control" aria-hidden="true"></span>
+                    <span className="admin-switch-text">Emergency Available (24/7)</span>
                   </label>
-                  <label>
+                  <label className="admin-switch">
                     <input
                       type="checkbox"
                       checked={formData.is_active || false}
                       onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
                     />
-                    Active Status
+                    <span className="admin-switch-control" aria-hidden="true"></span>
+                    <span className="admin-switch-text">Active Status</span>
                   </label>
                   {editingHospital && (
                     <>
@@ -1380,6 +1842,8 @@ const HospitalAdminDashboard = () => {
                   setShowForm(false);
                   setEditingHospital(false);
                   setFormData({});
+                  setFormErrors({});
+                  setError(null);
                 }}>Cancel</button>
               </div>
             </form>

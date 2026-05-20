@@ -11,6 +11,7 @@ class EDoctorProfileWriteSerializer(serializers.ModelSerializer):
             'registration_number', 'email', 'phone_number', 'hospital_name',
             'consultation_address', 'consultation_fee', 'consultation_duration_minutes',
             'languages_spoken', 'available_days', 'available_start_time', 'available_end_time',
+            'availability_schedule',
             'is_available', 'is_verified', 'requires_authentication', 'bio', 'specialties', 'hospital', 'image_url'
         ]
         read_only_fields = ['id', 'doctor_id', 'is_verified']
@@ -26,7 +27,8 @@ class EDoctorProfileListSerializer(serializers.ModelSerializer):
             'id', 'doctor_id', 'name', 'specialization', 'specialization_display',
             'qualification', 'experience_years', 'consultation_fee', 'is_verified',
             'rating', 'review_count', 'is_available', 'hospital_name', 'phone_number',
-            'available_days', 'available_start_time', 'available_end_time', 'image_url'
+            'available_days', 'available_start_time', 'available_end_time',
+            'availability_schedule', 'image_url'
         ]
 
 
@@ -43,6 +45,7 @@ class EDoctorProfileDetailSerializer(serializers.ModelSerializer):
             'registration_number', 'email', 'phone_number', 'hospital_name',
             'consultation_address', 'consultation_fee', 'consultation_duration_minutes',
             'languages_spoken', 'available_days', 'available_start_time', 'available_end_time',
+            'availability_schedule',
             'is_available', 'is_verified', 'rating', 'review_count', 'bio',
             'specialties', 'image_url', 'created_at', 'updated_at'
         ]
@@ -67,7 +70,7 @@ class EDoctorConsultationListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'consultation_id', 'doctor', 'doctor_name', 'specialization',
             'patient_name', 'scheduled_date', 'scheduled_time', 'status',
-            'urgency', 'fee_amount', 'is_paid', 'payment_status', 'created_at'
+            'urgency', 'fee_amount', 'is_paid', 'payment_status', 'created_at', 'updated_at'
         ]
 
 
@@ -94,10 +97,48 @@ class EDoctorConsultationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EDoctorConsultation
         fields = [
-            'doctor', 'slot', 'patient_name', 'patient_email', 'patient_phone',
+            'id', 'consultation_id', 'doctor', 'slot', 'patient_name', 'patient_email', 'patient_phone',
             'patient_age', 'chief_complaint', 'medical_history', 'scheduled_date',
-            'scheduled_time', 'urgency'
+            'scheduled_time', 'urgency', 'status', 'fee_amount', 'is_paid', 'payment_status'
         ]
+        read_only_fields = [
+            'id', 'consultation_id', 'status', 'fee_amount', 'is_paid', 'payment_status'
+        ]
+
+    def validate(self, attrs):
+        doctor = attrs.get('doctor')
+        scheduled_date = attrs.get('scheduled_date')
+        scheduled_time = attrs.get('scheduled_time')
+        patient_email = (attrs.get('patient_email') or '').strip()
+        patient_phone = (attrs.get('patient_phone') or '').strip()
+        active_statuses = ['scheduled', 'confirmed', 'ongoing']
+
+        if doctor and scheduled_date and scheduled_time:
+            base_query = EDoctorConsultation.objects.filter(
+                doctor=doctor,
+                scheduled_date=scheduled_date,
+                scheduled_time=scheduled_time,
+                status__in=active_statuses,
+            )
+
+            if patient_email:
+                patient_duplicate_query = base_query.filter(patient_email__iexact=patient_email)
+            elif patient_phone:
+                patient_duplicate_query = base_query.filter(patient_phone=patient_phone)
+            else:
+                patient_duplicate_query = EDoctorConsultation.objects.none()
+
+            if patient_duplicate_query.exists():
+                raise serializers.ValidationError({
+                    'scheduled_time': 'You already booked this doctor at this date and time.'
+                })
+
+            if base_query.exists():
+                raise serializers.ValidationError({
+                    'scheduled_time': 'Doctor already booked for consultation at this date and time.'
+                })
+
+        return attrs
 
     def create(self, validated_data):
         doctor = validated_data['doctor']

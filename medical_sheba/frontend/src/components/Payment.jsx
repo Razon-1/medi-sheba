@@ -63,6 +63,10 @@ const Payment = ({
         ...paymentDetails,
       };
 
+      if (['appointment', 'edoctor', 'ambulance', 'medicine'].includes(paymentType) && !referenceId) {
+        throw { detail: 'Payment cannot start because the service reference is missing. Please try booking again.' };
+      }
+
       if (paymentMethod === 'sslcommerz') {
         const response = await paymentsAPI.initiateSSLCommerzPayment(paymentData);
         const checkoutUrl = response.gateway_url || response.redirect_url || response.GatewayPageURL;

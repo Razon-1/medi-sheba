@@ -633,6 +633,17 @@
   border-top: 1px solid #e0e0e0;
 }
 
+.booking-inline-error {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  color: #9a3412;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-top: 14px;
+  padding: 12px 14px;
+}
+
 .btn-cancel {
   flex: 1;
   padding: 12px;
@@ -729,6 +740,20 @@
   flex: 1;
   word-break: break-word;
   margin-left: 10px;
+}
+
+.confirmation-details .payment-warning {
+  align-items: flex-start;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.confirmation-details .payment-warning .label,
+.confirmation-details .payment-warning .value {
+  color: #9a3412;
 }
 
 .confirmation-message {

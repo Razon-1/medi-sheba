@@ -54,6 +54,9 @@ export default function PaymentResultPage({ status = 'success' }) {
   };
 
   const isSuccess = status === 'success';
+  const serviceSuccessMessage = payment?.payment_type === 'edoctor'
+    ? 'Your payment is complete and your consultation is scheduled. The hospital admin will confirm it.'
+    : 'Your SSLCommerz payment has been processed.';
 
   return (
     <div className="support-page" style={{ padding: '48px 16px' }}>
@@ -66,7 +69,7 @@ export default function PaymentResultPage({ status = 'success' }) {
         <h1>{isSuccess ? 'Payment Successful' : cancelled ? 'Payment Cancelled' : 'Payment Failed'}</h1>
         <p>
           {isSuccess
-            ? 'Your SSLCommerz payment has been processed.'
+            ? serviceSuccessMessage
             : 'Your payment was not completed. You can try again from the plan or service page.'}
         </p>
 
@@ -100,7 +103,9 @@ export default function PaymentResultPage({ status = 'success' }) {
         )}
 
         <div style={{ marginTop: 28 }}>
-          <Link to="/" className="btn btn-primary">Back Home</Link>
+          <Link to={payment?.payment_type === 'edoctor' ? '/appointments' : '/'} className="btn btn-primary">
+            {payment?.payment_type === 'edoctor' ? 'View My Consultations' : 'Back Home'}
+          </Link>
         </div>
       </div>
     </div>

@@ -87,9 +87,21 @@ export default function PharmacyCreatePage() {
           return;
         }
 
-        const response = await medicineAPI.getMyPharmacy();
+        if (user && !user.has_made_first_payment && !cancelled) {
+          const updated = { ...user, has_made_first_payment: true };
+          setUser(updated);
+          localStorage.setItem('user', JSON.stringify(updated));
+        }
+
+        const response = await medicineAPI.getMyPharmacy().catch(() => null);
         if (response && !cancelled) {
           navigate('/pharmacy-admin', { replace: true });
+          return;
+        }
+
+        if (!cancelled) {
+          setCheckingExisting(false);
+          setAccessState('active');
         }
       } catch (err) {
         if (!cancelled) {
@@ -245,10 +257,12 @@ export default function PharmacyCreatePage() {
               : 'Start your free trial to unlock pharmacy creation.'}
           </p>
           <div style={{display: 'flex', gap: '12px', marginTop: '14px', alignItems: 'center', flexWrap: 'wrap'}}>
-            <div style={{flex: '1 1 260px', padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.07)'}}>
+            {accessState !== 'expired' && (
+              <div style={{flex: '1 1 260px', padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.07)'}}>
               <div style={{fontWeight:800, fontSize:16}}>Free Trial</div>
               <div style={{fontSize:13, opacity:0.95, marginTop: 4}}>3 days • No upfront payment • Continue to setup after activation</div>
             </div>
+            )}
             {accessState === 'expired' && (
               <div style={{flex: '1 1 260px', padding: '14px', borderRadius: 12, background: 'rgba(255,255,255,0.07)'}}>
                 <div style={{fontWeight:800, fontSize:16}}>Paid Plans</div>
@@ -257,11 +271,17 @@ export default function PharmacyCreatePage() {
             )}
           </div>
           <div className="subscription-actions">
+            {accessState === 'expired' ? (
+              <button className="btn-primary" onClick={() => navigate('/#subscription-plans')}>
+                Choose Paid Plan
+              </button>
+            ) : (
               <button className="btn-outline" onClick={handleStartTrial} disabled={loading}>
                 {loading ? 'Starting Trial...' : 'Continue Free Trial'}
               </button>
+            )}
           </div>
-          {error && <div className="error-banner"><span>{error}</span></div>}
+          {error && accessState !== 'expired' && <div className="error-banner"><span>{error}</span></div>}
         </div>
       </div>
     );

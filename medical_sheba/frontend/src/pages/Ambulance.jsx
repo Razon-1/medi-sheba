@@ -122,6 +122,10 @@ export default function Ambulance() {
 
   const formatFarePerKm = (fare) => `BDT ${Number.parseFloat(fare || 0).toFixed(2)} per km`;
 
+  const getServiceArea = (ambulance) => (
+    ambulance.district_name || ambulance.address || 'Service area not provided'
+  );
+
   const handleOpenRequestModal = (ambulance) => {
     setSelectedAmbulance(ambulance);
     setFormData(prev => ({
@@ -343,8 +347,8 @@ export default function Ambulance() {
                 <div className="detail-row">
                   <div className="detail-item">
                     <MapPin size={16} />
-                    <span className="label">Location:</span>
-                    <span className="value">{ambulance.district_name || 'Location not provided'}</span>
+                    <span className="label">Service Area:</span>
+                    <span className="value">{getServiceArea(ambulance)}</span>
                   </div>
                   <div className="detail-item">
                     <DollarSign size={16} />

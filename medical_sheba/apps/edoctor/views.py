@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from apps.hospitals.models import Hospital
@@ -171,8 +172,14 @@ class IsPatientOrReadOnly(BasePermission):
             and obj.doctor.hospital
         ):
             return obj.doctor.hospital.admin_user == request.user
-        # Write permission only for the patient who booked the consultation
-        return obj.patient_email == request.user.email if request.user.is_authenticated else False
+        if not request.user.is_authenticated:
+            return False
+        if obj.status == 'confirmed' and getattr(view, 'action', None) == 'cancel':
+            return False
+        return (
+            obj.patient_email == request.user.email
+            or (getattr(request.user, 'phone', None) and obj.patient_phone == request.user.phone)
+        )
 
 
 class EDoctorConsultationViewSet(viewsets.ModelViewSet):
@@ -197,7 +204,10 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
             except Hospital.DoesNotExist:
                 return EDoctorConsultation.objects.none()
         if user.is_authenticated:
-            return EDoctorConsultation.objects.filter(patient_email=user.email).order_by('-created_at')
+            patient_filter = Q(patient_email=user.email)
+            if getattr(user, 'phone', None):
+                patient_filter |= Q(patient_phone=user.phone)
+            return EDoctorConsultation.objects.filter(patient_filter).distinct().order_by('-created_at')
         return EDoctorConsultation.objects.none()
 
     def get_serializer_class(self):
@@ -248,7 +258,7 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
         """Confirm a consultation booking"""
         consultation = self.get_object()
         consultation.status = 'confirmed'
-        consultation.save()
+        consultation.save(update_fields=['status', 'updated_at'])
         serializer = EDoctorConsultationDetailSerializer(consultation)
         return Response(serializer.data)
 
@@ -256,9 +266,9 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     def cancel(self, request, pk=None):
         """Cancel a consultation"""
         consultation = self.get_object()
-        if consultation.status in ['scheduled', 'confirmed']:
+        if consultation.status == 'scheduled':
             consultation.status = 'cancelled'
-            consultation.save()
+            consultation.save(update_fields=['status', 'updated_at'])
             serializer = EDoctorConsultationDetailSerializer(consultation)
             return Response(serializer.data)
         return Response(
@@ -270,9 +280,9 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     def start_consultation(self, request, pk=None):
         """Start the consultation"""
         consultation = self.get_object()
-        if consultation.status == 'scheduled':
+        if consultation.status == 'confirmed':
             consultation.status = 'ongoing'
-            consultation.save()
+            consultation.save(update_fields=['status', 'updated_at'])
             serializer = EDoctorConsultationDetailSerializer(consultation)
             return Response(serializer.data)
         return Response(
@@ -284,13 +294,13 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     def complete(self, request, pk=None):
         """Mark consultation as completed"""
         consultation = self.get_object()
-        if consultation.status == 'ongoing':
+        if consultation.status in ['confirmed', 'ongoing']:
             consultation.status = 'completed'
-            consultation.save()
+            consultation.save(update_fields=['status', 'updated_at'])
             serializer = EDoctorConsultationDetailSerializer(consultation)
             return Response(serializer.data)
         return Response(
-            {'error': 'Consultation is not ongoing'},
+            {'error': 'Only confirmed or ongoing consultations can be completed'},
             status=status.HTTP_400_BAD_REQUEST
         )
 

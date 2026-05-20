@@ -70,7 +70,7 @@ class AmbulanceRequestListSerializer(serializers.ModelSerializer):
             'pickup_location', 'dropoff_location', 'vehicle_type_required',
             'urgency', 'status', 'required_date', 'ambulance',
             'ambulance_name', 'ambulance_phone', 'estimated_fare',
-            'final_fare', 'distance_km', 'payment_status', 'created_at'
+            'final_fare', 'distance_km', 'payment_status', 'created_at', 'updated_at'
         ]
 
 

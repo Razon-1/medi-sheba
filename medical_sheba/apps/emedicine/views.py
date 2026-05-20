@@ -314,9 +314,9 @@ class EMedicineOrderViewSet(viewsets.ModelViewSet):
     def cancel(self, request, pk=None):
         """Cancel an order"""
         order = self.get_object()
-        if order.status in ['delivered', 'cancelled']:
+        if order.status != 'pending':
             return Response(
-                {'error': f'Cannot cancel order with status {order.status}'},
+                {'error': 'Medicine orders cannot be cancelled after pharmacy confirmation.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         

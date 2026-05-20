@@ -56,13 +56,38 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         # Ensure patient is set in validated data
         if 'patient' not in serializer.validated_data:
             serializer.validated_data['patient'] = request.user
+
+        appointment_date = serializer.validated_data.get('appointment_date')
+        patient = serializer.validated_data.get('patient')
+        doctor = serializer.validated_data.get('doctor')
+        doctor_id = serializer.validated_data.get('doctor_id')
+
+        if not doctor and doctor_id:
+            from apps.doctors.models import Doctor
+            doctor = Doctor.objects.filter(id=doctor_id).first()
+
+        if appointment_date and patient and doctor:
+            duplicate_exists = Appointment.objects.filter(
+                patient=patient,
+                doctor=doctor,
+                appointment_date=appointment_date,
+            ).exclude(status__in=['cancelled', 'no_show']).exists()
+
+            if duplicate_exists:
+                return Response(
+                    {
+                        'appointment_date': [
+                            'You already have an appointment with this doctor on this date.'
+                        ]
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         
         # Generate unique appointment number within 20 character limit
         from django.utils.timezone import now
         import random
         import string
         
-        appointment_date = serializer.validated_data.get('appointment_date')
         now_obj = now()
         
         # Format: APT + YYMMDD + HHMM + 2 random digits
@@ -172,11 +197,49 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         appointment.save()
         serializer = self.get_serializer(appointment)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        """Mark an appointment as completed (hospital admin only)."""
+        appointment = self.get_object()
+
+        is_superuser = request.user.is_authenticated and request.user.is_superuser
+        is_hospital_admin = (
+            request.user.is_authenticated
+            and 'hospital_admin' in getattr(request.user, 'roles', [])
+            and appointment.hospital
+            and appointment.hospital.admin_user == request.user
+        )
+
+        if not (is_superuser or is_hospital_admin):
+            return Response(
+                {'error': 'You do not have permission to complete this appointment'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if appointment.status != 'confirmed':
+            return Response(
+                {'error': f'Only confirmed appointments can be completed. Current status: {appointment.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        appointment.status = 'completed'
+        appointment.save(update_fields=['status', 'updated_at'])
+        serializer = self.get_serializer(appointment)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         """Cancel an appointment"""
         appointment = self.get_object()
+        is_patient = request.user.is_authenticated and appointment.patient == request.user
+
+        if is_patient and appointment.status != 'pending':
+            return Response(
+                {'detail': 'Confirmed appointments cannot be cancelled by the patient.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         if appointment.status == 'completed':
             return Response(
                 {'detail': 'Cannot cancel completed appointment'},

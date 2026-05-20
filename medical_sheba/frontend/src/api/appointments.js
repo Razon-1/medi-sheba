@@ -34,4 +34,7 @@ export const appointmentsAPI = {
     if (appointmentTime) data.appointment_time = appointmentTime;
     return client.post(`/appointments/${id}/confirm/`, data);
   },
+
+  complete: (id) =>
+    client.post(`/appointments/${id}/complete/`),
 };

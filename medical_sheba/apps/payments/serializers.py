@@ -60,6 +60,24 @@ class PaymentInitiateSerializer(serializers.ModelSerializer):
             'mobile_number', 'mobile_name', 'card_holder_name', 'card_last_four'
         ]
 
+    def validate(self, attrs):
+        service_payment_types = {'appointment', 'edoctor', 'ambulance', 'medicine'}
+        payment_type = attrs.get('payment_type')
+        reference_id = attrs.get('reference_id')
+        amount = attrs.get('amount')
+
+        if amount is not None and amount <= 0:
+            raise serializers.ValidationError({
+                'amount': 'Payment amount must be greater than 0.'
+            })
+
+        if payment_type in service_payment_types and not reference_id:
+            raise serializers.ValidationError({
+                'reference_id': 'A service reference is required before starting payment.'
+            })
+
+        return attrs
+
 
 class PaymentVerifySerializer(serializers.Serializer):
     """For verifying payment"""

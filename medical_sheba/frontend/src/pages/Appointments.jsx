@@ -71,10 +71,10 @@ const statusStyles = {
 };
 
 const cancelableStatuses = {
-  doctor: ['pending', 'confirmed'],
-  edoctor: ['scheduled', 'confirmed'],
-  ambulance: ['pending', 'accepted'],
-  medicine: ['pending', 'confirmed', 'processing'],
+  doctor: ['pending'],
+  edoctor: ['scheduled'],
+  ambulance: ['pending'],
+  medicine: ['pending'],
 };
 
 const completedStatuses = ['completed', 'delivered'];
@@ -94,6 +94,20 @@ const formatStatus = (status) => {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 };
+
+const isPaidPaymentStatus = (paymentStatus) => String(paymentStatus || '').toLowerCase() === 'paid';
+
+const getPaymentDisplay = (service) => {
+  if (String(service.status || '').toLowerCase() === 'cancelled' && isPaidPaymentStatus(service.paymentStatus)) {
+    return 'Refund in 48 hours';
+  }
+
+  return formatStatus(service.paymentStatus || 'not available');
+};
+
+const getServiceSortTime = (service) => (
+  new Date(service.updatedAt || service.createdAt || service.date || 0).getTime() || 0
+);
 
 const formatDate = (dateValue) => {
   if (!dateValue) return 'To be confirmed';
@@ -167,6 +181,7 @@ export default function Appointments() {
     notes: appointment.notes,
     detail: String(appointment.type || 'new').replace('_', ' '),
     createdAt: appointment.created_at,
+    updatedAt: appointment.updated_at,
     cancelMessage: 'Doctor appointments can be cancelled while pending or confirmed.',
     cancel: (reason) => appointmentsAPI.cancel(appointment.id, reason),
   });
@@ -187,7 +202,8 @@ export default function Appointments() {
     notes: consultation.chief_complaint,
     detail: formatStatus(consultation.urgency || 'routine'),
     createdAt: consultation.created_at,
-    cancelMessage: 'E-Doctor consultations can be cancelled before the session starts.',
+    updatedAt: consultation.updated_at,
+    cancelMessage: 'E-Doctor consultations can be cancelled before hospital confirmation.',
     cancel: () => edoctorAPI.cancelConsultation(consultation.id),
   });
 
@@ -207,7 +223,8 @@ export default function Appointments() {
     notes: request.urgency ? `${formatStatus(request.urgency)} priority` : '',
     detail: formatStatus(request.vehicle_type_required || 'ambulance'),
     createdAt: request.created_at,
-    cancelMessage: 'Ambulance requests can be cancelled before the vehicle is on the way.',
+    updatedAt: request.updated_at,
+    cancelMessage: 'Ambulance requests can be cancelled while pending only.',
     cancel: () => ambulanceAPI.cancelRequest(request.id),
   });
 
@@ -224,10 +241,13 @@ export default function Appointments() {
     time: null,
     amount: order.total_amount,
     paymentStatus: order.payment_status,
-    notes: order.notes,
+    notes: order.status === 'confirmed'
+      ? 'Delivery man will contact with you.'
+      : order.notes,
     detail: formatStatus(order.urgency || 'normal'),
     createdAt: order.created_at,
-    cancelMessage: 'Medicine orders can be cancelled before delivery is handed to courier.',
+    updatedAt: order.updated_at,
+    cancelMessage: 'Medicine orders can be cancelled before pharmacy confirmation.',
     cancel: () => emedicineAPI.cancelOrder(order.id),
   });
 
@@ -266,7 +286,7 @@ export default function Appointments() {
         setError('Some services could not be loaded. Refresh to try again.');
       }
 
-      nextServices.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
+      nextServices.sort((a, b) => getServiceSortTime(b) - getServiceSortTime(a));
       setServices(nextServices);
     } catch (err) {
       console.error('Error fetching patient services:', err);
@@ -616,7 +636,7 @@ export default function Appointments() {
                   <div className="mt-5 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Payment</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900">{formatStatus(service.paymentStatus || 'not available')}</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-900">{getPaymentDisplay(service)}</p>
                     </div>
                     {service.notes && (
                       <p className="max-w-2xl text-sm leading-6 text-gray-600">{service.notes}</p>
@@ -641,6 +661,9 @@ export default function Appointments() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">Cancel service</h2>
                 <p className="mt-1 text-sm text-gray-600">{cancelTarget.cancelMessage}</p>
+                {isPaidPaymentStatus(cancelTarget.paymentStatus) && (
+                  <p className="mt-2 text-sm font-bold text-amber-700">Refund in 48 hours after cancellation.</p>
+                )}
               </div>
               <button
                 type="button"

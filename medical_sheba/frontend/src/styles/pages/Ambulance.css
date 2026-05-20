@@ -128,7 +128,8 @@
 
 .ambulance-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+  justify-content: start;
   gap: 20px;
   padding: 0 0 40px;
 }
@@ -658,7 +659,8 @@
 
 /* Page-scoped protection from other globally imported page styles. */
 .ambulance-page .ambulance-list {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+  justify-content: start;
 }
 
 .ambulance-page .ambulance-card {

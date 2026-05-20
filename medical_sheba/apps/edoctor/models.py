@@ -59,6 +59,7 @@ class EDoctorProfile(models.Model):
     available_days = models.CharField(max_length=100, default='Monday, Tuesday, Wednesday, Thursday, Friday')
     available_start_time = models.TimeField(default='09:00')
     available_end_time = models.TimeField(default='18:00')
+    availability_schedule = models.JSONField(default=list, blank=True)
     is_available = models.BooleanField(default=True)
     requires_authentication = models.BooleanField(default=False, help_text="Patient must be logged in to book consultation")
 
@@ -129,6 +130,7 @@ class EDoctorConsultation(models.Model):
 
     STATUS_CHOICES = [
         ('scheduled', 'Scheduled'),
+        ('confirmed', 'Confirmed'),
         ('ongoing', 'Ongoing'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),

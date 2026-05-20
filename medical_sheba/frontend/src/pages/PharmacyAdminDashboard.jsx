@@ -4,11 +4,19 @@ import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import useAuthStore from '../context/authStore';
 import { medicineAPI } from '../api/emedicine';
 import { uploadImage } from '../api/hospitals';
+import { AdminSubscriptionPrompt, useAdminSubscriptionAccess } from '../components/AdminSubscriptionAccess';
 import '../styles/pages/PharmacyAdminDashboard.css';
 
 export default function PharmacyAdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const {
+    checkingAccess,
+    accessState,
+    accessError,
+    trialLoading,
+    startTrial,
+  } = useAdminSubscriptionAccess('pharmacy_admin');
   const [pharmacy, setPharmacy] = useState(null);
   const [medicines, setMedicines] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -18,7 +26,6 @@ export default function PharmacyAdminDashboard() {
   const [showAddMedicine, setShowAddMedicine] = useState(false);
   const [showEditPharmacy, setShowEditPharmacy] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
   const [reviewPeriod, setReviewPeriod] = useState('weekly');
 
   // Redirect if not pharmacy admin
@@ -83,14 +90,14 @@ export default function PharmacyAdminDashboard() {
       }
     };
 
-    if (user && user.roles.includes('pharmacy_admin')) {
+    if (accessState === 'active' && user && user.roles.includes('pharmacy_admin')) {
       fetchData();
     }
-  }, [user]);
+  }, [accessState, user]);
 
   // Refetch orders when tab changes to 'orders'
   useEffect(() => {
-    if (activeTab === 'orders') {
+    if (accessState === 'active' && activeTab === 'orders') {
       const fetchOrders = async () => {
         try {
           const ordersRes = await medicineAPI.listOrders();
@@ -104,7 +111,7 @@ export default function PharmacyAdminDashboard() {
       };
       fetchOrders();
     }
-  }, [activeTab]);
+  }, [accessState, activeTab]);
 
   const getPeriodStart = (period) => {
     const now = new Date();
@@ -299,6 +306,20 @@ export default function PharmacyAdminDashboard() {
     return null;
   }
 
+  if (checkingAccess || accessState !== 'active') {
+    return (
+      <AdminSubscriptionPrompt
+        accessState={checkingAccess ? 'checking' : accessState}
+        accessError={accessError}
+        trialLoading={trialLoading}
+        onStartTrial={startTrial}
+        serviceName="pharmacy admin services"
+        loadingTitle="Loading Pharmacy Access"
+        loadingText="Checking your subscription and pharmacy access..."
+      />
+    );
+  }
+
   if (loading) {
     return <div className="pharmacy-admin-loading">Loading pharmacy dashboard...</div>;
   }
@@ -359,12 +380,10 @@ export default function PharmacyAdminDashboard() {
         )}
 
         {activeTab === 'orders' && (
-          <OrdersTab
-            orders={orders}
-            setOrders={setOrders}
-            selectedOrder={selectedOrder}
-            setSelectedOrder={setSelectedOrder}
-          />
+            <OrdersTab
+              orders={orders}
+              setOrders={setOrders}
+            />
         )}
 
         {activeTab === 'review' && <RevenueReviewTab />}
@@ -382,7 +401,7 @@ export default function PharmacyAdminDashboard() {
   );
 }
 
-function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
+function OrdersTab({ orders, setOrders }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterUrgency, setFilterUrgency] = useState('all');
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
@@ -474,6 +493,8 @@ function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
     return actions[order.status];
   };
 
+  const canCompleteOrder = (order) => ['confirmed', 'processing', 'shipped'].includes(order.status);
+
   return (
     <div className="orders-tab">
       <div className="tab-header">
@@ -542,7 +563,7 @@ function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
                 </div>
                 <div className="info-row">
                   <span className="label">Delivery Address:</span>
-                  <span className="value address">{order.delivery_address}</span>
+                  <span className="value address">{order.delivery_address || 'No delivery address provided'}</span>
                 </div>
                 <div className="info-row">
                   <span className="label">Total Amount:</span>
@@ -578,7 +599,17 @@ function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
                       {getNextAction(order).label}
                     </button>
                   )}
-                  {!['delivered', 'cancelled'].includes(order.status) && (
+                  {canCompleteOrder(order) && (
+                    <button
+                      type="button"
+                      className="btn-action confirm"
+                      onClick={() => handleQuickStatusChange(order, 'delivered')}
+                      disabled={updatingOrderId === order.id}
+                    >
+                      Completed
+                    </button>
+                  )}
+                  {order.status === 'pending' && (
                     <button
                       type="button"
                       className="btn-action cancel"
@@ -589,22 +620,7 @@ function OrdersTab({ orders, setOrders, selectedOrder, setSelectedOrder }) {
                     </button>
                   )}
                 </div>
-                <button 
-                  className="btn-view" 
-                  onClick={() => setSelectedOrder(selectedOrder?.id === order.id ? null : order)}
-                >
-                  {selectedOrder?.id === order.id ? 'Hide Details' : 'View Details'}
-                </button>
               </div>
-
-              {selectedOrder?.id === order.id && (
-                <OrderDetailsModal
-                  order={order}
-                  orders={orders}
-                  setOrders={setOrders}
-                  onClose={() => setSelectedOrder(null)}
-                />
-              )}
             </div>
           ))}
         </div>

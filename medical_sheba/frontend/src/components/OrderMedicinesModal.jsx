@@ -407,8 +407,10 @@ export default function OrderMedicinesModal({ pharmacy, medicines, isOpen, onClo
                   <div className="phone-notice">
                     <Phone size={18} className="icon" />
                     <div>
-                      <strong>How it works:</strong>
-                      <p>We will call you to confirm your order and delivery address.</p>
+                      <strong>Need any information? Call</strong>
+                      <p>
+                        <a href={`tel:${pharmacy.phone_number}`}>{pharmacy.phone_number}</a>
+                      </p>
                     </div>
                   </div>
 

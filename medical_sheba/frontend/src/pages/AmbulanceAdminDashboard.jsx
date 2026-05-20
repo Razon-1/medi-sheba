@@ -4,6 +4,7 @@ import useAuthStore from '../context/authStore';
 import * as ambulanceApi from '../api/ambulance';
 import { uploadImage } from '../api/hospitals';
 import { validateBangladeshPhone } from '../utils/validators';
+import { AdminSubscriptionPrompt, useAdminSubscriptionAccess } from '../components/AdminSubscriptionAccess';
 import '../styles/AdminDashboard.css';
 
 const emptyAmbulance = {
@@ -29,6 +30,13 @@ const getData = (response) => {
 export default function AmbulanceAdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const {
+    checkingAccess,
+    accessState,
+    accessError,
+    trialLoading,
+    startTrial,
+  } = useAdminSubscriptionAccess('ambulance_driver_admin');
   const [activeTab, setActiveTab] = useState('ambulances');
   const [ambulances, setAmbulances] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -53,9 +61,9 @@ export default function AmbulanceAdminDashboard() {
   }, [canManageAmbulance, navigate, user]);
 
   useEffect(() => {
-    if (!canManageAmbulance) return;
+    if (accessState !== 'active' || !canManageAmbulance) return;
     loadDashboard();
-  }, [activeTab, canManageAmbulance, statusFilter, user]);
+  }, [activeTab, accessState, canManageAmbulance, statusFilter, user]);
 
   const loadDashboard = async () => {
     try {
@@ -129,18 +137,14 @@ export default function AmbulanceAdminDashboard() {
 
   const getRevenueBreakdown = () => {
     const periodRequests = getPeriodRequests();
-    const paidRevenue = periodRequests
-      .filter((request) => request.payment_status === 'paid')
-      .reduce((sum, request) => sum + Number.parseFloat(request.final_fare || request.estimated_fare || 0), 0);
     const completedRevenue = periodRequests
-      .filter((request) => request.payment_status !== 'paid' && request.status === 'completed')
+      .filter((request) => request.status === 'completed')
       .reduce((sum, request) => sum + Number.parseFloat(request.final_fare || request.estimated_fare || 0), 0);
     const pendingRevenue = periodRequests
-      .filter((request) => request.payment_status !== 'paid' && request.status !== 'completed')
+      .filter((request) => request.status !== 'completed')
       .reduce((sum, request) => sum + Number.parseFloat(request.final_fare || request.estimated_fare || 0), 0);
 
     return [
-      { label: 'Paid', value: paidRevenue, color: '#28a745' },
       { label: 'Completed', value: completedRevenue, color: '#1d72b8' },
       { label: 'Pending', value: pendingRevenue, color: '#f59e0b' }
     ];
@@ -206,6 +210,10 @@ export default function AmbulanceAdminDashboard() {
   };
 
   const handleAddClick = () => {
+    if (!user?.is_superuser && ambulances.length >= 1) {
+      setError('You already added an ambulance. One ambulance driver admin can manage only one ambulance.');
+      return;
+    }
     setEditingItem(null);
     setFormData(emptyAmbulance);
     setFormErrors({});
@@ -389,7 +397,13 @@ export default function AmbulanceAdminDashboard() {
   const AmbulancesTab = () => (
     <div className="admin-content">
       <h2>Manage Ambulances</h2>
-      <button className="btn btn-primary" onClick={handleAddClick}>+ Add Ambulance</button>
+      {user?.is_superuser || ambulances.length === 0 ? (
+        <button className="btn btn-primary" onClick={handleAddClick}>+ Add Ambulance</button>
+      ) : (
+        <div className="info-card" style={{ marginBottom: 16 }}>
+          <p><strong>One ambulance only:</strong> You can edit or delete your existing ambulance, but cannot add another one.</p>
+        </div>
+      )}
       {ambulances.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
           <p>No ambulances found. Click "Add Ambulance" to create one.</p>
@@ -468,43 +482,53 @@ export default function AmbulanceAdminDashboard() {
             </tr>
           </thead>
           <tbody>
-            {requests.map((request) => (
-              <tr key={request.id}>
-                <td>{request.request_id}</td>
-                <td>{request.patient_name}<br />{request.contact_phone}</td>
-                <td>{request.pickup_location}</td>
-                <td>{request.dropoff_location}</td>
-                <td>{request.urgency}</td>
-                <td>{request.status}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 150 }}>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={distanceInputs[request.id] || ''}
-                      onChange={(event) => setDistanceInputs((current) => ({ ...current, [request.id]: event.target.value }))}
-                      placeholder="km"
-                      style={{ width: 80 }}
-                    />
-                    <button type="button" className="btn-edit" onClick={() => handleFareUpdate(request.id)}>
-                      Set
-                    </button>
-                  </div>
-                </td>
-                <td>BDT {Number.parseFloat(request.final_fare || request.estimated_fare || 0).toFixed(2)}</td>
-                <td>
-                  <select
-                    value={request.status}
-                    onChange={(event) => handleStatusUpdate(request.id, event.target.value)}
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status} value={status}>{status.replaceAll('_', ' ')}</option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
+            {requests.map((request) => {
+              const isFinalStatus = ['completed', 'cancelled'].includes(request.status);
+              return (
+                <tr key={request.id}>
+                  <td>{request.request_id}</td>
+                  <td>{request.patient_name}<br />{request.contact_phone}</td>
+                  <td>{request.pickup_location}</td>
+                  <td>{request.dropoff_location}</td>
+                  <td>{request.urgency}</td>
+                  <td>{request.status}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', minWidth: 150 }}>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={distanceInputs[request.id] || ''}
+                        onChange={(event) => setDistanceInputs((current) => ({ ...current, [request.id]: event.target.value }))}
+                        placeholder="km"
+                        style={{ width: 80 }}
+                        disabled={isFinalStatus}
+                      />
+                      <button type="button" className="btn-edit" onClick={() => handleFareUpdate(request.id)} disabled={isFinalStatus}>
+                        Set
+                      </button>
+                    </div>
+                  </td>
+                  <td>BDT {Number.parseFloat(request.final_fare || request.estimated_fare || 0).toFixed(2)}</td>
+                  <td>
+                    {isFinalStatus ? (
+                      <span style={{ color: request.status === 'completed' ? '#198754' : '#dc3545', fontWeight: 700 }}>
+                        {request.status === 'completed' ? 'Completed' : 'Cancelled'}
+                      </span>
+                    ) : (
+                      <select
+                        value={request.status}
+                        onChange={(event) => handleStatusUpdate(request.id, event.target.value)}
+                      >
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>{status.replaceAll('_', ' ')}</option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
@@ -514,10 +538,9 @@ export default function AmbulanceAdminDashboard() {
   const RevenueReviewTab = () => {
     const periodRequests = getPeriodRequests();
     const breakdown = getRevenueBreakdown();
-    const paidRevenue = breakdown.find((item) => item.label === 'Paid')?.value || 0;
     const completedRevenue = breakdown.find((item) => item.label === 'Completed')?.value || 0;
     const pendingRevenue = breakdown.find((item) => item.label === 'Pending')?.value || 0;
-    const totalRevenue = paidRevenue + completedRevenue;
+    const totalRevenue = completedRevenue;
     const chartTotal = breakdown.reduce((sum, item) => sum + item.value, 0);
 
     return (
@@ -525,7 +548,7 @@ export default function AmbulanceAdminDashboard() {
         <div className="review-header">
           <div>
             <h2>Revenue Review</h2>
-            <p>View ambulance booking earnings by period and payment status.</p>
+            <p>View ambulance booking earnings by period and request status.</p>
           </div>
           <div className="review-periods">
             {['weekly', 'monthly', 'yearly'].map((period) => (
@@ -549,13 +572,9 @@ export default function AmbulanceAdminDashboard() {
               <small>{periodRequests.length} requests in period</small>
             </div>
             <div className="revenue-card">
-              <p>Paid Revenue</p>
-              <strong>{formatCurrency(paidRevenue)}</strong>
-            </div>
-            <div className="revenue-card">
               <p>Completed Earnings</p>
               <strong>{formatCurrency(completedRevenue)}</strong>
-              <small>Completed requests without paid status</small>
+              <small>Completed ambulance requests</small>
             </div>
             <div className="revenue-card">
               <p>Pending Fare</p>
@@ -564,7 +583,7 @@ export default function AmbulanceAdminDashboard() {
           </div>
 
           <div className="review-chart-card">
-            <div className="review-chart-title">Revenue by Payment Status</div>
+            <div className="review-chart-title">Revenue by Request Status</div>
             {renderPieChart(breakdown)}
             <div className="pie-legend">
               {breakdown.map((item) => (
@@ -580,7 +599,7 @@ export default function AmbulanceAdminDashboard() {
               ))}
             </div>
             {chartTotal === 0 && (
-              <div className="empty-pie">Add paid or completed ambulance bookings to see the pie split dynamically.</div>
+              <div className="empty-pie">Add completed ambulance bookings to see the pie split dynamically.</div>
             )}
           </div>
         </div>
@@ -590,6 +609,20 @@ export default function AmbulanceAdminDashboard() {
 
   if (!canManageAmbulance) {
     return null;
+  }
+
+  if (checkingAccess || accessState !== 'active') {
+    return (
+      <AdminSubscriptionPrompt
+        accessState={checkingAccess ? 'checking' : accessState}
+        accessError={accessError}
+        trialLoading={trialLoading}
+        onStartTrial={startTrial}
+        serviceName="ambulance admin services"
+        loadingTitle="Loading Ambulance Access"
+        loadingText="Checking your subscription and ambulance access..."
+      />
+    );
   }
 
   return (
@@ -650,28 +683,16 @@ export default function AmbulanceAdminDashboard() {
               </div>
 
               <div className="form-group">
-                {editingItem && (
-                  <>
-                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#333' }}>Vehicle Type</label>
-                    <p style={{ padding: '10px 12px', backgroundColor: '#f5f5f5', borderRadius: '4px', border: '1px solid #ddd', color: '#333', fontWeight: '500', margin: '0' }}>
-                      {formData.vehicle_type === 'basic' ? 'Basic Ambulance' : formData.vehicle_type === 'advanced' ? 'Advanced Life Support' : 'ICU Ambulance'}
-                    </p>
-                  </>
-                )}
-                {!editingItem && (
-                  <>
-                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#333' }}>Vehicle Type *</label>
-                    <select
-                      value={formData.vehicle_type}
-                      onChange={(event) => setFormData({ ...formData, vehicle_type: event.target.value })}
-                      required
-                    >
-                      <option value="basic">Basic Ambulance</option>
-                      <option value="advanced">Advanced Life Support</option>
-                      <option value="icu">ICU Ambulance</option>
-                    </select>
-                  </>
-                )}
+                <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', color: '#333' }}>Vehicle Type *</label>
+                <select
+                  value={formData.vehicle_type}
+                  onChange={(event) => setFormData({ ...formData, vehicle_type: event.target.value })}
+                  required
+                >
+                  <option value="basic">Basic Ambulance</option>
+                  <option value="advanced">Advanced Life Support</option>
+                  <option value="icu">ICU Ambulance</option>
+                </select>
               </div>
 
               <div className="form-group">
@@ -748,13 +769,14 @@ export default function AmbulanceAdminDashboard() {
               </div>
 
               <div className="form-group">
-                <label>
+                <label className="admin-switch">
                   <input
                     type="checkbox"
                     checked={formData.is_available !== false}
                     onChange={(event) => setFormData({ ...formData, is_available: event.target.checked })}
                   />
-                  Available for bookings
+                  <span className="admin-switch-control" aria-hidden="true"></span>
+                  <span className="admin-switch-text">Available for bookings</span>
                 </label>
               </div>
 
