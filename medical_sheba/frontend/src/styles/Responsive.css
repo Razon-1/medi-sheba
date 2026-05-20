@@ -180,6 +180,11 @@ button,
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
 }
 
+.blood-page .donors-grid {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+  justify-content: start;
+}
+
 .admin-content,
 .dashboard-content,
 .table-responsive,
@@ -346,7 +351,8 @@ button,
   .benefits-grid,
   .quick-stats,
   .details-grid,
-  .facilities-grid {
+  .facilities-grid,
+  .blood-page .donors-grid {
     grid-template-columns: 1fr;
   }
 

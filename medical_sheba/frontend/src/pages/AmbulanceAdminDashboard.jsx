@@ -297,7 +297,7 @@ export default function AmbulanceAdminDashboard() {
         email: formData.email || '',
         address: formData.address || '',
         cost_per_km: Number.parseFloat(formData.cost_per_km || 0),
-        image_url: formData.image_url || '',
+        image_url: formData.image_url || editingItem?.image_url || '',
         is_available: formData.is_available !== false,
       };
 
@@ -739,7 +739,7 @@ export default function AmbulanceAdminDashboard() {
                   onChange={(event) => setFormData({ ...formData, image_file: event.target.files[0] })}
                 />
                 <input
-                  type="url"
+                  type="text"
                   placeholder="Or paste image URL"
                   value={formData.image_url || ''}
                   onChange={(event) => setFormData({ ...formData, image_url: event.target.value })}

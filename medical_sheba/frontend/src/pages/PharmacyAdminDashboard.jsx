@@ -1386,7 +1386,7 @@ function EditPharmacyForm({ pharmacy, setPharmacy, onClose }) {
       setLoading(true);
       setError(null);
 
-      let uploadedImageUrl = formData.image_url || '';
+      let uploadedImageUrl = formData.image_url || pharmacy.image_url || '';
       if (formData.image_file) {
         const uploadRes = await uploadImage(formData.image_file);
         uploadedImageUrl = uploadRes.data.image_url;
@@ -1475,7 +1475,7 @@ function EditPharmacyForm({ pharmacy, setPharmacy, onClose }) {
               onChange={(e) => setFormData(prev => ({ ...prev, image_file: e.target.files[0] }))}
             />
             <input
-              type="url"
+              type="text"
               name="image_url"
               value={formData.image_url || ''}
               onChange={handleChange}

@@ -41,7 +41,7 @@ class BloodDonorListSerializer(serializers.ModelSerializer):
         model = BloodDonor
         fields = [
             'id', 'user_name', 'phone', 'contact_phone', 'blood_group',
-            'district', 'upazila', 'total_donations', 'is_available'
+            'district', 'upazila', 'last_donation_date', 'total_donations', 'is_available'
         ]
     
     def get_user_name(self, obj):

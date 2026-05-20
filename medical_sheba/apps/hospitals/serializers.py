@@ -15,7 +15,7 @@ class HospitalSerializer(serializers.ModelSerializer):
             'visiting_hours_start', 'visiting_hours_end',
             'is_verified', 'is_active', 'admin_user', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'admin_user', 'rating', 'review_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'admin_user', 'rating', 'review_count', 'created_at', 'updated_at', 'is_verified']
 
 
 class HospitalListSerializer(serializers.ModelSerializer):

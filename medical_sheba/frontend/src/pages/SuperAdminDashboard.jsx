@@ -635,14 +635,29 @@ function AdminCreateForm({ newAdmin, setNewAdmin, onSubmit, saving }) {
     <form className="admin-content" onSubmit={onSubmit} style={{ marginBottom: 18 }}>
       <h2>Add Admin Account</h2>
       <div className="form-row">
-        <input required placeholder="Full name" value={newAdmin.full_name} onChange={(event) => setNewAdmin({ ...newAdmin, full_name: event.target.value })} />
-        <input required type="email" placeholder="Gmail address" value={newAdmin.email} onChange={(event) => setNewAdmin({ ...newAdmin, email: event.target.value })} />
-        <input required placeholder="Bangladesh phone" value={newAdmin.phone} onChange={(event) => setNewAdmin({ ...newAdmin, phone: event.target.value })} />
-        <input required type="password" placeholder="Password" value={newAdmin.password} onChange={(event) => setNewAdmin({ ...newAdmin, password: event.target.value })} />
-        <select value={newAdmin.roles[0]} onChange={(event) => setNewAdmin({ ...newAdmin, roles: [event.target.value] })}>
-          {adminRoleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
-        </select>
-        <button type="submit" className="btn btn-primary" disabled={saving}>Add Admin</button>
+        <div className="form-group">
+          <label>Full Name *</label>
+          <input required value={newAdmin.full_name} onChange={(event) => setNewAdmin({ ...newAdmin, full_name: event.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>Gmail Address *</label>
+          <input required type="email" value={newAdmin.email} onChange={(event) => setNewAdmin({ ...newAdmin, email: event.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>Bangladesh Phone *</label>
+          <input required value={newAdmin.phone} onChange={(event) => setNewAdmin({ ...newAdmin, phone: event.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>Password *</label>
+          <input required type="password" value={newAdmin.password} onChange={(event) => setNewAdmin({ ...newAdmin, password: event.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>Role *</label>
+          <select value={newAdmin.roles[0]} onChange={(event) => setNewAdmin({ ...newAdmin, roles: [event.target.value] })}>
+            {adminRoleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
+          </select>
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={saving} style={{ alignSelf: 'flex-end', height: 'fit-content' }}>Add Admin</button>
       </div>
     </form>
   );
@@ -653,26 +668,44 @@ function SubscriptionCreateForm({ admins, form, setForm, onSubmit, saving }) {
     <form className="admin-content" onSubmit={onSubmit} style={{ marginBottom: 18 }}>
       <h2>Add Subscription</h2>
       <div className="form-row">
-        <select required value={form.user} onChange={(event) => setForm({ ...form, user: event.target.value })}>
-          <option value="">Select admin</option>
-          {admins.map((admin) => <option key={admin.id} value={admin.id}>{admin.email}</option>)}
-        </select>
-        <select value={form.plan} onChange={(event) => setForm({ ...form, plan: event.target.value })}>
-          <option value="basic">basic</option>
-          <option value="premium">premium</option>
-          <option value="professional">professional</option>
-        </select>
-        <select value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })}>
-          <option value="monthly">monthly</option>
-          <option value="quarterly">quarterly</option>
-          <option value="annual">annual</option>
-        </select>
-        <input required type="number" min="0" step="0.01" placeholder="Amount" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
-        <input required type="datetime-local" value={form.end_date} onChange={(event) => setForm({ ...form, end_date: event.target.value })} />
-        <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
-          {subscriptionStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
-        </select>
-        <button type="submit" className="btn btn-primary" disabled={saving}>Add Subscription</button>
+        <div className="form-group">
+          <label>Select Admin *</label>
+          <select required value={form.user} onChange={(event) => setForm({ ...form, user: event.target.value })}>
+            <option value="">Select admin</option>
+            {admins.map((admin) => <option key={admin.id} value={admin.id}>{admin.email}</option>)}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Plan</label>
+          <select value={form.plan} onChange={(event) => setForm({ ...form, plan: event.target.value })}>
+            <option value="basic">basic</option>
+            <option value="premium">premium</option>
+            <option value="professional">professional</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Duration</label>
+          <select value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })}>
+            <option value="monthly">monthly</option>
+            <option value="quarterly">quarterly</option>
+            <option value="annual">annual</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Amount *</label>
+          <input required type="number" min="0" step="0.01" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>End Date *</label>
+          <input required type="datetime-local" value={form.end_date} onChange={(event) => setForm({ ...form, end_date: event.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>Status</label>
+          <select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
+            {subscriptionStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+          </select>
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={saving} style={{ alignSelf: 'flex-end', height: 'fit-content' }}>Add Subscription</button>
       </div>
     </form>
   );

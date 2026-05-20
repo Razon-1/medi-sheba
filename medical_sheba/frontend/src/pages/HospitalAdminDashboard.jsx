@@ -177,9 +177,94 @@ const HospitalAdminDashboard = () => {
     setShowForm(true);
   };
 
-  const handleEditClick = (item) => {
+  const formatTimeForInput = (value) => {
+    if (!value) return '';
+    return String(value).slice(0, 5);
+  };
+
+  const normalizeDoctorFormData = (doctor) => {
+    const userData = doctor.user || {};
+
+    return {
+      ...doctor,
+      first_name: doctor.first_name || userData.first_name || '',
+      last_name: doctor.last_name || userData.last_name || '',
+      email: doctor.email || userData.email || '',
+      phone_number: doctor.phone_number || userData.phone_number || userData.phone || doctor.phone || '',
+      available_time_start: formatTimeForInput(doctor.available_time_start),
+      available_time_end: formatTimeForInput(doctor.available_time_end),
+    };
+  };
+
+  const normalizeEDoctorFormData = (doctor) => ({
+    ...doctor,
+    available_start_time: formatTimeForInput(doctor.available_start_time),
+    available_end_time: formatTimeForInput(doctor.available_end_time),
+  });
+
+  const normalizeHospitalFormData = (hospitalData) => ({
+    ...hospitalData,
+    hospital_image_url: hospitalData.hospital_image_url || hospitalData.image_url || '',
+  });
+
+  const pickEditableFields = (data, fields) => fields.reduce((picked, field) => {
+    if (data[field] !== undefined) {
+      picked[field] = data[field];
+    }
+    return picked;
+  }, {});
+
+  const doctorEditableFields = [
+    'hospital', 'first_name', 'last_name', 'email', 'phone_number', 'bmdc_number',
+    'specialty', 'subspecialty', 'qualifications', 'experience_years',
+    'consultation_fee', 'follow_up_fee', 'chamber_address', 'available_days',
+    'available_time_start', 'available_time_end', 'bio', 'languages',
+    'is_available', 'requires_authentication', 'image_url'
+  ];
+
+  const edoctorEditableFields = [
+    'hospital', 'name', 'specialization', 'qualification', 'experience_years',
+    'registration_number', 'email', 'phone_number', 'hospital_name',
+    'consultation_address', 'consultation_fee', 'consultation_duration_minutes',
+    'languages_spoken', 'available_days', 'available_start_time',
+    'available_end_time', 'is_available', 'requires_authentication', 'bio',
+    'specialties', 'image_url'
+  ];
+
+  const keepExistingImageOnEdit = (submitData, currentItem, fallbackImageUrl) => {
+    if (submitData.image_url && String(submitData.image_url).trim() !== '') {
+      return;
+    }
+
+    if (currentItem?.image_url) {
+      submitData.image_url = currentItem.image_url;
+      return;
+    }
+
+    if (!currentItem && fallbackImageUrl) {
+      submitData.image_url = fallbackImageUrl;
+    }
+  };
+
+  const handleEditClick = async (item) => {
     setEditingItem(item);
-    setFormData(item);
+
+    if (activeTab === 'doctors') {
+      setFormData(normalizeDoctorFormData(item));
+    } else if (activeTab === 'edoctors') {
+      setFormData(normalizeEDoctorFormData(item));
+
+      try {
+        const response = await edoctorApi.edoctorAPI.getDoctor(item.id);
+        const detailData = response.data || response;
+        setFormData(normalizeEDoctorFormData(detailData));
+      } catch (err) {
+        console.error('Failed to load full e-doctor details:', err);
+      }
+    } else {
+      setFormData(item);
+    }
+
     setShowForm(true);
   };
 
@@ -451,7 +536,10 @@ const HospitalAdminDashboard = () => {
         setFormData({});
         setError(null);
       } else if (activeTab === 'doctors') {
-        let submitData = {...formData, hospital: hospital.id};
+        let submitData = pickEditableFields(
+          { ...formData, hospital: hospital.id },
+          doctorEditableFields
+        );
         
         // Upload doctor image if file provided
         if (formData.image_file) {
@@ -460,14 +548,10 @@ const HospitalAdminDashboard = () => {
             submitData.image_url = res.data.image_url;
           } catch (err) {
             console.error('Image upload failed:', err);
-            // Fall back to hospital default or provided URL
-            if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.doctor_image_url) {
-              submitData.image_url = hospital.doctor_image_url;
-            }
+            keepExistingImageOnEdit(submitData, editingItem, hospital.doctor_image_url);
           }
-        } else if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.doctor_image_url) {
-          // Use hospital's default doctor image if no specific image provided
-          submitData.image_url = hospital.doctor_image_url;
+        } else {
+          keepExistingImageOnEdit(submitData, editingItem, hospital.doctor_image_url);
         }
         
         delete submitData.image_file;
@@ -482,7 +566,10 @@ const HospitalAdminDashboard = () => {
           setDoctors([...doctors, newDoctor]);
         }
       } else if (activeTab === 'edoctors') {
-        let submitData = {...formData};
+        let submitData = pickEditableFields(
+          { ...formData, hospital: hospital.id },
+          edoctorEditableFields
+        );
         
         // Upload e-doctor image if file provided
         if (formData.image_file) {
@@ -491,14 +578,10 @@ const HospitalAdminDashboard = () => {
             submitData.image_url = res.data.image_url;
           } catch (err) {
             console.error('Image upload failed:', err);
-            // Fall back to hospital default or provided URL
-            if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.edoctor_image_url) {
-              submitData.image_url = hospital.edoctor_image_url;
-            }
+            keepExistingImageOnEdit(submitData, editingItem, hospital.edoctor_image_url);
           }
-        } else if ((!submitData.image_url || submitData.image_url.trim() === '') && hospital.edoctor_image_url) {
-          // Use hospital's default e-doctor image if no specific image provided
-          submitData.image_url = hospital.edoctor_image_url;
+        } else {
+          keepExistingImageOnEdit(submitData, editingItem, hospital.edoctor_image_url);
         }
         
         delete submitData.image_file;
@@ -508,7 +591,7 @@ const HospitalAdminDashboard = () => {
           const updated = res.data;
           setEdoctors(edoctors.map(e => e.id === updated.id ? updated : e));
         } else {
-          const res = await edoctorApi.addEdoctor({...submitData, hospital: hospital.id});
+          const res = await edoctorApi.addEdoctor(submitData);
           const newEdoctor = res.data;
           setEdoctors([...edoctors, newEdoctor]);
         }
@@ -594,7 +677,7 @@ const HospitalAdminDashboard = () => {
   );
 
   const handleEditHospital = () => {
-    setFormData(hospital);
+    setFormData(normalizeHospitalFormData(hospital));
     setEditingHospital(true);
     setShowForm(true);
   };
@@ -787,114 +870,145 @@ const HospitalAdminDashboard = () => {
             <form onSubmit={handleSubmit} encType="multipart/form-data">
               {activeTab === 'doctors' && (
                 <>
-                  <input
-                    type="text"
-                    placeholder="First Name"
-                    value={formData.first_name || ''}
-                    onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Last Name"
-                    value={formData.last_name || ''}
-                    onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={formData.email || ''}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Phone Number"
-                    value={formData.phone_number || ''}
-                    onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="BMDC Number"
-                    value={formData.bmdc_number || ''}
-                    onChange={(e) => setFormData({...formData, bmdc_number: e.target.value})}
-                    required
-                  />
-                  <select
-                    value={formData.specialty || ''}
-                    onChange={(e) => setFormData({...formData, specialty: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Specialty</option>
-                    <option value="General Practice">General Practice</option>
-                    <option value="Cardiology">Cardiology</option>
-                    <option value="Neurology">Neurology</option>
-                    <option value="Pediatrics">Pediatrics</option>
-                    <option value="Orthopedics">Orthopedics</option>
-                    <option value="Dentistry">Dentistry</option>
-                    <option value="ENT">ENT</option>
-                    <option value="Dermatology">Dermatology</option>
-                    <option value="Psychiatry">Psychiatry</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Qualifications (e.g., MBBS, MD)"
-                    value={formData.qualifications || ''}
-                    onChange={(e) => setFormData({...formData, qualifications: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Years of Experience"
-                    value={formData.experience_years || ''}
-                    onChange={(e) => setFormData({...formData, experience_years: parseInt(e.target.value) || 0})}
-                    min="0"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Consultation Fee (BDT)"
-                    step="0.01"
-                    value={formData.consultation_fee || ''}
-                    onChange={(e) => setFormData({...formData, consultation_fee: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Follow-up Fee (BDT)"
-                    step="0.01"
-                    value={formData.follow_up_fee || ''}
-                    onChange={(e) => setFormData({...formData, follow_up_fee: e.target.value})}
-                  />
-                  <textarea
-                    placeholder="Chamber Address"
-                    value={formData.chamber_address || ''}
-                    onChange={(e) => setFormData({...formData, chamber_address: e.target.value})}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Available Days (e.g., Mon,Tue,Wed)"
-                    value={formData.available_days || ''}
-                    onChange={(e) => setFormData({...formData, available_days: e.target.value})}
-                  />
-                  <input
-                    type="time"
-                    placeholder="Available Time Start"
-                    value={formData.available_time_start || ''}
-                    onChange={(e) => setFormData({...formData, available_time_start: e.target.value})}
-                  />
-                  <input
-                    type="time"
-                    placeholder="Available Time End"
-                    value={formData.available_time_end || ''}
-                    onChange={(e) => setFormData({...formData, available_time_end: e.target.value})}
-                  />
-                  <textarea
-                    placeholder="Bio"
-                    value={formData.bio || ''}
-                    onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                  />
+                  <div className="form-group">
+                    <label className="form-label">First Name *</label>
+                    <input
+                      type="text"
+                      value={formData.first_name || ''}
+                      onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Last Name *</label>
+                    <input
+                      type="text"
+                      value={formData.last_name || ''}
+                      onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Email *</label>
+                    <input
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone Number *</label>
+                    <input
+                      type="text"
+                      value={formData.phone_number || ''}
+                      onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">BMDC Number *</label>
+                    <input
+                      type="text"
+                      value={formData.bmdc_number || ''}
+                      onChange={(e) => setFormData({...formData, bmdc_number: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Select Specialty *</label>
+                    <select
+                      value={formData.specialty || ''}
+                      onChange={(e) => setFormData({...formData, specialty: e.target.value})}
+                      required
+                    >
+                      <option value="">Select Specialty</option>
+                      <option value="General Practice">General Practice</option>
+                      <option value="Cardiology">Cardiology</option>
+                      <option value="Neurology">Neurology</option>
+                      <option value="Pediatrics">Pediatrics</option>
+                      <option value="Orthopedics">Orthopedics</option>
+                      <option value="Dentistry">Dentistry</option>
+                      <option value="ENT">ENT</option>
+                      <option value="Dermatology">Dermatology</option>
+                      <option value="Psychiatry">Psychiatry</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Qualifications (e.g., MBBS, MD) *</label>
+                    <input
+                      type="text"
+                      value={formData.qualifications || ''}
+                      onChange={(e) => setFormData({...formData, qualifications: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Years of Experience</label>
+                    <input
+                      type="number"
+                      value={formData.experience_years || ''}
+                      onChange={(e) => setFormData({...formData, experience_years: parseInt(e.target.value) || 0})}
+                      min="0"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Consultation Fee (BDT) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.consultation_fee || ''}
+                      onChange={(e) => setFormData({...formData, consultation_fee: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Follow-up Fee (BDT)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.follow_up_fee || ''}
+                      onChange={(e) => setFormData({...formData, follow_up_fee: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Chamber Address</label>
+                    <textarea
+                      value={formData.chamber_address || ''}
+                      onChange={(e) => setFormData({...formData, chamber_address: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Available Days (e.g., Mon,Tue,Wed)</label>
+                    <input
+                      type="text"
+                      value={formData.available_days || ''}
+                      onChange={(e) => setFormData({...formData, available_days: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Available Time Start</label>
+                    <input
+                      type="time"
+                      value={formData.available_time_start || ''}
+                      onChange={(e) => setFormData({...formData, available_time_start: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Available Time End</label>
+                    <input
+                      type="time"
+                      value={formData.available_time_end || ''}
+                      onChange={(e) => setFormData({...formData, available_time_end: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Bio</label>
+                    <textarea
+                      value={formData.bio || ''}
+                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                    />
+                  </div>
                   <label>
                     <input
                       type="checkbox"
@@ -902,14 +1016,6 @@ const HospitalAdminDashboard = () => {
                       onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
                     />
                     Make available for public (visible without login)
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={formData.is_verified === true}
-                      onChange={(e) => setFormData({...formData, is_verified: e.target.checked})}
-                    />
-                    Verify this doctor (show verification badge)
                   </label>
                   <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                     <h4 style={{ marginTop: 0 }}>📸 Doctor Image (Optional)</h4>
@@ -921,7 +1027,7 @@ const HospitalAdminDashboard = () => {
                     />
                     <small style={{ display: 'block', color: '#666', marginBottom: '5px' }}>Or enter image URL:</small>
                     <input
-                      type="url"
+                      type="text"
                       placeholder="Doctor image URL"
                       value={formData.image_url || ''}
                       onChange={(e) => setFormData({...formData, image_url: e.target.value})}
@@ -932,90 +1038,116 @@ const HospitalAdminDashboard = () => {
               )}
               {activeTab === 'edoctors' && (
                 <>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                  <select
-                    value={formData.specialization || ''}
-                    onChange={(e) => setFormData({...formData, specialization: e.target.value})}
-                    required
-                  >
-                    <option>Select Specialization</option>
-                    <option value="general">General Practitioner</option>
-                    <option value="cardiology">Cardiology</option>
-                    <option value="neurology">Neurology</option>
-                  </select>
-                  <select
-                    value={formData.qualification || ''}
-                    onChange={(e) => setFormData({...formData, qualification: e.target.value})}
-                    required
-                  >
-                    <option>Select Qualification</option>
-                    <option value="mbbs">MBBS</option>
-                    <option value="md">MD</option>
-                    <option value="ms">MS</option>
-                  </select>
-                  <input
-                    type="number"
-                    placeholder="Years of Experience"
-                    value={formData.experience_years || ''}
-                    onChange={(e) => setFormData({...formData, experience_years: e.target.value})}
-                    required
-                    min="0"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Registration Number"
-                    value={formData.registration_number || ''}
-                    onChange={(e) => setFormData({...formData, registration_number: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={formData.email || ''}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Phone"
-                    value={formData.phone_number || ''}
-                    onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="number"
-                    placeholder="Consultation Fee"
-                    step="0.01"
-                    value={formData.consultation_fee || ''}
-                    onChange={(e) => setFormData({...formData, consultation_fee: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Available Days (e.g., Monday, Tuesday, Wednesday)"
-                    value={formData.available_days || ''}
-                    onChange={(e) => setFormData({...formData, available_days: e.target.value})}
-                  />
-                  <label>Consultation Hours</label>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Name *</label>
                     <input
-                      type="time"
-                      placeholder="Start Time"
-                      value={formData.available_start_time || ''}
-                      onChange={(e) => setFormData({...formData, available_start_time: e.target.value})}
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
                     />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Specialization *</label>
+                    <select
+                      value={formData.specialization || ''}
+                      onChange={(e) => setFormData({...formData, specialization: e.target.value})}
+                      required
+                    >
+                      <option value="">Select Specialization</option>
+                      <option value="general">General Practitioner</option>
+                      <option value="cardiology">Cardiology</option>
+                      <option value="neurology">Neurology</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Qualification *</label>
+                    <select
+                      value={formData.qualification || ''}
+                      onChange={(e) => setFormData({...formData, qualification: e.target.value})}
+                      required
+                    >
+                      <option value="">Select Qualification</option>
+                      <option value="mbbs">MBBS</option>
+                      <option value="md">MD</option>
+                      <option value="ms">MS</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Years of Experience *</label>
                     <input
-                      type="time"
-                      placeholder="End Time"
-                      value={formData.available_end_time || ''}
-                      onChange={(e) => setFormData({...formData, available_end_time: e.target.value})}
+                      type="number"
+                      value={formData.experience_years || ''}
+                      onChange={(e) => setFormData({...formData, experience_years: e.target.value})}
+                      required
+                      min="0"
                     />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Registration Number *</label>
+                    <input
+                      type="text"
+                      value={formData.registration_number || ''}
+                      onChange={(e) => setFormData({...formData, registration_number: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Email *</label>
+                    <input
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone *</label>
+                    <input
+                      type="text"
+                      value={formData.phone_number || ''}
+                      onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Consultation Fee *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.consultation_fee || ''}
+                      onChange={(e) => setFormData({...formData, consultation_fee: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Available Days (e.g., Monday, Tuesday, Wednesday)</label>
+                    <input
+                      type="text"
+                      value={formData.available_days || ''}
+                      onChange={(e) => setFormData({...formData, available_days: e.target.value})}
+                    />
+                  </div>
+                  <div style={{ marginTop: '10px' }}>
+                    <label className="form-label">Consultation Hours</label>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label className="form-label" style={{ marginBottom: '5px', fontSize: '12px' }}>Start Time</label>
+                        <input
+                          type="time"
+                          value={formData.available_start_time || ''}
+                          onChange={(e) => setFormData({...formData, available_start_time: e.target.value})}
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label className="form-label" style={{ marginBottom: '5px', fontSize: '12px' }}>End Time</label>
+                        <input
+                          type="time"
+                          value={formData.available_end_time || ''}
+                          onChange={(e) => setFormData({...formData, available_end_time: e.target.value})}
+                        />
+                      </div>
+                    </div>
                   </div>
                   <label>
                     <input
@@ -1024,14 +1156,6 @@ const HospitalAdminDashboard = () => {
                       onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
                     />
                     Make available for public (visible without login)
-                  </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={formData.is_verified === true}
-                      onChange={(e) => setFormData({...formData, is_verified: e.target.checked})}
-                    />
-                    Verify this E-Doctor (show verification badge)
                   </label>
                   <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
                     <h4 style={{ marginTop: 0 }}>📸 E-Doctor Image (Optional)</h4>
@@ -1043,7 +1167,7 @@ const HospitalAdminDashboard = () => {
                     />
                     <small style={{ display: 'block', color: '#666', marginBottom: '5px' }}>Or enter image URL:</small>
                     <input
-                      type="url"
+                      type="text"
                       placeholder="E-Doctor image URL"
                       value={formData.image_url || ''}
                       onChange={(e) => setFormData({...formData, image_url: e.target.value})}
@@ -1054,94 +1178,123 @@ const HospitalAdminDashboard = () => {
               )}
               {editingHospital && (
                 <>
-                  <input
-                    type="text"
-                    placeholder="Hospital Name"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                  <select
-                    value={formData.type || ''}
-                    onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Hospital Type</option>
-                    <option value="government">Government</option>
-                    <option value="private">Private</option>
-                    <option value="clinic">Clinic</option>
-                  </select>
-                  <textarea
-                    placeholder="Address"
-                    value={formData.address || ''}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="District"
-                    value={formData.district || ''}
-                    onChange={(e) => setFormData({...formData, district: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Upazila"
-                    value={formData.upazila || ''}
-                    onChange={(e) => setFormData({...formData, upazila: e.target.value})}
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Primary Phone"
-                    value={formData.phone_primary || ''}
-                    onChange={(e) => setFormData({...formData, phone_primary: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Secondary Phone"
-                    value={formData.phone_secondary || ''}
-                    onChange={(e) => setFormData({...formData, phone_secondary: e.target.value})}
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={formData.email || ''}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  />
-                  <input
-                    type="url"
-                    placeholder="Website"
-                    value={formData.website || ''}
-                    onChange={(e) => setFormData({...formData, website: e.target.value})}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Total Beds"
-                    value={formData.beds_total || ''}
-                    onChange={(e) => setFormData({...formData, beds_total: parseInt(e.target.value)})}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Available Beds"
-                    value={formData.beds_available || ''}
-                    onChange={(e) => setFormData({...formData, beds_available: parseInt(e.target.value)})}
-                  />
-                  <textarea
-                    placeholder="Description"
-                    value={formData.description || ''}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  />
-                  <textarea
-                    placeholder="Services (comma-separated)"
-                    value={formData.services || ''}
-                    onChange={(e) => setFormData({...formData, services: e.target.value})}
-                  />
-                  <textarea
-                    placeholder="Special Facilities (comma-separated)"
-                    value={formData.special_facilities || ''}
-                    onChange={(e) => setFormData({...formData, special_facilities: e.target.value})}
-                  />
+                  <div className="form-group">
+                    <label className="form-label">Hospital Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name || ''}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Hospital Type *</label>
+                    <select
+                      value={formData.type || ''}
+                      onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      required
+                    >
+                      <option value="">Select Hospital Type</option>
+                      <option value="government">Government</option>
+                      <option value="private">Private</option>
+                      <option value="clinic">Clinic</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Address *</label>
+                    <textarea
+                      value={formData.address || ''}
+                      onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">District *</label>
+                    <input
+                      type="text"
+                      value={formData.district || ''}
+                      onChange={(e) => setFormData({...formData, district: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Upazila</label>
+                    <input
+                      type="text"
+                      value={formData.upazila || ''}
+                      onChange={(e) => setFormData({...formData, upazila: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Primary Phone *</label>
+                    <input
+                      type="tel"
+                      value={formData.phone_primary || ''}
+                      onChange={(e) => setFormData({...formData, phone_primary: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Secondary Phone</label>
+                    <input
+                      type="tel"
+                      value={formData.phone_secondary || ''}
+                      onChange={(e) => setFormData({...formData, phone_secondary: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Email</label>
+                    <input
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Website</label>
+                    <input
+                      type="url"
+                      value={formData.website || ''}
+                      onChange={(e) => setFormData({...formData, website: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Total Beds</label>
+                    <input
+                      type="number"
+                      value={formData.beds_total || ''}
+                      onChange={(e) => setFormData({...formData, beds_total: parseInt(e.target.value)})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Available Beds</label>
+                    <input
+                      type="number"
+                      value={formData.beds_available || ''}
+                      onChange={(e) => setFormData({...formData, beds_available: parseInt(e.target.value)})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      value={formData.description || ''}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Services (comma-separated)</label>
+                    <textarea
+                      value={formData.services || ''}
+                      onChange={(e) => setFormData({...formData, services: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Special Facilities (comma-separated)</label>
+                    <textarea
+                      value={formData.special_facilities || ''}
+                      onChange={(e) => setFormData({...formData, special_facilities: e.target.value})}
+                    />
+                  </div>
                   <label>
                     <input
                       type="checkbox"
@@ -1173,7 +1326,7 @@ const HospitalAdminDashboard = () => {
                           />
                           <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
                           <input
-                            type="url"
+                            type="text"
                             placeholder="Hospital image URL"
                             value={formData.hospital_image_url || ''}
                             onChange={(e) => setFormData({...formData, hospital_image_url: e.target.value})}
@@ -1191,7 +1344,7 @@ const HospitalAdminDashboard = () => {
                           />
                           <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
                           <input
-                            type="url"
+                            type="text"
                             placeholder="Doctor image URL"
                             value={formData.doctor_image_url || ''}
                             onChange={(e) => setFormData({...formData, doctor_image_url: e.target.value})}
@@ -1209,7 +1362,7 @@ const HospitalAdminDashboard = () => {
                           />
                           <small style={{ display: 'block', color: '#666', marginTop: '5px' }}>Or enter image URL:</small>
                           <input
-                            type="url"
+                            type="text"
                             placeholder="E-Doctor image URL"
                             value={formData.edoctor_image_url || ''}
                             onChange={(e) => setFormData({...formData, edoctor_image_url: e.target.value})}

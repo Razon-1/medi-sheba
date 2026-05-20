@@ -33,7 +33,7 @@ class AmbulanceServiceCreateSerializer(serializers.ModelSerializer):
             'admin_user_name', 'is_available', 'is_verified', 'rating', 'review_count',
             'image_url', 'requires_authentication'
         ]
-        read_only_fields = ['id', 'admin_user', 'admin_user_name', 'hospital', 'rating', 'review_count']
+        read_only_fields = ['id', 'admin_user', 'admin_user_name', 'hospital', 'rating', 'review_count', 'is_verified']
         extra_kwargs = {
             'district': {'required': False, 'allow_null': True},
             'upazila': {'required': False, 'allow_null': True},

@@ -13,7 +13,7 @@ class EDoctorProfileWriteSerializer(serializers.ModelSerializer):
             'languages_spoken', 'available_days', 'available_start_time', 'available_end_time',
             'is_available', 'is_verified', 'requires_authentication', 'bio', 'specialties', 'hospital', 'image_url'
         ]
-        read_only_fields = ['id', 'doctor_id']
+        read_only_fields = ['id', 'doctor_id', 'is_verified']
 
 
 class EDoctorProfileListSerializer(serializers.ModelSerializer):

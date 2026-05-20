@@ -24,7 +24,7 @@ class DoctorSerializer(serializers.ModelSerializer):
             'is_verified', 'is_available', 'requires_authentication', 'created_at', 'updated_at',
             'image_url', 'first_name', 'last_name', 'email', 'phone_number'
         ]
-        read_only_fields = ['id', 'rating', 'review_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'rating', 'review_count', 'created_at', 'updated_at', 'is_verified']
     
     def create(self, validated_data):
         # Extract user-related fields

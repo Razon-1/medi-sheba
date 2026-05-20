@@ -1,2 +1,13 @@
 /* Using same styles as Doctors page */
 @import 'Doctors.css';
+
+.hospitals-page .hospitals-grid {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+  justify-content: start;
+}
+
+@media (max-width: 768px) {
+  .hospitals-page .hospitals-grid {
+    grid-template-columns: 1fr;
+  }
+}

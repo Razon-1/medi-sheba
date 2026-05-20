@@ -75,6 +75,46 @@
   font-size: 22px;
 }
 
+.admin-content .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.admin-content .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-content .form-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 13px;
+  display: block;
+}
+
+.admin-content .form-group input,
+.admin-content .form-group select,
+.admin-content .form-group textarea {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-content .form-group input:focus,
+.admin-content .form-group select:focus,
+.admin-content .form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .btn {
   padding: 10px 15px;
   border: none;
@@ -223,8 +263,34 @@
   cursor: pointer;
 }
 
+.modal-content label.form-label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
 .modal-content input[type="checkbox"] {
   width: auto;
+}
+
+.modal-content .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-content .form-group input,
+.modal-content .form-group select,
+.modal-content .form-group textarea {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-actions {

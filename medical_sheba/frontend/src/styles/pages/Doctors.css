@@ -124,6 +124,11 @@
   gap: 2.5rem;
 }
 
+.doctors-page .doctors-grid {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+  justify-content: start;
+}
+
 .blood-actions {
   display: flex;
   justify-content: space-between;
@@ -236,6 +241,10 @@
 
   .doctors-grid,
   .hospitals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .doctors-page .doctors-grid {
     grid-template-columns: 1fr;
   }
 

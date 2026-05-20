@@ -44,7 +44,18 @@ export default function BloodBank() {
     donors.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
   );
 
-  const fetchDonors = async () => {
+  const mergeSavedDonor = (donors, savedDonor) => {
+    if (!savedDonor || savedDonor.is_available === false) {
+      return donors;
+    }
+
+    return [
+      savedDonor,
+      ...donors.filter((donor) => donor.id !== savedDonor.id)
+    ];
+  };
+
+  const fetchDonors = async (savedDonor = null) => {
     try {
       setLoading(true);
       let allDonorsData = [];
@@ -65,10 +76,12 @@ export default function BloodBank() {
         page++;
       }
 
-      setAllDonors(allDonorsData);
-      setBloodDonors(getCurrentPageDonors(allDonorsData, 1));
-      setTotalCount(allDonorsData.length);
-      setTotalPages(Math.ceil(allDonorsData.length / ITEMS_PER_PAGE));
+      const visibleDonors = mergeSavedDonor(allDonorsData, savedDonor);
+
+      setAllDonors(visibleDonors);
+      setBloodDonors(getCurrentPageDonors(visibleDonors, 1));
+      setTotalCount(visibleDonors.length);
+      setTotalPages(Math.ceil(visibleDonors.length / ITEMS_PER_PAGE));
       setCurrentPage(1);
       setError(null);
     } catch (err) {
@@ -243,23 +256,18 @@ export default function BloodBank() {
         contact_phone: donorForm.contact_phone,
         last_donation_date: donorForm.last_donation_date || null,
         total_donations: Number(donorForm.total_donations) || 0,
+        is_available: true,
         upazila: donorForm.upazila || null,
         health_conditions: donorForm.health_conditions || null
       };
 
-      await bloodAPI.saveMyDonor(donorData);
+      const response = await bloodAPI.saveMyDonor(donorData);
+      const savedDonor = response.data || response;
       setFormSuccess('Your donation details were updated successfully.');
-      setDonorForm({
-        blood_group: '',
-        contact_phone: user?.phone || '',
-        district: '',
-        upazila: '',
-        last_donation_date: '',
-        total_donations: 0,
-        is_available: true,
-        health_conditions: ''
-      });
-      fetchDonors();
+      populateDonorForm(savedDonor);
+      setSearchQuery('');
+      setActiveBloodType('');
+      await fetchDonors(savedDonor);
     } catch (err) {
       console.error('Error submitting donor details:', err);
       setFormError(getApiErrorMessage(err, 'Failed to submit donor details. Please try again.'));
@@ -284,6 +292,23 @@ export default function BloodBank() {
         alert(`Call this number: ${phoneNumber}`);
       });
     }
+  };
+
+  const formatDonationDate = (dateValue) => {
+    if (!dateValue) {
+      return 'Not provided';
+    }
+
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) {
+      return dateValue;
+    }
+
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -390,8 +415,8 @@ export default function BloodBank() {
                 <label className="blood-checkbox-field">
                   <input
                     type="checkbox"
-                    checked={donorForm.is_available}
-                    onChange={(e) => setDonorForm({ ...donorForm, is_available: e.target.checked })}
+                    checked
+                    readOnly
                   />
                   Available to donate
                 </label>
@@ -467,6 +492,11 @@ export default function BloodBank() {
                       </div>
                       <div className="detail-item">
                         <span className="last-donated">
+                          Last donated: {formatDonationDate(donor.last_donation_date)}
+                        </span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="last-donated">
                           Total donations: {donor.total_donations}
                         </span>
                       </div>
@@ -496,7 +526,11 @@ export default function BloodBank() {
         ) : (
           <div className="no-results">
             <h3>No donors found</h3>
-            <p>Try different search criteria</p>
+            <p>
+              {searchQuery.trim() || activeBloodType
+                ? 'Try different search criteria'
+                : 'No available donors are listed yet'}
+            </p>
           </div>
         )}
       </div>
