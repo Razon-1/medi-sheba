@@ -685,10 +685,12 @@ class PaymentViewSet(viewsets.ModelViewSet):
             try:
                 from apps.edoctor.models import EDoctorConsultation
                 consultation = EDoctorConsultation.objects.get(id=payment.reference_id)
+                if not consultation.patient_id:
+                    consultation.patient = payment.user
                 consultation.payment = payment
                 consultation.payment_status = 'paid'
                 consultation.is_paid = True
-                consultation.save(update_fields=['payment', 'payment_status', 'is_paid', 'updated_at'])
+                consultation.save(update_fields=['patient', 'payment', 'payment_status', 'is_paid', 'updated_at'])
             except EDoctorConsultation.DoesNotExist:
                 pass
     

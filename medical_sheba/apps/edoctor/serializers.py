@@ -68,10 +68,11 @@ class EDoctorConsultationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EDoctorConsultation
         fields = [
-            'id', 'consultation_id', 'doctor', 'doctor_name', 'specialization',
+            'id', 'consultation_id', 'doctor', 'patient', 'doctor_name', 'specialization',
             'patient_name', 'scheduled_date', 'scheduled_time', 'status',
             'urgency', 'fee_amount', 'is_paid', 'payment_status', 'created_at', 'updated_at'
         ]
+        read_only_fields = ['patient']
 
 
 class EDoctorConsultationDetailSerializer(serializers.ModelSerializer):
@@ -82,13 +83,14 @@ class EDoctorConsultationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = EDoctorConsultation
         fields = [
-            'id', 'consultation_id', 'doctor', 'doctor_id', 'slot',
+            'id', 'consultation_id', 'doctor', 'doctor_id', 'patient', 'slot',
             'patient_name', 'patient_email', 'patient_phone', 'patient_age',
             'chief_complaint', 'medical_history', 'consultation_notes', 'prescription',
             'scheduled_date', 'scheduled_time', 'urgency', 'status',
             'fee_amount', 'is_paid', 'video_call_link', 'meeting_password',
             'created_at', 'updated_at'
         ]
+        read_only_fields = ['patient']
 
 
 class EDoctorConsultationCreateSerializer(serializers.ModelSerializer):
@@ -97,12 +99,12 @@ class EDoctorConsultationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EDoctorConsultation
         fields = [
-            'id', 'consultation_id', 'doctor', 'slot', 'patient_name', 'patient_email', 'patient_phone',
+            'id', 'consultation_id', 'doctor', 'patient', 'slot', 'patient_name', 'patient_email', 'patient_phone',
             'patient_age', 'chief_complaint', 'medical_history', 'scheduled_date',
             'scheduled_time', 'urgency', 'status', 'fee_amount', 'is_paid', 'payment_status'
         ]
         read_only_fields = [
-            'id', 'consultation_id', 'status', 'fee_amount', 'is_paid', 'payment_status'
+            'id', 'consultation_id', 'patient', 'status', 'fee_amount', 'is_paid', 'payment_status'
         ]
 
     def validate(self, attrs):

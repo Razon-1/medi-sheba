@@ -140,6 +140,7 @@ class EDoctorConsultation(models.Model):
     # Consultation ID and basic info
     consultation_id = models.CharField(max_length=50, unique=True, editable=False)
     doctor = models.ForeignKey(EDoctorProfile, on_delete=models.PROTECT, related_name='consultations')
+    patient = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='edoctor_consultations')
     slot = models.OneToOneField(ConsultationSlot, on_delete=models.SET_NULL, null=True, blank=True, related_name='consultation')
 
     # Patient info

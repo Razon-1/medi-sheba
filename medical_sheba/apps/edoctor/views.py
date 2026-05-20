@@ -204,7 +204,7 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
             except Hospital.DoesNotExist:
                 return EDoctorConsultation.objects.none()
         if user.is_authenticated:
-            patient_filter = Q(patient_email=user.email)
+            patient_filter = Q(patient=user) | Q(patient_email__iexact=user.email)
             if getattr(user, 'phone', None):
                 patient_filter |= Q(patient_phone=user.phone)
             return EDoctorConsultation.objects.filter(patient_filter).distinct().order_by('-created_at')
@@ -220,7 +220,8 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create consultation and set fee"""
         doctor = serializer.validated_data['doctor']
-        serializer.save(fee_amount=doctor.consultation_fee)
+        patient = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(patient=patient, fee_amount=doctor.consultation_fee)
 
     @action(detail=False, methods=['get'])
     def hospital_consultations(self, request):
