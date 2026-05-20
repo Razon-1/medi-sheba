@@ -1,7 +1,15 @@
 from rest_framework import serializers
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError, transaction
 from .models import Doctor, DoctorReview
 from apps.users.models import User
 from apps.users.serializers import UserSerializer
+from apps.users.validators import (
+    normalize_phone_number,
+    validate_bangladesh_phone_number,
+    validate_gmail_address,
+    validate_person_name,
+)
 
 
 class DoctorSerializer(serializers.ModelSerializer):
@@ -25,6 +33,69 @@ class DoctorSerializer(serializers.ModelSerializer):
             'image_url', 'first_name', 'last_name', 'email', 'phone_number'
         ]
         read_only_fields = ['id', 'rating', 'review_count', 'created_at', 'updated_at', 'is_verified']
+
+    def validate_first_name(self, value):
+        value = (value or '').strip()
+        if value:
+            validate_person_name(value)
+        return value
+
+    def validate_last_name(self, value):
+        value = (value or '').strip()
+        if value:
+            validate_person_name(value)
+        return value
+
+    def validate_email(self, value):
+        value = (value or '').strip().lower()
+        validate_gmail_address(value)
+
+        queryset = User.objects.filter(email__iexact=value)
+        if self.instance and self.instance.user_id:
+            queryset = queryset.exclude(pk=self.instance.user_id)
+        if queryset.exists():
+            raise serializers.ValidationError('This email address is already registered.')
+        return value
+
+    def validate_phone_number(self, value):
+        value = normalize_phone_number(value)
+        validate_bangladesh_phone_number(value)
+
+        queryset = User.objects.filter(phone=value)
+        if self.instance and self.instance.user_id:
+            queryset = queryset.exclude(pk=self.instance.user_id)
+        if queryset.exists():
+            raise serializers.ValidationError('This phone number is already registered.')
+        return value
+
+    def validate_user_id(self, value):
+        if value in (None, ''):
+            return None
+
+        try:
+            user = User.objects.get(id=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError('Selected user was not found.')
+
+        linked_doctor = getattr(user, 'doctor_profile', None)
+        if linked_doctor and (not self.instance or linked_doctor.pk != self.instance.pk):
+            raise serializers.ValidationError('Selected user is already linked to another doctor.')
+
+        return value
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        if not self.instance and not attrs.get('user_id'):
+            errors = {}
+            if not attrs.get('email'):
+                errors['email'] = 'Email is required to create a new doctor.'
+            if not attrs.get('phone_number'):
+                errors['phone_number'] = 'Phone number is required to create a new doctor.'
+            if errors:
+                raise serializers.ValidationError(errors)
+
+        return attrs
     
     def create(self, validated_data):
         # Extract user-related fields
@@ -34,24 +105,32 @@ class DoctorSerializer(serializers.ModelSerializer):
         phone_number = validated_data.pop('phone_number', '')
         user_id = validated_data.pop('user_id', None)
         
-        # Either use provided user_id or create a new user
-        if user_id:
-            user = User.objects.get(id=user_id)
-        else:
-            if not email or not phone_number:
-                raise serializers.ValidationError("Email and phone_number are required to create a new doctor")
-            
-            # Create a new user with the provided information
-            user = User.objects.create_user(
-                email=email,
-                phone=phone_number,
-                first_name=first_name,
-                last_name=last_name,
-                roles=['doctor']
+        try:
+            with transaction.atomic():
+                # Either use provided user_id or create a new user.
+                if user_id:
+                    user = User.objects.get(id=user_id)
+                    if not user.has_role('doctor'):
+                        user.add_role('doctor')
+                else:
+                    user = User.objects.create_user(
+                        email=email,
+                        phone=phone_number,
+                        first_name=first_name,
+                        last_name=last_name,
+                        roles=['doctor']
+                    )
+
+                validated_data['user'] = user
+                return super().create(validated_data)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({'user_id': 'Selected user was not found.'})
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict if hasattr(exc, 'message_dict') else exc.messages)
+        except IntegrityError:
+            raise serializers.ValidationError(
+                {'non_field_errors': ['Doctor could not be created because one of the unique fields already exists.']}
             )
-        
-        validated_data['user'] = user
-        return super().create(validated_data)
     
     def update(self, instance, validated_data):
         # Extract user-related fields

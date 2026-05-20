@@ -1223,21 +1223,27 @@ const HospitalAdminDashboard = () => {
                     <input
                       type="text"
                       value={formData.first_name || ''}
-                      onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                      onChange={(e) => setFieldValue('first_name', e.target.value)}
+                      className={getFieldClassName('first_name')}
+                      aria-invalid={Boolean(formErrors.first_name)}
                       required
                     />
+                    {renderFieldError('first_name')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Last Name *</label>
                     <input
                       type="text"
                       value={formData.last_name || ''}
-                      onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                      onChange={(e) => setFieldValue('last_name', e.target.value)}
+                      className={getFieldClassName('last_name')}
+                      aria-invalid={Boolean(formErrors.last_name)}
                       required
                     />
+                    {renderFieldError('last_name')}
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Email *</label>
+                    <label className="form-label">Gmail Address *</label>
                     <input
                       type="email"
                       value={formData.email || ''}
@@ -1265,15 +1271,20 @@ const HospitalAdminDashboard = () => {
                     <input
                       type="text"
                       value={formData.bmdc_number || ''}
-                      onChange={(e) => setFormData({...formData, bmdc_number: e.target.value})}
+                      onChange={(e) => setFieldValue('bmdc_number', e.target.value)}
+                      className={getFieldClassName('bmdc_number')}
+                      aria-invalid={Boolean(formErrors.bmdc_number)}
                       required
                     />
+                    {renderFieldError('bmdc_number')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Select Specialty *</label>
                     <select
                       value={formData.specialty || ''}
-                      onChange={(e) => setFormData({...formData, specialty: e.target.value})}
+                      onChange={(e) => setFieldValue('specialty', e.target.value)}
+                      className={getFieldClassName('specialty')}
+                      aria-invalid={Boolean(formErrors.specialty)}
                       required
                     >
                       <option value="">Select Specialty</option>
@@ -1287,24 +1298,31 @@ const HospitalAdminDashboard = () => {
                       <option value="Dermatology">Dermatology</option>
                       <option value="Psychiatry">Psychiatry</option>
                     </select>
+                    {renderFieldError('specialty')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Qualifications (e.g., MBBS, MD) *</label>
                     <input
                       type="text"
                       value={formData.qualifications || ''}
-                      onChange={(e) => setFormData({...formData, qualifications: e.target.value})}
+                      onChange={(e) => setFieldValue('qualifications', e.target.value)}
+                      className={getFieldClassName('qualifications')}
+                      aria-invalid={Boolean(formErrors.qualifications)}
                       required
                     />
+                    {renderFieldError('qualifications')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Years of Experience</label>
                     <input
                       type="number"
                       value={formData.experience_years || ''}
-                      onChange={(e) => setFormData({...formData, experience_years: parseInt(e.target.value) || 0})}
+                      onChange={(e) => setFieldValue('experience_years', parseInt(e.target.value) || 0)}
+                      className={getFieldClassName('experience_years')}
+                      aria-invalid={Boolean(formErrors.experience_years)}
                       min="0"
                     />
+                    {renderFieldError('experience_years')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Consultation Fee (BDT) *</label>
@@ -1312,9 +1330,12 @@ const HospitalAdminDashboard = () => {
                       type="number"
                       step="0.01"
                       value={formData.consultation_fee || ''}
-                      onChange={(e) => setFormData({...formData, consultation_fee: e.target.value})}
+                      onChange={(e) => setFieldValue('consultation_fee', e.target.value)}
+                      className={getFieldClassName('consultation_fee')}
+                      aria-invalid={Boolean(formErrors.consultation_fee)}
                       required
                     />
+                    {renderFieldError('consultation_fee')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Follow-up Fee (BDT)</label>
@@ -1322,8 +1343,11 @@ const HospitalAdminDashboard = () => {
                       type="number"
                       step="0.01"
                       value={formData.follow_up_fee || ''}
-                      onChange={(e) => setFormData({...formData, follow_up_fee: e.target.value})}
+                      onChange={(e) => setFieldValue('follow_up_fee', e.target.value)}
+                      className={getFieldClassName('follow_up_fee')}
+                      aria-invalid={Boolean(formErrors.follow_up_fee)}
                     />
+                    {renderFieldError('follow_up_fee')}
                   </div>
                   <div className="form-group">
                     <label className="form-label">Chamber Address</label>
