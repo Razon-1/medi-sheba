@@ -12,6 +12,12 @@ import paymentsAPI from '../api/payments';
 import '../styles/AdminDashboard.css';
 
 const adminRoleOptions = ['hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin', 'admin'];
+const adminRoleLabels = {
+  hospital_admin: 'Hospital Admin',
+  pharmacy_admin: 'Pharmacy Admin',
+  ambulance_driver_admin: 'Ambulance Driver Admin',
+  admin: 'Super Admin',
+};
 const paymentStatuses = ['pending', 'processing', 'success', 'failed', 'cancelled', 'refunded'];
 const subscriptionStatuses = ['active', 'inactive', 'expired', 'cancelled'];
 
@@ -33,9 +39,57 @@ const getRows = (response) => {
   return Array.isArray(data) ? data : data?.results || [];
 };
 
-const getMessage = (err, fallback) => (
-  err?.response?.data?.detail || err?.response?.data?.error || err?.detail || err?.error || err.message || fallback
-);
+const getMessage = (err, fallback) => {
+  const data = err?.response?.data || err?.data || err;
+  if (data?.detail) return data.detail;
+  if (data?.error) return data.error;
+  if (data?.message) return data.message;
+  if (typeof data === 'object' && data !== null) {
+    const fieldMessages = Object.entries(data)
+      .filter(([key]) => !['detail', 'error', 'message'].includes(key))
+      .map(([key, value]) => {
+        const message = Array.isArray(value) ? value.join(' ') : String(value);
+        return `${key.replaceAll('_', ' ')}: ${message}`;
+      })
+      .filter(Boolean);
+    if (fieldMessages.length) return fieldMessages.join(' ');
+  }
+  return err?.message || fallback;
+};
+
+const validateAdminForm = (admin) => {
+  const errors = {};
+  const phonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
+  const password = admin.password || '';
+
+  if (!String(admin.full_name || '').trim()) {
+    errors.full_name = 'Full name is required.';
+  }
+  if (!String(admin.email || '').trim().toLowerCase().endsWith('@gmail.com')) {
+    errors.email = 'Use a valid Gmail address.';
+  }
+  if (!phonePattern.test(String(admin.phone || '').trim())) {
+    errors.phone = 'Use a valid Bangladesh phone number, for example 01712345678.';
+  }
+  if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    errors.password = 'Password must include uppercase, lowercase, number, and special character.';
+  }
+  if (!admin.roles?.[0]) {
+    errors.roles = 'Select an admin role.';
+  }
+
+  return errors;
+};
+
+const getFieldErrors = (err) => {
+  const data = err?.response?.data || err?.data || err;
+  if (!data || typeof data !== 'object') return {};
+  return Object.entries(data).reduce((errors, [key, value]) => {
+    if (['detail', 'error', 'message', 'non_field_errors'].includes(key)) return errors;
+    const message = Array.isArray(value) ? value.join(' ') : String(value);
+    return { ...errors, [key]: message };
+  }, {});
+};
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -72,6 +126,7 @@ export default function SuperAdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [adminFormErrors, setAdminFormErrors] = useState({});
 
   const isSuperAdmin = user?.is_superuser || user?.roles?.includes('admin');
 
@@ -151,7 +206,9 @@ export default function SuperAdminDashboard() {
       await action();
       setSuccess(message);
     } catch (err) {
-      setError(getMessage(err, 'Action failed'));
+      if (err?.suppressGlobalError) return;
+      const message = getMessage(err, 'Action failed');
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -159,16 +216,33 @@ export default function SuperAdminDashboard() {
 
   const createAdmin = async (event) => {
     event.preventDefault();
+    const validationErrors = validateAdminForm(newAdmin);
+    if (Object.keys(validationErrors).length) {
+      setAdminFormErrors(validationErrors);
+      setError('');
+      return;
+    }
+    setAdminFormErrors({});
     await runAction(async () => {
-      await authAPI.createUser({
-        full_name: newAdmin.full_name,
-        email: newAdmin.email,
-        phone: newAdmin.phone,
-        password: newAdmin.password,
-        roles: newAdmin.roles,
-        is_active: true,
-      });
+      try {
+        await authAPI.createUser({
+          full_name: newAdmin.full_name.trim(),
+          email: newAdmin.email.trim().toLowerCase(),
+          phone: newAdmin.phone.trim(),
+          password: newAdmin.password,
+          roles: newAdmin.roles,
+          is_active: true,
+        });
+      } catch (err) {
+        const fieldErrors = getFieldErrors(err);
+        if (Object.keys(fieldErrors).length) {
+          setAdminFormErrors(fieldErrors);
+          throw { suppressGlobalError: true };
+        }
+        throw err;
+      }
       setNewAdmin({ full_name: '', email: '', phone: '', password: '', roles: ['hospital_admin'] });
+      setAdminFormErrors({});
       await loadDashboard();
     }, 'Admin account created');
   };
@@ -353,7 +427,14 @@ export default function SuperAdminDashboard() {
     if (activeTab === 'admins') {
       return (
         <>
-          <AdminCreateForm newAdmin={newAdmin} setNewAdmin={setNewAdmin} onSubmit={createAdmin} saving={saving} />
+          <AdminCreateForm
+            newAdmin={newAdmin}
+            setNewAdmin={setNewAdmin}
+            onSubmit={createAdmin}
+            saving={saving}
+            fieldErrors={adminFormErrors}
+            setFieldErrors={setAdminFormErrors}
+          />
           <Table headers={['Name', 'Email', 'Phone', 'Roles', 'Active', 'Actions']}>
             {data.admins.map((admin) => (
               <tr key={admin.id}>
@@ -630,32 +711,62 @@ export default function SuperAdminDashboard() {
   );
 }
 
-function AdminCreateForm({ newAdmin, setNewAdmin, onSubmit, saving }) {
+function AdminCreateForm({ newAdmin, setNewAdmin, onSubmit, saving, fieldErrors, setFieldErrors }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const updateField = (field, value) => {
+    setNewAdmin({ ...newAdmin, [field]: value });
+    if (fieldErrors[field]) {
+      setFieldErrors({ ...fieldErrors, [field]: '' });
+    }
+  };
+
   return (
     <form className="admin-content" onSubmit={onSubmit} style={{ marginBottom: 18 }}>
       <h2>Add Admin Account</h2>
       <div className="form-row">
         <div className="form-group">
           <label>Full Name *</label>
-          <input required value={newAdmin.full_name} onChange={(event) => setNewAdmin({ ...newAdmin, full_name: event.target.value })} />
+          <input required value={newAdmin.full_name} onChange={(event) => updateField('full_name', event.target.value)} className={fieldErrors.full_name ? 'input-error' : ''} />
+          {fieldErrors.full_name && <span className="field-error">{fieldErrors.full_name}</span>}
         </div>
         <div className="form-group">
           <label>Gmail Address *</label>
-          <input required type="email" value={newAdmin.email} onChange={(event) => setNewAdmin({ ...newAdmin, email: event.target.value })} />
+          <input required type="email" value={newAdmin.email} onChange={(event) => updateField('email', event.target.value)} className={fieldErrors.email ? 'input-error' : ''} />
+          {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
         </div>
         <div className="form-group">
           <label>Bangladesh Phone *</label>
-          <input required value={newAdmin.phone} onChange={(event) => setNewAdmin({ ...newAdmin, phone: event.target.value })} />
+          <input required value={newAdmin.phone} onChange={(event) => updateField('phone', event.target.value)} className={fieldErrors.phone ? 'input-error' : ''} />
+          {fieldErrors.phone && <span className="field-error">{fieldErrors.phone}</span>}
         </div>
         <div className="form-group">
           <label>Password *</label>
-          <input required type="password" value={newAdmin.password} onChange={(event) => setNewAdmin({ ...newAdmin, password: event.target.value })} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8 }}>
+            <input
+              required
+              type={showPassword ? 'text' : 'password'}
+              value={newAdmin.password}
+              onChange={(event) => updateField('password', event.target.value)}
+              className={fieldErrors.password ? 'input-error' : ''}
+            />
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowPassword((current) => !current)}
+              style={{ margin: 0, padding: '0 14px', height: '100%' }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
         </div>
         <div className="form-group">
           <label>Role *</label>
-          <select value={newAdmin.roles[0]} onChange={(event) => setNewAdmin({ ...newAdmin, roles: [event.target.value] })}>
-            {adminRoleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
+          <select value={newAdmin.roles[0]} onChange={(event) => setNewAdmin({ ...newAdmin, roles: [event.target.value] })} className={fieldErrors.roles ? 'input-error' : ''}>
+            {adminRoleOptions.map((role) => <option key={role} value={role}>{adminRoleLabels[role]}</option>)}
           </select>
+          {fieldErrors.roles && <span className="field-error">{fieldErrors.roles}</span>}
         </div>
         <button type="submit" className="btn btn-primary" disabled={saving} style={{ alignSelf: 'flex-end', height: 'fit-content' }}>Add Admin</button>
       </div>
