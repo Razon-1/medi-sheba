@@ -8,10 +8,13 @@ import useAuthStore from '../context/authStore';
 import ReviewList from '../components/ReviewList';
 import ReviewForm from '../components/ReviewForm';
 import BookAppointmentModal from '../components/BookAppointmentModal';
+import { useSEO, pageMetadata, updateMetaTags } from '../utils/seo';
 import '../styles/pages/DoctorDetail.css';
 
 // Main component: renders a single doctor's profile page.
 export default function DoctorDetail() {
+  useSEO(pageMetadata.doctorDetail);
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -38,7 +41,14 @@ export default function DoctorDetail() {
 
       // Fetch doctor details
       const doctorResponse = await doctorsAPI.get(id);
-      setDoctor(doctorResponse.data);
+      const doctorData = doctorResponse.data;
+      setDoctor(doctorData);
+      updateMetaTags({
+        title: `Dr. ${doctorData.user?.first_name || doctorData.first_name || doctorData.name || 'Doctor'} ${doctorData.user?.last_name || doctorData.last_name || ''} | Medi Sheba`,
+        description: `View ${doctorData.specialty || doctorData.specialization || 'doctor'} profile, consultation details, reviews, and appointment options on Medi Sheba.`,
+        keywords: `doctor profile, ${doctorData.specialty || doctorData.specialization || 'doctor'}, appointment, Medi Sheba`,
+        ogUrl: `https://medisheba.bd/doctors/${id}`
+      });
 
       // Fetch reviews
       const reviewsResponse = await reviewsAPI.getByDoctor(id);

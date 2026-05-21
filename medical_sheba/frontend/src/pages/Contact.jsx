@@ -1,16 +1,13 @@
 // Search keyword: Page Contact - contact form and support information.
 import { useState } from 'react';
 import { Mail, Phone, MapPin, MessageCircle, Send, AlertCircle } from 'lucide-react';
-import { useSEO } from '../utils/seo';
+import { useSEO, pageMetadata } from '../utils/seo';
 import { contactAPI } from '../api/contact';
 import '../styles/pages/Support.css';
 
 // Main component: renders the contact and support page.
 export default function Contact() {
-  useSEO({
-    title: 'Contact Us - Medi Sheba',
-    description: 'Get in touch with Medi Sheba. We are here to help you with any queries or concerns.',
-  });
+  useSEO(pageMetadata.contact);
 
   const [formData, setFormData] = useState({
     name: '',

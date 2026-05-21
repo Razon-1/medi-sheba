@@ -4,12 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Phone, Mail, Users, Bed, Clock, CheckCircle, ArrowLeft, AlertCircle } from 'lucide-react';
 import { hospitalsAPI } from '../api/hospitals';
 import { doctorsAPI } from '../api/doctors';
-import { updateMetaTags } from '../utils/seo';
+import { useSEO, pageMetadata, updateMetaTags } from '../utils/seo';
 import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/HospitalDetail.css';
 
 // Main component: renders a single hospital detail page.
 export default function HospitalDetail() {
+  useSEO(pageMetadata.hospitalDetail);
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [hospital, setHospital] = useState(null);
@@ -49,7 +51,9 @@ export default function HospitalDetail() {
       console.log('Setting SEO metadata for:', hospitalData.name);
       updateMetaTags({
         title: `${hospitalData.name} - Medi Sheba`,
-        description: `${hospitalData.name} in ${hospitalData.district}. ${hospitalData.type}. Emergency: ${hospitalData.emergency_available ? 'Available' : 'Not Available'}`
+        description: `${hospitalData.name} in ${hospitalData.district}. ${hospitalData.type}. Emergency: ${hospitalData.emergency_available ? 'Available' : 'Not Available'}`,
+        keywords: `${hospitalData.name}, hospital, ${hospitalData.district}, healthcare, Medi Sheba`,
+        ogUrl: `https://medisheba.bd/hospitals/${id}`
       });
     } catch (err) {
       console.error('Error fetching hospital details:', err);

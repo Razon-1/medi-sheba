@@ -5,11 +5,14 @@ import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import useAuthStore from '../context/authStore';
 import { medicineAPI } from '../api/emedicine';
 import { uploadImage } from '../api/hospitals';
+import { useSEO, pageMetadata } from '../utils/seo';
 import { AdminSubscriptionPrompt, useAdminSubscriptionAccess } from '../components/AdminSubscriptionAccess';
 import '../styles/pages/PharmacyAdminDashboard.css';
 
 // Main component: renders the pharmacy admin dashboard page.
 export default function PharmacyAdminDashboard() {
+  useSEO(pageMetadata.pharmacyAdmin);
+
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const {

@@ -5,6 +5,7 @@ import useAuthStore from '../context/authStore';
 import * as ambulanceApi from '../api/ambulance';
 import { uploadImage } from '../api/hospitals';
 import { validateBangladeshPhone } from '../utils/validators';
+import { useSEO, pageMetadata } from '../utils/seo';
 import { AdminSubscriptionPrompt, useAdminSubscriptionAccess } from '../components/AdminSubscriptionAccess';
 import '../styles/AdminDashboard.css';
 
@@ -30,6 +31,8 @@ const getData = (response) => {
 
 // Main component: renders the ambulance admin dashboard page.
 export default function AmbulanceAdminDashboard() {
+  useSEO(pageMetadata.ambulanceAdmin);
+
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const {

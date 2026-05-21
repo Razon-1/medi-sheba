@@ -8,7 +8,7 @@ import { useSEO, pageMetadata } from '../utils/seo';
 // Main component: renders forgot password request page.
 export default function ForgotPassword() {
   // Set SEO metadata for this page
-  useSEO(pageMetadata.forgotPassword || { title: 'Forgot Password - Medi Sheba' });
+  useSEO(pageMetadata.forgotPassword);
   
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);

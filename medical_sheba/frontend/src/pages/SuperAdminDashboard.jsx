@@ -10,6 +10,7 @@ import { ambulanceAPI } from '../api/ambulance';
 import { appointmentsAPI } from '../api/appointments';
 import { edoctorAPI } from '../api/edoctor';
 import paymentsAPI from '../api/payments';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/AdminDashboard.css';
 
 const adminRoleOptions = ['hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin', 'admin'];
@@ -95,6 +96,8 @@ const getFieldErrors = (err) => {
 
 // Main component: renders the super admin control dashboard.
 export default function SuperAdminDashboard() {
+  useSEO(pageMetadata.superAdmin);
+
   const navigate = useNavigate();
   const { user } = useAuthStore();
   // Controls which super admin dashboard tab is currently open.

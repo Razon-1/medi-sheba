@@ -6,11 +6,14 @@ import useAuthStore from '../context/authStore';
 import { medicineAPI } from '../api/emedicine';
 import { uploadImage } from '../api/hospitals';
 import paymentsAPI from '../api/payments';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/PharmacyCreatePage.css';
 import '../styles/App.css';
 
 // Main component: renders pharmacy creation and subscription setup page.
 export default function PharmacyCreatePage() {
+  useSEO(pageMetadata.pharmacyCreate);
+
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);

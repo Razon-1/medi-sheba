@@ -10,7 +10,7 @@ import '../styles/pages/Ambulance.css';
 // Main component: renders public ambulance services and booking request form.
 export default function Ambulance() {
   // Set SEO metadata for this page
-  useSEO(pageMetadata.ambulance || { title: 'Ambulance Services | Medi Sheba', description: 'Emergency ambulance services' });
+  useSEO(pageMetadata.ambulance);
   
   const [ambulances, setAmbulances] = useState([]);
   const [filteredAmbulances, setFilteredAmbulances] = useState([]);

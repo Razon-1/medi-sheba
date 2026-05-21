@@ -8,6 +8,7 @@ import * as doctorApi from '../api/doctors';
 import * as edoctorApi from '../api/edoctor';
 import { appointmentsAPI } from '../api/appointments';
 import { validateBangladeshPhone, validateEmail, validateNumberRange, validateRequired } from '../utils/validators';
+import { useSEO, pageMetadata } from '../utils/seo';
 import { AdminSubscriptionPrompt, useAdminSubscriptionAccess } from '../components/AdminSubscriptionAccess';
 
 const weekdayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -19,6 +20,8 @@ const createEmptyAvailabilityRow = () => ({
 
 // Main component: renders the hospital admin dashboard page.
 const HospitalAdminDashboard = () => {
+  useSEO(pageMetadata.hospitalAdmin);
+
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const {

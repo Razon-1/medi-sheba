@@ -1,14 +1,11 @@
 // Search keyword: Page Terms Of Service - terms, conditions, and user responsibilities.
 import { FileText } from 'lucide-react';
-import { useSEO } from '../utils/seo';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Support.css';
 
 // Main component: renders the terms of service page.
 export default function TermsOfService() {
-  useSEO({
-    title: 'Terms of Service - Medi Sheba',
-    description: 'Read our terms of service to understand the rules and conditions for using Medi Sheba platform.',
-  });
+  useSEO(pageMetadata.terms);
 
   // Page layout: terms sections, service rules, and user responsibilities.
   return (

@@ -1,14 +1,11 @@
 // Search keyword: Page Privacy Policy - privacy rules and data handling.
 import { Shield } from 'lucide-react';
-import { useSEO } from '../utils/seo';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Support.css';
 
 // Main component: renders the privacy policy page.
 export default function PrivacyPolicy() {
-  useSEO({
-    title: 'Privacy Policy - Medi Sheba',
-    description: 'Read our privacy policy to understand how we protect your personal and medical information.',
-  });
+  useSEO(pageMetadata.privacy);
 
   // Page layout: privacy policy sections and user data handling information.
   return (

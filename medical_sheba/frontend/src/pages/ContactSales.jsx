@@ -1,9 +1,12 @@
 // Search keyword: Page Contact Sales - subscription sales contact page.
 import React from 'react';
+import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/ContactSales.css';
 
 // Main component: renders the sales contact page.
 export default function ContactSales() {
+  useSEO(pageMetadata.contactSales);
+
   // Page layout: sales message, benefits, and contact call-to-action.
   return (
     <div className="contact-sales-page">

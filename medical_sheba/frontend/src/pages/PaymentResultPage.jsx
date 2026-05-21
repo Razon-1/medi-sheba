@@ -3,9 +3,12 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Download, Mail, XCircle } from 'lucide-react';
 import paymentsAPI from '../api/payments';
+import { useSEO, pageMetadata } from '../utils/seo';
 
 // Main component: renders payment success or failed result page.
 export default function PaymentResultPage({ status = 'success' }) {
+  useSEO(status === 'success' ? pageMetadata.paymentSuccess : pageMetadata.paymentFailed);
+
   const [searchParams] = useSearchParams();
   const transactionId = searchParams.get('transaction_id');
   const cancelled = searchParams.get('cancelled') === 'true';

@@ -8,7 +8,7 @@ import { useSEO, pageMetadata } from '../utils/seo';
 // Main component: renders password reset confirmation page.
 export default function ResetPassword() {
   // Set SEO metadata for this page
-  useSEO(pageMetadata.resetPassword || { title: 'Reset Password - Medi Sheba' });
+  useSEO(pageMetadata.resetPassword);
   
   const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);

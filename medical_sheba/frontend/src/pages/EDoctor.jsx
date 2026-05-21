@@ -191,10 +191,7 @@ const getErrorMessage = (err, fallback) => {
 // Main component: renders online doctor consultation page.
 export default function EDoctor() {
   // Set SEO metadata for this page
-  useSEO(pageMetadata.edoctor || { 
-    title: 'E-Doctor | Medi Sheba', 
-    description: 'Consult with qualified doctors online' 
-  });
+  useSEO(pageMetadata.edoctor);
   
   const { user } = useAuthStore();
   

@@ -11,10 +11,7 @@ import '../styles/pages/EMedicine.css';
 // Main component: renders medicine search and pharmacy ordering page.
 export default function EMedicine() {
   // Set SEO metadata for this page
-  useSEO(pageMetadata.emedicine || { 
-    title: 'E-Medicine | Medi Sheba', 
-    description: 'Order medicines online with home delivery' 
-  });
+  useSEO(pageMetadata.emedicine);
   
   const [pharmacies, setPharmacies] = useState([]);
   const [filteredPharmacies, setFilteredPharmacies] = useState([]);
