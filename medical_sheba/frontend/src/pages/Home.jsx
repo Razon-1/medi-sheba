@@ -1,11 +1,11 @@
 // Search keyword: Page Home - landing dashboard and main service links.
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search, Check, Zap } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import useAuthStore from '../context/authStore';
 import paymentsAPI from '../api/payments';
+import client from '../api/client';
 import '../styles/pages/Home.css';
 
 // Main component: renders the home page and main service entry points.
@@ -28,7 +28,7 @@ export default function Home() {
 
     const fetchHomeStats = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/users/home_stats/');
+        const response = await client.get('/users/home_stats/');
         if (isMounted) {
           setHomeStats(response.data);
         }
