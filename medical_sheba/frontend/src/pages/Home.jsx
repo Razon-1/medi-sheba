@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search, Check, Zap } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import useAuthStore from '../context/authStore';
@@ -10,14 +11,47 @@ export default function Home() {
   const navigate = useNavigate();
   const [adminType, setAdminType] = useState('pharmacy');
   const [paymentStarting, setPaymentStarting] = useState(null);
+  const [homeStats, setHomeStats] = useState({
+    active_users: null,
+    hospitals: null,
+    doctors: null,
+    appointments: null,
+  });
   const { user } = useAuthStore();
   // Set SEO metadata for this page
   useSEO(pageMetadata.home);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchHomeStats = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/users/home_stats/');
+        if (isMounted) {
+          setHomeStats(response.data);
+        }
+      } catch (err) {
+        console.error('Failed to load home stats:', err);
+      }
+    };
+
+    fetchHomeStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const formatStatValue = (value) => {
+    if (typeof value !== 'number') return '-';
+    return `${Math.max(0, value - 1).toLocaleString()}+`;
+  };
+
   const stats = [
-    { icon: Users, label: 'Active Users', value: '50K+' },
-    { icon: Building2, label: 'Hospitals', value: '500+' },
-    { icon: Stethoscope, label: 'Doctors', value: '5K+' },
-    { icon: Calendar, label: 'Appointments', value: '100K+' },
+    { icon: Users, label: 'Active Users', value: formatStatValue(homeStats.active_users) },
+    { icon: Building2, label: 'Hospitals', value: formatStatValue(homeStats.hospitals) },
+    { icon: Stethoscope, label: 'Doctors', value: formatStatValue(homeStats.doctors) },
+    { icon: Calendar, label: 'Appointments', value: formatStatValue(homeStats.appointments) },
   ];
 
   const features = [

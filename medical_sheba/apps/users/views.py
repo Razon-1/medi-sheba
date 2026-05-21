@@ -57,6 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'request_password_reset',
             'confirm_password_reset',
             'email_debug',
+            'home_stats',
         ]:
             return [AllowAny()]
         return super().get_permissions()
@@ -318,6 +319,20 @@ Medi Sheba Team
                 debug_info['sent_emails_folder_exists'] = False
         
         return Response(debug_info)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def home_stats(self, request):
+        """Public homepage counters."""
+        from apps.appointments.models import Appointment
+        from apps.doctors.models import Doctor
+        from apps.hospitals.models import Hospital
+
+        return Response({
+            'active_users': User.objects.filter(is_active=True).count(),
+            'hospitals': Hospital.objects.filter(is_active=True).count(),
+            'doctors': Doctor.objects.count(),
+            'appointments': Appointment.objects.count(),
+        })
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
