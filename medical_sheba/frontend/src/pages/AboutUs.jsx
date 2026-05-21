@@ -1,3 +1,4 @@
+// Search keyword: Page About Us - company information and platform mission.
 import { Heart, Users, Target, Award } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Support.css';

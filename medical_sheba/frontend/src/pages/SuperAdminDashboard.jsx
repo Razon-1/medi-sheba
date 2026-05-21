@@ -1,3 +1,4 @@
+// Search keyword: Page Super Admin Dashboard - admins, services, payments, subscriptions, and request management tabs.
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Building2, CalendarDays, CreditCard, Pill, Stethoscope, Truck, Users } from 'lucide-react';
@@ -21,6 +22,7 @@ const adminRoleLabels = {
 const paymentStatuses = ['pending', 'processing', 'success', 'failed', 'cancelled', 'refunded'];
 const subscriptionStatuses = ['active', 'inactive', 'expired', 'cancelled'];
 
+// Super admin tab definitions: each id matches a renderTable branch below.
 const tabs = [
   { id: 'admins', label: 'Admins', icon: Users },
   { id: 'hospitals', label: 'Hospitals', icon: Building2 },
@@ -94,6 +96,7 @@ const getFieldErrors = (err) => {
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  // Controls which super admin dashboard tab is currently open.
   const [activeTab, setActiveTab] = useState('admins');
   const [data, setData] = useState({
     admins: [],
@@ -423,8 +426,10 @@ export default function SuperAdminDashboard() {
 
   if (!isSuperAdmin) return null;
 
+  // Tab content renderer: returns the table or form for the selected super admin tab.
   const renderTable = () => {
     if (activeTab === 'admins') {
+      // Admins tab: create admins, change roles/status, reset passwords, and delete admins.
       return (
         <>
           <AdminCreateForm
@@ -465,6 +470,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'hospitals') {
+      // Hospitals tab: view, edit, activate/deactivate, and delete hospital services.
       return (
         <Table headers={['Name', 'Type', 'District', 'Phone', 'Active', 'Actions']}>
           {data.hospitals.map((hospital) => (
@@ -485,6 +491,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'pharmacies') {
+      // Pharmacies tab: view, edit, enable/disable pharmacy services.
       return (
         <Table headers={['Name', 'Type', 'Phone', 'Admin', 'Available', 'Actions']}>
           {data.pharmacies.map((pharmacy) => (
@@ -505,6 +512,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'ambulances') {
+      // Ambulances tab: view, edit fare/availability, and delete ambulance services.
       return (
         <Table headers={['Name', 'Driver', 'Phone', 'Type', 'Fare/KM', 'Available', 'Actions']}>
           {data.ambulances.map((ambulance) => (
@@ -526,6 +534,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'appointments') {
+      // Appointments tab: view and update appointment statuses.
       return (
         <Table headers={['Appointment', 'Patient', 'Type', 'Payment', 'Status', 'Update']}>
           {data.appointments.map((appointment) => (
@@ -549,6 +558,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'medicineOrders') {
+      // Medicine Orders tab: view and update medicine delivery orders.
       return (
         <Table headers={['Order', 'Patient', 'Pharmacy', 'Amount', 'Urgency', 'Payment', 'Status']}>
           {data.medicineOrders.map((order) => (
@@ -573,6 +583,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'ambulanceRequests') {
+      // Ambulance Requests tab: view and update ambulance booking requests.
       return (
         <Table headers={['Request', 'Patient', 'Pickup', 'Urgency', 'Fare', 'Payment', 'Status']}>
           {data.ambulanceRequests.map((request) => (
@@ -597,6 +608,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'payments') {
+      // Payments tab: review, update, refund, and delete payment records.
       return (
         <Table headers={['Transaction', 'User', 'For', 'Amount', 'Gateway', 'Status', 'Actions']}>
           {data.payments.map((payment) => (
@@ -622,6 +634,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (activeTab === 'subscriptions') {
+      // Subscriptions tab: create, update, cancel, and delete admin subscriptions.
       return (
         <>
           <SubscriptionCreateForm
@@ -656,6 +669,7 @@ export default function SuperAdminDashboard() {
       );
     }
 
+    // E-Doctor tab: view and update e-doctor consultation statuses.
     return (
       <Table headers={['Consultation', 'Patient', 'Doctor', 'Fee', 'Paid', 'Status', 'Action']}>
         {data.consultations.map((consultation) => (
@@ -698,6 +712,7 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
+      {/* Tab buttons: generated from the tabs list above and used to switch activeTab. */}
       <div className="admin-tabs">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button key={id} type="button" className={`tab-button ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
@@ -706,6 +721,7 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
+      {/* Tab content: renderTable shows only the currently selected super admin tab. */}
       {loading ? <div className="loading">Loading super admin control...</div> : <div className="admin-content">{renderTable()}</div>}
     </div>
   );

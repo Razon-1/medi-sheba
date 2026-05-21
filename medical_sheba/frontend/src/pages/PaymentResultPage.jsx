@@ -1,3 +1,4 @@
+// Search keyword: Page Payment Result - payment success and failure status.
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Download, Mail, XCircle } from 'lucide-react';

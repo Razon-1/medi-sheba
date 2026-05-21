@@ -1,3 +1,4 @@
+// Search keyword: Page Terms Of Service - terms, conditions, and user responsibilities.
 import { FileText } from 'lucide-react';
 import { useSEO } from '../utils/seo';
 import '../styles/pages/Support.css';

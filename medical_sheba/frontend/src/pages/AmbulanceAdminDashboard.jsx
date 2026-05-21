@@ -1,3 +1,4 @@
+// Search keyword: Page Ambulance Admin Dashboard - ambulances, requests, and revenue review tabs.
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
@@ -37,6 +38,7 @@ export default function AmbulanceAdminDashboard() {
     trialLoading,
     startTrial,
   } = useAdminSubscriptionAccess('ambulance_driver_admin');
+  // Controls which admin dashboard tab is currently open: Ambulances, Requests, or Revenue Review.
   const [activeTab, setActiveTab] = useState('ambulances');
   const [ambulances, setAmbulances] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -70,10 +72,12 @@ export default function AmbulanceAdminDashboard() {
       setLoading(true);
       setError('');
 
+      // Ambulances tab: load only the ambulance records owned by this admin.
       if (activeTab === 'ambulances') {
         const response = await ambulanceApi.getMyAmbulances();
         setAmbulances(getData(response));
       } else {
+        // Requests and Revenue Review tabs: load ambulance booking requests.
         const response = await ambulanceApi.getAmbulanceAdminRequests(activeTab === 'requests' ? statusFilter || null : null);
         const requestList = getData(response);
         setRequests(requestList);
@@ -92,6 +96,8 @@ export default function AmbulanceAdminDashboard() {
     }
   };
 
+  // Revenue calculation for Requests tab: adds paid or completed request fares.
+  // Uses final_fare first; if missing, falls back to estimated_fare.
   const revenue = useMemo(() => {
     return requests
       .filter((request) => request.payment_status === 'paid' || request.status === 'completed')
@@ -135,6 +141,8 @@ export default function AmbulanceAdminDashboard() {
     });
   };
 
+  // Revenue calculation for Revenue Review tab: splits period fares into completed and pending.
+  // Uses final_fare first; if missing, falls back to estimated_fare.
   const getRevenueBreakdown = () => {
     const periodRequests = getPeriodRequests();
     const completedRevenue = periodRequests
@@ -394,6 +402,7 @@ export default function AmbulanceAdminDashboard() {
     }
   };
 
+  // Ambulances tab: add, edit, delete, and view ambulance service details.
   const AmbulancesTab = () => (
     <div className="admin-content">
       <h2>Manage Ambulances</h2>
@@ -442,6 +451,7 @@ export default function AmbulanceAdminDashboard() {
     </div>
   );
 
+  // Requests tab: view booking requests, update status, set distance, and update fare.
   const RequestsTab = () => (
     <div className="admin-content">
       <div className="review-header">
@@ -535,6 +545,7 @@ export default function AmbulanceAdminDashboard() {
     </div>
   );
 
+  // Revenue Review tab: show weekly/monthly/yearly earnings summary and pie chart.
   const RevenueReviewTab = () => {
     const periodRequests = getPeriodRequests();
     const breakdown = getRevenueBreakdown();
@@ -635,6 +646,7 @@ export default function AmbulanceAdminDashboard() {
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
 
+      {/* Tab buttons: clicking these changes activeTab and switches the dashboard section below. */}
       <div className="admin-tabs">
         <button
           className={`tab-button ${activeTab === 'ambulances' ? 'active' : ''}`}
@@ -656,6 +668,7 @@ export default function AmbulanceAdminDashboard() {
         </button>
       </div>
 
+      {/* Tab content: only the selected tab component is rendered here. */}
       {loading ? (
         <div className="loading">Loading ambulance dashboard...</div>
       ) : (

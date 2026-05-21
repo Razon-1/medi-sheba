@@ -1,3 +1,4 @@
+// Search keyword: Page Blood - blood donor search and blood requests.
 import { useState, useEffect } from 'react';
 import { Search, MapPin, Phone, X } from 'lucide-react';
 import Pagination from '../components/Pagination';

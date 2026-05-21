@@ -1,3 +1,4 @@
+// Search keyword: Page Reset Password - password reset confirmation form.
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Lock, EyeOff, Eye, CheckCircle } from 'lucide-react';

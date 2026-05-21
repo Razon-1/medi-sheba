@@ -1,3 +1,4 @@
+// Search keyword: Page Pharmacy Admin Dashboard - medicines, orders, revenue review, and pharmacy info tabs.
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, AlertCircle } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function PharmacyAdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Controls which pharmacy admin dashboard tab is currently open.
   const [activeTab, setActiveTab] = useState('medicines');
   const [showAddMedicine, setShowAddMedicine] = useState(false);
   const [showEditPharmacy, setShowEditPharmacy] = useState(false);
@@ -95,7 +97,7 @@ export default function PharmacyAdminDashboard() {
     }
   }, [accessState, user]);
 
-  // Refetch orders when tab changes to 'orders'
+  // Orders tab: refetch pharmacy orders when the admin opens the Orders tab.
   useEffect(() => {
     if (accessState === 'active' && activeTab === 'orders') {
       const fetchOrders = async () => {
@@ -150,14 +152,18 @@ export default function PharmacyAdminDashboard() {
     });
   };
 
+  // Revenue calculation for Revenue Review tab: splits selected-period order totals by payment status.
   const getRevenueBreakdown = () => {
     const periodOrders = getPeriodOrders();
+    // Paid revenue calculation: add total_amount from paid orders only.
     const paidRevenue = periodOrders
       .filter((order) => order.payment_status === 'paid')
       .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+    // Unpaid revenue calculation: add total_amount from unpaid orders only.
     const unpaidRevenue = periodOrders
       .filter((order) => order.payment_status === 'unpaid')
       .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+    // Refunded revenue calculation: add total_amount from refunded orders only.
     const refundedRevenue = periodOrders
       .filter((order) => order.payment_status === 'refunded')
       .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
@@ -232,6 +238,7 @@ export default function PharmacyAdminDashboard() {
     return Math.round((value / total) * 100);
   };
 
+  // Revenue Review tab: shows weekly/monthly/yearly pharmacy earnings by payment status.
   const RevenueReviewTab = () => {
     const breakdown = getRevenueBreakdown();
     const paidRevenue = breakdown.find((item) => item.label === 'Paid')?.value || 0;
@@ -340,6 +347,7 @@ export default function PharmacyAdminDashboard() {
         {pharmacy && <p className="pharmacy-name">{pharmacy.name}</p>}
       </div>
 
+      {/* Tab buttons: clicking these changes activeTab and switches the dashboard section below. */}
       <div className="dashboard-tabs">
         <button
           className={`tab-button ${activeTab === 'medicines' ? 'active' : ''}`}
@@ -367,7 +375,9 @@ export default function PharmacyAdminDashboard() {
         </button>
       </div>
 
+      {/* Tab content: only the selected pharmacy admin tab is rendered here. */}
       <div className="dashboard-content">
+        {/* Medicines tab: add, edit, delete, and view pharmacy medicines. */}
         {activeTab === 'medicines' && (
           <MedicinesTab
             medicines={medicines}
@@ -379,6 +389,7 @@ export default function PharmacyAdminDashboard() {
           />
         )}
 
+        {/* Orders tab: view and update medicine order status. */}
         {activeTab === 'orders' && (
             <OrdersTab
               orders={orders}
@@ -386,8 +397,10 @@ export default function PharmacyAdminDashboard() {
             />
         )}
 
+        {/* Revenue Review tab: view pharmacy income summary and pie chart. */}
         {activeTab === 'review' && <RevenueReviewTab />}
 
+        {/* Pharmacy Info tab: view and edit pharmacy profile details. */}
         {activeTab === 'pharmacy' && pharmacy && (
           <PharmacyInfoTab
             pharmacy={pharmacy}
@@ -401,6 +414,7 @@ export default function PharmacyAdminDashboard() {
   );
 }
 
+// Orders tab component: filters orders and updates order status.
 function OrdersTab({ orders, setOrders }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterUrgency, setFilterUrgency] = useState('all');
@@ -817,6 +831,7 @@ function OrderDetailsModal({ order, orders, setOrders, onClose }) {
   );
 }
 
+// Medicines tab component: manages medicine list and medicine add/edit form.
 function MedicinesTab({ medicines, setMedicines, showAddMedicine, setShowAddMedicine, editingMedicine, setEditingMedicine }) {
   return (
     <div className="medicines-tab">
@@ -1300,6 +1315,7 @@ async function deleteMedicine(medicineId, setMedicines) {
   }
 }
 
+// Pharmacy Info tab component: shows pharmacy details and edit form.
 function PharmacyInfoTab({ pharmacy, setPharmacy, showEditPharmacy, setShowEditPharmacy }) {
   return (
     <div className="pharmacy-info-tab">

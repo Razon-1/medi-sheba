@@ -1,3 +1,4 @@
+// Search keyword: Page Forgot Password - password reset request form.
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, ArrowLeft } from 'lucide-react';

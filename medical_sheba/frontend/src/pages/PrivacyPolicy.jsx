@@ -1,3 +1,4 @@
+// Search keyword: Page Privacy Policy - privacy rules and data handling.
 import { Shield } from 'lucide-react';
 import { useSEO } from '../utils/seo';
 import '../styles/pages/Support.css';

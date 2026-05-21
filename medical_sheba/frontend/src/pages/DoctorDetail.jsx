@@ -1,3 +1,4 @@
+// Search keyword: Page Doctor Detail - doctor profile, reviews, and booking.
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Phone, MapPin, BookOpen, Clock, CheckCircle, AlertCircle } from 'lucide-react';

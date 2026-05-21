@@ -1,3 +1,4 @@
+// Search keyword: Page Hospital Admin Dashboard - doctors, appointments, consultations, revenue review, and hospital info tabs.
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
@@ -26,6 +27,7 @@ const HospitalAdminDashboard = () => {
     trialLoading,
     startTrial,
   } = useAdminSubscriptionAccess('hospital_admin');
+  // Controls which hospital admin dashboard tab is currently open.
   const [activeTab, setActiveTab] = useState('doctors');
   const [hospital, setHospital] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -73,21 +75,25 @@ const HospitalAdminDashboard = () => {
       const hospitalData = hospitalRes.data || hospitalRes;
       setHospital(hospitalData);
 
-      // Load data based on active tab
+      // Load data based on active tab.
       if (activeTab === 'doctors') {
+        // Doctors tab: load the hospital's in-person doctors.
         const doctorsRes = await doctorApi.getMyDoctors();
         // API returns array directly, not wrapped in {data: ...}
         const doctorsData = Array.isArray(doctorsRes.data) ? doctorsRes.data : (Array.isArray(doctorsRes) ? doctorsRes : []);
         setDoctors(doctorsData);
       } else if (activeTab === 'edoctors') {
+        // E-Doctors tab: load the hospital's online consultation doctors.
         const edoctorsRes = await edoctorApi.getMyEdoctors();
         const edoctorsData = Array.isArray(edoctorsRes.data) ? edoctorsRes.data : (Array.isArray(edoctorsRes) ? edoctorsRes : []);
         setEdoctors(edoctorsData);
       } else if (activeTab === 'appointments') {
+        // Appointments tab: load patient appointments for this hospital.
         const appointmentsRes = await appointmentsAPI.hospitalAppointments();
         const appointmentsData = Array.isArray(appointmentsRes.data) ? appointmentsRes.data : (Array.isArray(appointmentsRes) ? appointmentsRes : []);
         setAppointments(appointmentsData);
       } else if (activeTab === 'consultations') {
+        // Consultations tab: load e-doctor consultation requests.
         const consultationsRes = await edoctorApi.edoctorAPI.hospitalConsultations();
         const consultationsData = Array.isArray(consultationsRes.data) ? consultationsRes.data : (Array.isArray(consultationsRes) ? consultationsRes : []);
         setConsultations(consultationsData);
@@ -160,12 +166,15 @@ const HospitalAdminDashboard = () => {
         return created && created >= periodStart && (consultation.is_paid === true || consultation.payment_status === 'paid');
       });
 
+      // Revenue calculation for Revenue Review tab: add paid appointment fees in the selected period.
       const appointmentsRevenue = filteredAppointments.reduce((sum, appointment) => sum + parseFloat(appointment.fee_amount || 0), 0);
+      // Revenue calculation for Revenue Review tab: add paid e-doctor consultation fees in the selected period.
       const consultationsRevenue = filteredConsultations.reduce((sum, consultation) => sum + parseFloat(consultation.fee_amount || 0), 0);
 
       setRevenueSummary({
         appointmentsRevenue,
         consultationsRevenue,
+        // Total revenue calculation: appointment revenue plus consultation revenue.
         totalRevenue: appointmentsRevenue + consultationsRevenue,
         appointmentsCount: filteredAppointments.length,
         consultationsCount: filteredConsultations.length,
@@ -390,6 +399,7 @@ const HospitalAdminDashboard = () => {
     return Math.round((value / total) * 100);
   };
 
+  // Revenue Review tab: shows hospital earnings from appointments and e-doctor consultations.
   const ReviewTab = () => (
     <div className="review-tab">
       <div className="review-header">
@@ -916,6 +926,7 @@ const HospitalAdminDashboard = () => {
     }
   };
 
+  // Doctors tab: add, edit, delete, and view in-person doctors.
   const DoctorsTab = () => (
     <div className="admin-content">
       <h2>🩺 Manage Doctors</h2>
@@ -950,6 +961,7 @@ const HospitalAdminDashboard = () => {
     </div>
   );
 
+  // E-Doctors tab: add, edit, delete, and view online consultation doctors.
   const EdoctorsTab = () => (
     <div className="admin-content">
       <h2>💻 Manage E-Doctors</h2>
@@ -996,6 +1008,7 @@ const HospitalAdminDashboard = () => {
     setShowForm(true);
   };
 
+  // Hospital Info tab: view and edit this hospital's profile details.
   const HospitalInfoTab = () => (
     <div className="admin-content">
       <h2>🏥 Hospital Information</h2>
@@ -1020,6 +1033,7 @@ const HospitalAdminDashboard = () => {
     </div>
   );
 
+  // Appointments tab: view and update patient appointment status.
   const AppointmentsTab = () => (
     <div className="admin-content">
       <h2>📅 Patient Appointments</h2>
@@ -1070,6 +1084,7 @@ const HospitalAdminDashboard = () => {
     </div>
   );
 
+  // Consultations tab: view and update e-doctor consultation status.
   const ConsultationsTab = () => (
     <div className="admin-content">
       <h2>💻 E-Doctor Consultations</h2>
@@ -1150,6 +1165,7 @@ const HospitalAdminDashboard = () => {
 
       {error && <div className="error-message">{error}</div>}
 
+      {/* Tab buttons: clicking these changes activeTab and switches the dashboard section below. */}
       <div className="admin-tabs">
         <button
           className={`tab-button ${activeTab === 'doctors' ? 'active' : ''}`}
@@ -1189,6 +1205,7 @@ const HospitalAdminDashboard = () => {
         </button>
       </div>
 
+      {/* Tab content: only the selected hospital admin tab is rendered here. */}
       <div className="tab-content">
         {activeTab === 'doctors' && <DoctorsTab />}
         {activeTab === 'edoctors' && <EdoctorsTab />}
@@ -1216,6 +1233,7 @@ const HospitalAdminDashboard = () => {
               noValidate={!editingHospital && (activeTab === 'doctors' || activeTab === 'edoctors')}
             >
               {error && <div className="error-message">{error}</div>}
+              {/* Doctors tab form fields: used when adding or editing an in-person doctor. */}
               {activeTab === 'doctors' && (
                 <>
                   <div className="form-group">

@@ -1,3 +1,4 @@
+// Search keyword: Page Contact - contact form and support information.
 import { useState } from 'react';
 import { Mail, Phone, MapPin, MessageCircle, Send, AlertCircle } from 'lucide-react';
 import { useSEO } from '../utils/seo';

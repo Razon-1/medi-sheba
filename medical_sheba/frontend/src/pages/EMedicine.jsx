@@ -1,3 +1,4 @@
+// Search keyword: Page E-Medicine - medicine search and pharmacy orders.
 import { useState, useEffect } from 'react';
 import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart } from 'lucide-react';
 import Pagination from '../components/Pagination';

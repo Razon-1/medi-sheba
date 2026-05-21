@@ -1,3 +1,4 @@
+// Search keyword: Page E-Doctor - online doctor consultations.
 import { useState, useEffect } from 'react';
 import { Star, Clock, MapPin, Phone, AlertCircle } from 'lucide-react';
 import Pagination from '../components/Pagination';

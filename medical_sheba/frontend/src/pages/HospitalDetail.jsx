@@ -1,3 +1,4 @@
+// Search keyword: Page Hospital Detail - hospital profile, doctors, and reviews.
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Phone, Mail, Users, Bed, Clock, CheckCircle, ArrowLeft, AlertCircle } from 'lucide-react';

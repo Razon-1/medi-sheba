@@ -1,3 +1,4 @@
+// Search keyword: Page Ambulance - ambulance services and booking requests.
 import { useState, useEffect } from 'react';
 import { PhoneCall, MapPin, DollarSign, AlertCircle, X } from 'lucide-react';
 import Pagination from '../components/Pagination';

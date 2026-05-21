@@ -1,3 +1,4 @@
+// Search keyword: Page Hospitals - hospital listing, filters, and search.
 import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import HospitalCard from '../components/HospitalCard';
