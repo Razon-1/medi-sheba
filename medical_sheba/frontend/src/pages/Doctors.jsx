@@ -13,6 +13,7 @@ const getListData = (data) => {
   return [];
 };
 
+// Main component: renders the doctors listing page.
 export default function Doctors() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.doctors);
@@ -67,6 +68,7 @@ export default function Doctors() {
   };
 
   const visibleDoctors = filteredDoctors.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  // Page layout: doctor search/filter controls, doctor cards, and pagination.
   return (
     <div className="doctors-page">
       <div className="page-header">

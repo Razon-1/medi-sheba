@@ -5,6 +5,7 @@ import { useSEO } from '../utils/seo';
 import { contactAPI } from '../api/contact';
 import '../styles/pages/Support.css';
 
+// Main component: renders the contact and support page.
 export default function Contact() {
   useSEO({
     title: 'Contact Us - Medi Sheba',
@@ -59,6 +60,7 @@ export default function Contact() {
     }
   };
 
+  // Page layout: contact form, contact details, and support information.
   return (
     <div className="support-page">
       <div className="page-header">

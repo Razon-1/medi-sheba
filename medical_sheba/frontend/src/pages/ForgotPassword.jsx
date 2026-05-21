@@ -5,6 +5,7 @@ import { Mail, ArrowLeft } from 'lucide-react';
 import { authAPI } from '../api/auth';
 import { useSEO, pageMetadata } from '../utils/seo';
 
+// Main component: renders forgot password request page.
 export default function ForgotPassword() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.forgotPassword || { title: 'Forgot Password - Medi Sheba' });
@@ -45,6 +46,7 @@ export default function ForgotPassword() {
     }
   };
 
+  // Page layout: password reset request form and success/error feedback.
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-2xl items-center">

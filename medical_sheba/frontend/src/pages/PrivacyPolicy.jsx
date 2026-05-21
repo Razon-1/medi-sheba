@@ -3,12 +3,14 @@ import { Shield } from 'lucide-react';
 import { useSEO } from '../utils/seo';
 import '../styles/pages/Support.css';
 
+// Main component: renders the privacy policy page.
 export default function PrivacyPolicy() {
   useSEO({
     title: 'Privacy Policy - Medi Sheba',
     description: 'Read our privacy policy to understand how we protect your personal and medical information.',
   });
 
+  // Page layout: privacy policy sections and user data handling information.
   return (
     <div className="support-page">
       <div className="page-header">

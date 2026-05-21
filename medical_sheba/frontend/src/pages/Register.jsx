@@ -6,6 +6,7 @@ import AuthForm from '../components/AuthForm';
 import useAuthStore from '../context/authStore';
 import { useSEO, pageMetadata } from '../utils/seo';
 
+// Main component: renders user registration page.
 export default function Register() {
   useSEO(pageMetadata.register);
 
@@ -77,6 +78,7 @@ export default function Register() {
     }
   };
 
+  // Page layout: signup form, validation feedback, and login link.
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-2xl items-center">

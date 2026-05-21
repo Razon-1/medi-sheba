@@ -28,6 +28,7 @@ const getData = (response) => {
   return Array.isArray(data) ? data : (data?.results || []);
 };
 
+// Main component: renders the ambulance admin dashboard page.
 export default function AmbulanceAdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -636,6 +637,7 @@ export default function AmbulanceAdminDashboard() {
     );
   }
 
+  // Page layout: dashboard header, tab buttons, selected tab content, and add/edit modal.
   return (
     <div className="admin-dashboard">
       <div className="admin-header">

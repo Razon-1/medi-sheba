@@ -143,6 +143,7 @@ const canViewPatientServices = (user) => {
     && !roles.some((role) => ['pharmacy_admin', 'hospital_admin', 'ambulance_driver_admin', 'doctor', 'admin'].includes(role));
 };
 
+// Main component: renders the user's appointment management page.
 export default function Appointments() {
   useSEO(pageMetadata.appointments);
 
@@ -454,6 +455,7 @@ export default function Appointments() {
     );
   }
 
+  // Page layout: appointment filters, appointment cards, and appointment action buttons.
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">

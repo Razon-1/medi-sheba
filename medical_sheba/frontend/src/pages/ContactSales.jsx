@@ -2,7 +2,9 @@
 import React from 'react';
 import '../styles/pages/ContactSales.css';
 
+// Main component: renders the sales contact page.
 export default function ContactSales() {
+  // Page layout: sales message, benefits, and contact call-to-action.
   return (
     <div className="contact-sales-page">
       <div className="contact-card">

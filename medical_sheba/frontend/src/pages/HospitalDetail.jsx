@@ -8,6 +8,7 @@ import { updateMetaTags } from '../utils/seo';
 import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/HospitalDetail.css';
 
+// Main component: renders a single hospital detail page.
 export default function HospitalDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -134,6 +135,7 @@ export default function HospitalDetail() {
     );
   }
 
+  // Page layout: hospital profile, available doctors, reviews, and booking links.
   return (
     <div className="hospital-detail">
       {/* Back Button */}

@@ -7,6 +7,7 @@ import useAuthStore from '../context/authStore';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Blood.css';
 
+// Main component: renders blood donor search and blood request tools.
 export default function BloodBank() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.blood);
@@ -312,6 +313,7 @@ export default function BloodBank() {
     });
   };
 
+  // Page layout: blood search, donor results, request form, and request list sections.
   return (
     <div className="blood-page">
       <div className="page-header">

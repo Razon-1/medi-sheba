@@ -8,6 +8,7 @@ import OrderMedicinesModal from '../components/OrderMedicinesModal';
 import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/EMedicine.css';
 
+// Main component: renders medicine search and pharmacy ordering page.
 export default function EMedicine() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.emedicine || { 
@@ -153,6 +154,7 @@ export default function EMedicine() {
     setCurrentMedicinePage(1);
   }, [medicineSearchQuery]);
 
+  // Page layout: pharmacy/medicine search, medicine cards, and order medicine modal.
   return (
     <div className="emedicine-page">
       <div className="page-header">

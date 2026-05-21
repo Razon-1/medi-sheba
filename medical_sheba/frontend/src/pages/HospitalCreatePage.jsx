@@ -6,6 +6,7 @@ import paymentsAPI from '../api/payments';
 import '../styles/App.css';
 import * as hospitalApi from '../api/hospitals';
 
+// Main component: renders hospital creation and subscription setup page.
 const HospitalCreatePage = () => {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
@@ -233,6 +234,7 @@ const HospitalCreatePage = () => {
     );
   }
 
+  // Page layout: subscription access state, hospital creation form, and payment/trial actions.
   return (
     <div className="hospital-container">
       <div className="header-banner">

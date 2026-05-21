@@ -8,6 +8,7 @@ import { uploadImage } from '../api/hospitals';
 import { AdminSubscriptionPrompt, useAdminSubscriptionAccess } from '../components/AdminSubscriptionAccess';
 import '../styles/pages/PharmacyAdminDashboard.css';
 
+// Main component: renders the pharmacy admin dashboard page.
 export default function PharmacyAdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -340,6 +341,7 @@ export default function PharmacyAdminDashboard() {
     );
   }
 
+  // Page layout: dashboard header, tab buttons, selected tab content, and pharmacy forms.
   return (
     <div className="pharmacy-admin-dashboard">
       <div className="dashboard-header">

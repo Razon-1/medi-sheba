@@ -3,12 +3,14 @@ import { FileText } from 'lucide-react';
 import { useSEO } from '../utils/seo';
 import '../styles/pages/Support.css';
 
+// Main component: renders the terms of service page.
 export default function TermsOfService() {
   useSEO({
     title: 'Terms of Service - Medi Sheba',
     description: 'Read our terms of service to understand the rules and conditions for using Medi Sheba platform.',
   });
 
+  // Page layout: terms sections, service rules, and user responsibilities.
   return (
     <div className="support-page">
       <div className="page-header">

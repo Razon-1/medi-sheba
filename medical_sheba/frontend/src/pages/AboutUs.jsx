@@ -3,12 +3,14 @@ import { Heart, Users, Target, Award } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/Support.css';
 
+// Main component: renders the About Us page.
 export default function AboutUs() {
   useSEO({
     title: 'About Us - Medi Sheba',
     description: 'Learn about Medi Sheba, Bangladesh\'s professional healthcare management platform.',
   });
 
+  // Page layout: hero, mission, values, stats, team, and call-to-action sections.
   return (
     <div className="support-page">
       <div className="page-header">

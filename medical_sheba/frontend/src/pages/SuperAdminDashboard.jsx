@@ -93,6 +93,7 @@ const getFieldErrors = (err) => {
   }, {});
 };
 
+// Main component: renders the super admin control dashboard.
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -693,6 +694,7 @@ export default function SuperAdminDashboard() {
     );
   };
 
+  // Page layout: dashboard summary cards, tab buttons, and selected super admin table.
   return (
     <div className="admin-dashboard">
       <div className="admin-header">

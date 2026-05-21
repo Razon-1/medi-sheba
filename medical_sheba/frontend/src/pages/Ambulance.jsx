@@ -7,6 +7,7 @@ import { useSEO, pageMetadata } from '../utils/seo';
 import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/Ambulance.css';
 
+// Main component: renders public ambulance services and booking request form.
 export default function Ambulance() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.ambulance || { title: 'Ambulance Services | Medi Sheba', description: 'Emergency ambulance services' });
@@ -211,6 +212,7 @@ export default function Ambulance() {
     }
   };
 
+  // Page layout: ambulance search/list, service cards, and request modal/form.
   return (
     <div className="ambulance-page">
       <div className="page-header">

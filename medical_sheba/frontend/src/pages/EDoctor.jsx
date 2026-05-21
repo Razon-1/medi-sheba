@@ -188,6 +188,7 @@ const getErrorMessage = (err, fallback) => {
   return fallback;
 };
 
+// Main component: renders online doctor consultation page.
 export default function EDoctor() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.edoctor || { 
@@ -449,6 +450,7 @@ export default function EDoctor() {
     }
   };
 
+  // Page layout: consultation hero, doctor list, filters, and consultation booking modal.
   return (
     <div className="edoctor-container">
       <div className="edoctor-header">

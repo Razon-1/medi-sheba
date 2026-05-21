@@ -13,6 +13,7 @@ const getListData = (data) => {
   return [];
 };
 
+// Main component: renders the hospitals listing page.
 export default function Hospitals() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.hospitals);
@@ -83,6 +84,7 @@ export default function Hospitals() {
     setCurrentPage(1);
   };
 
+  // Page layout: hospital search/filter controls, hospital cards, and pagination.
   return (
     <div className="hospitals-page">
       <div className="page-header">

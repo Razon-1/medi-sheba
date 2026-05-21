@@ -7,6 +7,7 @@ import useAuthStore from '../context/authStore';
 import { authAPI } from '../api/auth';
 import { useSEO, pageMetadata } from '../utils/seo';
 
+// Main component: renders user login page.
 export default function Login() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.login);
@@ -66,6 +67,7 @@ export default function Login() {
     }
   };
 
+  // Page layout: login form, authentication feedback, and register/forgot links.
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-2xl items-center">

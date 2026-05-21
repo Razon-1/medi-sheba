@@ -5,6 +5,7 @@ import { Lock, EyeOff, Eye, CheckCircle } from 'lucide-react';
 import { authAPI } from '../api/auth';
 import { useSEO, pageMetadata } from '../utils/seo';
 
+// Main component: renders password reset confirmation page.
 export default function ResetPassword() {
   // Set SEO metadata for this page
   useSEO(pageMetadata.resetPassword || { title: 'Reset Password - Medi Sheba' });
@@ -114,6 +115,7 @@ export default function ResetPassword() {
     );
   }
 
+  // Page layout: new password form, token validation feedback, and login link.
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-120px)] w-full max-w-2xl items-center">

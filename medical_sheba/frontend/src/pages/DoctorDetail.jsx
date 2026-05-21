@@ -10,6 +10,7 @@ import ReviewForm from '../components/ReviewForm';
 import BookAppointmentModal from '../components/BookAppointmentModal';
 import '../styles/pages/DoctorDetail.css';
 
+// Main component: renders a single doctor's profile page.
 export default function DoctorDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -110,6 +111,7 @@ export default function DoctorDetail() {
     );
   }
 
+  // Page layout: doctor profile, booking action, review form, and review list.
   return (
     <div className="doctor-detail">
       {/* Back Button */}

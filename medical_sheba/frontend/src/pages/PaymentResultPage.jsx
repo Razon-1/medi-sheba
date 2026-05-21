@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Download, Mail, XCircle } from 'lucide-react';
 import paymentsAPI from '../api/payments';
 
+// Main component: renders payment success or failed result page.
 export default function PaymentResultPage({ status = 'success' }) {
   const [searchParams] = useSearchParams();
   const transactionId = searchParams.get('transaction_id');
@@ -59,6 +60,7 @@ export default function PaymentResultPage({ status = 'success' }) {
     ? 'Your payment is complete and your consultation is scheduled. The hospital admin will confirm it.'
     : 'Your SSLCommerz payment has been processed.';
 
+  // Page layout: payment status message, transaction details, and navigation actions.
   return (
     <div className="support-page" style={{ padding: '48px 16px' }}>
       <div className="support-content" style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>

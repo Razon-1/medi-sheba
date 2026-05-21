@@ -9,6 +9,7 @@ import paymentsAPI from '../api/payments';
 import '../styles/pages/PharmacyCreatePage.css';
 import '../styles/App.css';
 
+// Main component: renders pharmacy creation and subscription setup page.
 export default function PharmacyCreatePage() {
   const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
@@ -288,6 +289,7 @@ export default function PharmacyCreatePage() {
     );
   }
 
+  // Page layout: subscription access state, pharmacy creation form, and payment/trial actions.
   return (
     <div className="pharmacy-create-container">
       <div className="create-header">

@@ -8,6 +8,7 @@ import useAuthStore from '../context/authStore';
 import paymentsAPI from '../api/payments';
 import '../styles/pages/Home.css';
 
+// Main component: renders the home page and main service entry points.
 export default function Home() {
   const navigate = useNavigate();
   const [adminType, setAdminType] = useState('pharmacy');
@@ -415,6 +416,7 @@ export default function Home() {
     }
   };
 
+  // Page layout: hero, service sections, featured content, admin links, and calls to action.
   return (
     <div className="home">
       {/* Hero Section */}

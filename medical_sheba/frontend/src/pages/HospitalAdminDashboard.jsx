@@ -17,6 +17,7 @@ const createEmptyAvailabilityRow = () => ({
   slots: [{ start_time: '10:00', end_time: '10:15' }],
 });
 
+// Main component: renders the hospital admin dashboard page.
 const HospitalAdminDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -1156,6 +1157,7 @@ const HospitalAdminDashboard = () => {
     return <div className="loading">Loading Hospital Dashboard...</div>;
   }
 
+  // Page layout: dashboard header, tab buttons, selected tab content, and add/edit modal.
   return (
     <div className="admin-dashboard">
       <div className="admin-header">
