@@ -32,7 +32,7 @@ export default function Footer() {
             {/* Social Links */}
             <div className="flex gap-3 pt-2 justify-center sm:justify-start">
               <a 
-                href="https://facebook.com" 
+                href="https://www.facebook.com/profile.php?id=61589922942262" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="p-2 bg-gray-100 hover:bg-blue-600 text-gray-700 hover:text-white rounded-lg transition-colors duration-200"
@@ -94,10 +94,10 @@ export default function Footer() {
                 <div className="text-xs sm:text-sm text-center sm:text-left">
                   <p className="text-gray-500 uppercase text-xs tracking-wide">Email</p>
                   <a 
-                    href="mailto:support@medisheba.com"
+                    href="mailto:support.medisheba@gmail.com"
                     className="text-gray-900 font-semibold hover:text-blue-600 transition-colors"
                   >
-                    support@medisheba.com
+                    support.medisheba@gmail.com
                   </a>
                 </div>
               </div>

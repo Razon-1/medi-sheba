@@ -34,7 +34,7 @@ DATABASES = {
 # Email Configuration for development
 
 # Get credentials from .env file
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@medisheba.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support.medisheba@gmail.com')
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
 # Choose ONE email backend below:
