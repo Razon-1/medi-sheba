@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Phone, Star, Award } from 'lucide-react';
+import { Search } from 'lucide-react';
 import DoctorCard from '../components/DoctorCard';
 import Pagination from '../components/Pagination';
 import { doctorsAPI } from '../api/doctors';
@@ -22,7 +22,7 @@ export default function Doctors() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 16;
+  const ITEMS_PER_PAGE = 15;
 
   useEffect(() => {
     fetchDoctors();
@@ -31,27 +31,7 @@ export default function Doctors() {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      let allDoctors = [];
-      let page = 1;
-      let hasMore = true;
-
-      // Fetch all pages from backend API (which uses 20-item pagination)
-      while (hasMore) {
-        const response = await doctorsAPI.list({ page });
-        const data = response.data;
-        
-        const pageDoctors = getListData(data);
-
-        if (Array.isArray(data?.results)) {
-          allDoctors = [...allDoctors, ...pageDoctors];
-          // Check if there are more pages
-          hasMore = !!data.next;
-          page++;
-        } else {
-          allDoctors = pageDoctors;
-          hasMore = false;
-        }
-      }
+      const allDoctors = await fetchAllPages((page) => doctorsAPI.list({ page }));
       
       setDoctors(allDoctors);
       setFilteredDoctors(allDoctors);
@@ -70,18 +50,22 @@ export default function Doctors() {
       setCurrentPage(1);
       return;
     }
+    const query = searchQuery.toLowerCase();
     const filtered = doctors.filter(doctor => {
       const fullName = (doctor.user_name || '').toLowerCase();
       const specialty = (doctor.specialty || '').toLowerCase();
+      const hospitalName = (doctor.hospital_name || '').toLowerCase();
       return (
-        fullName.includes(searchQuery.toLowerCase()) ||
-        specialty.includes(searchQuery.toLowerCase())
+        fullName.includes(query) ||
+        specialty.includes(query) ||
+        hospitalName.includes(query)
       );
     });
     setFilteredDoctors(filtered);
     setCurrentPage(1);
   };
 
+  const visibleDoctors = filteredDoctors.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
   return (
     <div className="doctors-page">
       <div className="page-header">
@@ -105,33 +89,33 @@ export default function Doctors() {
       </div>
 
       <div className="filter-info">
-        <p>Showing <strong>{filteredDoctors.length}</strong> doctors</p>
+        <p>
+          Showing <strong>{filteredDoctors.length}</strong> doctors
+        </p>
       </div>
 
-      <div className="doctors-grid">
-        {loading ? (
-          <div className="no-results">
-            <h3>Loading doctors...</h3>
-          </div>
-        ) : error ? (
-          <div className="no-results">
-            <h3>Error</h3>
-            <p>{error}</p>
-            <button onClick={fetchDoctors} className="btn-search">Retry</button>
-          </div>
-        ) : filteredDoctors.length > 0 ? (
-          filteredDoctors
-            .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-            .map(doctor => (
-              <DoctorCard key={doctor.id} doctor={doctor} />
-            ))
-        ) : (
-          <div className="no-results">
-            <h3>No doctors found</h3>
-            <p>Try different search criteria</p>
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div className="no-results">
+          <h3>Loading doctors...</h3>
+        </div>
+      ) : error ? (
+        <div className="no-results">
+          <h3>Error</h3>
+          <p>{error}</p>
+          <button onClick={fetchDoctors} className="btn-search">Retry</button>
+        </div>
+      ) : visibleDoctors.length > 0 ? (
+        <div className="doctors-grid">
+          {visibleDoctors.map((doctor) => (
+            <DoctorCard key={doctor.id} doctor={doctor} />
+          ))}
+        </div>
+      ) : (
+        <div className="no-results">
+          <h3>No doctors found</h3>
+          <p>Try different search criteria</p>
+        </div>
+      )}
 
       {filteredDoctors.length > ITEMS_PER_PAGE && (
         <Pagination
@@ -145,3 +129,26 @@ export default function Doctors() {
     </div>
   );
 }
+
+const fetchAllPages = async (fetchPage) => {
+  let allItems = [];
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await fetchPage(page);
+    const data = response.data;
+    const pageItems = getListData(data);
+
+    if (Array.isArray(data?.results)) {
+      allItems = [...allItems, ...pageItems];
+      hasMore = Boolean(data.next);
+      page += 1;
+    } else {
+      allItems = pageItems;
+      hasMore = false;
+    }
+  }
+
+  return allItems;
+};

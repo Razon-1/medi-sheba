@@ -210,24 +210,6 @@ export default function Ambulance() {
     }
   };
 
-  const handleCallNow = (phoneNumber) => {
-    // Try to detect if device is mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // On mobile, use tel: protocol to initiate call
-      window.location.href = `tel:${phoneNumber}`;
-    } else {
-      // On desktop, copy to clipboard and show alert
-      navigator.clipboard.writeText(phoneNumber).then(() => {
-        alert(`Phone number copied to clipboard: ${phoneNumber}\n\nYou can now dial it manually.`);
-      }).catch(() => {
-        // Fallback if clipboard API fails
-        alert(`Call this number: ${phoneNumber}`);
-      });
-    }
-  };
-
   return (
     <div className="ambulance-page">
       <div className="page-header">
@@ -384,13 +366,6 @@ export default function Ambulance() {
               </div>
 
               <div className="action-buttons">
-                <button 
-                  className="btn-call" 
-                  onClick={() => handleCallNow(ambulance.phone_number)}
-                  disabled={!ambulance.phone_number}
-                >
-                  Call Now
-                </button>
                 <button 
                   className="btn-book"
                   onClick={() => handleOpenRequestModal(ambulance)}

@@ -20,16 +20,23 @@ class EDoctorProfileWriteSerializer(serializers.ModelSerializer):
 class EDoctorProfileListSerializer(serializers.ModelSerializer):
     """Doctor profile list view - minimal info"""
     specialization_display = serializers.CharField(source='get_specialization_display', read_only=True)
+    hospital_display_name = serializers.SerializerMethodField()
     
     class Meta:
         model = EDoctorProfile
         fields = [
             'id', 'doctor_id', 'name', 'specialization', 'specialization_display',
             'qualification', 'experience_years', 'consultation_fee', 'is_verified',
-            'rating', 'review_count', 'is_available', 'hospital_name', 'phone_number',
+            'rating', 'review_count', 'is_available', 'hospital', 'hospital_name',
+            'hospital_display_name', 'phone_number',
             'available_days', 'available_start_time', 'available_end_time',
             'availability_schedule', 'image_url'
         ]
+
+    def get_hospital_display_name(self, obj):
+        if obj.hospital:
+            return obj.hospital.name
+        return obj.hospital_name or 'Private Practice'
 
 
 class EDoctorProfileDetailSerializer(serializers.ModelSerializer):

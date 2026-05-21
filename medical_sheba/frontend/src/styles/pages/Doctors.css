@@ -120,13 +120,16 @@
 .doctors-grid,
 .hospitals-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 1.5rem;
 }
 
 .doctors-page .doctors-grid {
-  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
-  justify-content: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: center;
 }
 
 .blood-actions {
@@ -222,7 +225,7 @@
 @media (max-width: 1024px) {
   .doctors-grid,
   .hospitals-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

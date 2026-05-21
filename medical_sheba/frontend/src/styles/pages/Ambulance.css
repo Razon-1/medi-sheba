@@ -128,8 +128,11 @@
 
 .ambulance-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
-  justify-content: start;
+  max-width: 1200px;
+  margin: 0 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: center;
+  align-items: stretch;
   gap: 20px;
   padding: 0 0 40px;
 }
@@ -325,7 +328,7 @@
 
 .action-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
   padding: 18px;
   border-top: 1px solid #f0f0f0;
@@ -659,8 +662,14 @@
 
 /* Page-scoped protection from other globally imported page styles. */
 .ambulance-page .ambulance-list {
-  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
-  justify-content: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: center;
+}
+
+@media (max-width: 1024px) {
+  .ambulance-page .ambulance-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .ambulance-page .ambulance-card {
@@ -751,7 +760,7 @@
 
 .ambulance-page .ambulance-card .action-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   justify-content: stretch;
   flex-wrap: nowrap;
   gap: 10px;
@@ -771,7 +780,4 @@
     grid-template-columns: 1fr;
   }
 
-  .ambulance-page .ambulance-card .action-buttons {
-    grid-template-columns: 1fr;
-  }
 }

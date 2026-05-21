@@ -163,12 +163,13 @@ class DoctorSerializer(serializers.ModelSerializer):
 class DoctorListSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     hospital_name = serializers.SerializerMethodField()
+    hospital_id = serializers.SerializerMethodField()
     phone = serializers.SerializerMethodField()
     
     class Meta:
         model = Doctor
         fields = [
-            'id', 'user_name', 'specialty', 'hospital_name', 'consultation_fee',
+            'id', 'user_name', 'specialty', 'hospital_id', 'hospital_name', 'consultation_fee',
             'rating', 'is_available', 'is_verified', 'image_url', 'experience_years',
             'qualifications', 'review_count', 'available_days', 'available_time_start',
             'available_time_end', 'phone', 'user', 'requires_authentication'
@@ -182,6 +183,9 @@ class DoctorListSerializer(serializers.ModelSerializer):
     
     def get_hospital_name(self, obj):
         return obj.hospital.name if obj.hospital else "Private Practice"
+
+    def get_hospital_id(self, obj):
+        return obj.hospital_id
 
 
 class DoctorReviewSerializer(serializers.ModelSerializer):

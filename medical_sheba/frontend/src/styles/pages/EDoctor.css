@@ -187,9 +187,10 @@
 /* Doctors List */
 .doctors-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 360px));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
-  justify-content: start;
+  justify-content: center;
+  align-items: stretch;
 }
 
 .doctor-card {
@@ -199,6 +200,9 @@
   overflow: hidden;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .doctor-card:hover {
@@ -275,6 +279,7 @@
 .doctor-details {
   margin-bottom: 15px;
   padding: 0 20px;
+  flex: 1;
 }
 
 .detail-row {
@@ -383,9 +388,10 @@
 
 /* Doctor Actions */
 .doctor-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: auto;
   padding: 0 20px 20px;
 }
 
@@ -413,6 +419,7 @@
 .btn-book {
   background-color: #1abc9c;
   color: white;
+  width: 100%;
 }
 
 .btn-book:hover {
@@ -786,7 +793,7 @@
   }
 
   .doctors-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .consultations-list {
@@ -851,6 +858,10 @@
 
   .doctor-header {
     flex-direction: column;
+  }
+
+  .doctors-list {
+    grid-template-columns: 1fr;
   }
 
   .doctor-actions {

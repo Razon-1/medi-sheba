@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart, Phone } from 'lucide-react';
+import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
@@ -26,7 +26,8 @@ export default function EMedicine() {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 21;
+  const [currentMedicinePage, setCurrentMedicinePage] = useState(1);
+  const ITEMS_PER_PAGE = 15;
   const pharmacyFallbackImage = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop";
 
   useEffect(() => {
@@ -129,31 +130,6 @@ export default function EMedicine() {
     setIsOrderModalOpen(true);
   };
 
-  const handleCallNow = (pharmacy) => {
-    if (!pharmacy || !pharmacy.phone_number) {
-      alert('Phone number not available for this pharmacy');
-      return;
-    }
-
-    const phoneNumber = pharmacy.phone_number.replace(/\s+/g, '');
-    
-    // Try to detect if device is mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // On mobile, use tel: protocol to initiate call
-      window.location.href = `tel:${phoneNumber}`;
-    } else {
-      // On desktop, copy to clipboard and show alert
-      navigator.clipboard.writeText(phoneNumber).then(() => {
-        alert(`Phone number copied to clipboard: ${phoneNumber}\n\nYou can now dial it manually.`);
-      }).catch(() => {
-        // Fallback if clipboard API fails
-        alert(`Call this number: ${phoneNumber}`);
-      });
-    }
-  };
-
   const closeOrderModal = () => {
     setIsOrderModalOpen(false);
     setSelectedPharmacy(null);
@@ -171,6 +147,10 @@ export default function EMedicine() {
       medicine.strength
     ].some((value) => String(value || '').toLowerCase().includes(query));
   });
+
+  useEffect(() => {
+    setCurrentMedicinePage(1);
+  }, [medicineSearchQuery]);
 
   return (
     <div className="emedicine-page">
@@ -340,10 +320,6 @@ export default function EMedicine() {
                   </div>
 
                   <div className="action-buttons">
-                    <button className="btn-call" onClick={() => handleCallNow(pharmacy)} title={`Call ${pharmacy.phone_number}`}>
-                      <Phone size={18} style={{ marginRight: '8px' }} />
-                      Call Now
-                    </button>
                     <button className="btn-order" onClick={() => handleOrderMedicines(pharmacy)}>Order Medicines</button>
                   </div>
                 </div>
@@ -384,7 +360,9 @@ export default function EMedicine() {
           </div>
           <div className="medicines-grid">
             {filteredMedicines.length > 0 ? (
-              filteredMedicines.map(medicine => (
+              filteredMedicines
+                .slice((currentMedicinePage - 1) * ITEMS_PER_PAGE, currentMedicinePage * ITEMS_PER_PAGE)
+                .map(medicine => (
                 <div key={medicine.id} className="medicine-card">
                   <div className="medicine-header">
                     <h4>{medicine.name}</h4>
@@ -404,6 +382,16 @@ export default function EMedicine() {
               </div>
             )}
           </div>
+
+          {filteredMedicines.length > ITEMS_PER_PAGE && (
+            <Pagination
+              currentPage={currentMedicinePage}
+              totalPages={Math.ceil(filteredMedicines.length / ITEMS_PER_PAGE)}
+              totalItems={filteredMedicines.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setCurrentMedicinePage}
+            />
+          )}
         </div>
       )}
 

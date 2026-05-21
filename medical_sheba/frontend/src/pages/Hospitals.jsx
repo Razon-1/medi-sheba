@@ -22,7 +22,7 @@ export default function Hospitals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 16;
+  const ITEMS_PER_PAGE = 15;
 
   useEffect(() => {
     fetchHospitals();
