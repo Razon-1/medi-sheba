@@ -1,6 +1,8 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || (
-  /^https?:\/\//i.test(API_BASE_URL) ? new URL(API_BASE_URL).origin : ''
+  /^https?:\/\//i.test(API_BASE_URL)
+    ? new URL(API_BASE_URL).origin
+    : (import.meta.env.DEV ? 'http://localhost:8000' : '')
 );
 
 export function resolveImageUrl(imageUrl, fallbackUrl) {
