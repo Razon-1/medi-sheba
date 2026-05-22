@@ -91,12 +91,6 @@ export default function Doctors() {
         </div>
       </div>
 
-      <div className="filter-info">
-        <p>
-          Showing <strong>{filteredDoctors.length}</strong> doctors
-        </p>
-      </div>
-
       {loading ? (
         <div className="no-results">
           <h3>Loading doctors...</h3>

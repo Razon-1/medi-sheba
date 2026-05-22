@@ -266,11 +266,6 @@ export default function Ambulance() {
         </div>
       </div>
 
-      {/* Results Count */}
-      <div className="filter-info">
-        <p>Showing <strong>{filteredAmbulances.length}</strong> ambulance services available</p>
-      </div>
-
       {/* Ambulance List */}
       <div className="ambulance-list">
         {loading ? (

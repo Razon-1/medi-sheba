@@ -325,12 +325,13 @@ Medi Sheba Team
         """Public homepage counters."""
         from apps.appointments.models import Appointment
         from apps.doctors.models import Doctor
+        from apps.edoctor.models import EDoctorProfile
         from apps.hospitals.models import Hospital
 
         return Response({
             'active_users': User.objects.filter(is_active=True).count(),
             'hospitals': Hospital.objects.filter(is_active=True).count(),
-            'doctors': Doctor.objects.count(),
+            'doctors': Doctor.objects.count() + EDoctorProfile.objects.count(),
             'appointments': Appointment.objects.count(),
         })
 

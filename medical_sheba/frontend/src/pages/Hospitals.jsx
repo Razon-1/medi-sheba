@@ -107,10 +107,6 @@ export default function Hospitals() {
         </div>
       </div>
 
-      <div className="filter-info">
-        <p>Showing <strong>{filteredHospitals.length}</strong> hospitals</p>
-      </div>
-
       <div className="hospitals-grid">
         {loading ? (
           <div className="no-results">

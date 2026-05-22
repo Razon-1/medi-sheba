@@ -524,10 +524,6 @@ export default function EDoctor() {
             </div>
           </div>
 
-          <p className="results-count">
-            Showing <strong>{filteredDoctors.length}</strong> doctor(s) available
-          </p>
-
           {/* Doctors List */}
           {loading ? (
             <h3>Loading doctors...</h3>

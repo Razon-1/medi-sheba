@@ -225,11 +225,6 @@ export default function EMedicine() {
             </div>
           </div>
 
-          {/* Results Count */}
-          <div className="filter-info">
-            <p>Showing <strong>{filteredPharmacies.length}</strong> pharmacy services available</p>
-          </div>
-
           {/* Pharmacy List */}
           <div className="pharmacy-list">
             {loading ? (
