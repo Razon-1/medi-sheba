@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import useAuthStore from './context/authStore';
 
@@ -35,6 +35,16 @@ import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import './styles/App.css';
 import './styles/Responsive.css';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   const { initializeAuth } = useAuthStore();
 
@@ -45,6 +55,7 @@ function App() {
   return (
     <Router>
       <div className="app">
+        <ScrollToTop />
         <Navbar />
         <main className="main-content">
           <Routes>
