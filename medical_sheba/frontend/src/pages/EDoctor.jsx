@@ -1,197 +1,19 @@
-// Search keyword: Page E-Doctor - online doctor consultations.
 import { useState, useEffect } from 'react';
 import { Star, Clock, MapPin, Phone, AlertCircle } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { edoctorAPI } from '../api/edoctor';
 import paymentsAPI from '../api/payments';
+import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
 import useAuthStore from '../context/authStore';
-import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/EDoctor.css';
 
-const formatAvailabilitySchedule = (doctor) => {
-  if (Array.isArray(doctor.availability_schedule) && doctor.availability_schedule.length > 0) {
-    const scheduleText = doctor.availability_schedule
-      .filter((item) => item.day)
-      .map((item) => {
-        const slots = Array.isArray(item.slots) && item.slots.length > 0
-          ? item.slots
-          : [{ start_time: item.start_time, end_time: item.end_time }];
-        const slotText = slots
-          .filter((slot) => slot.start_time && slot.end_time)
-          .map((slot) => `${String(slot.start_time).slice(0, 5)} - ${String(slot.end_time).slice(0, 5)}`)
-          .join(', ');
-        return slotText ? `${item.day}: ${slotText}` : '';
-      })
-      .filter(Boolean)
-      .join(', ');
-
-    if (scheduleText) return scheduleText;
-  }
-
-  if (doctor.available_start_time && doctor.available_end_time) {
-    const days = doctor.available_days ? `${doctor.available_days}: ` : '';
-    return `${days}${doctor.available_start_time} - ${doctor.available_end_time}`;
-  }
-
-  return 'Check with hospital';
-};
-
-const getAvailabilitySchedule = (doctor) => {
-  if (Array.isArray(doctor?.availability_schedule) && doctor.availability_schedule.length > 0) {
-    return doctor.availability_schedule
-      .map((item) => ({
-        day: item.day,
-        slots: Array.isArray(item.slots) && item.slots.length > 0
-          ? item.slots
-          : [{ start_time: item.start_time, end_time: item.end_time }],
-      }))
-      .filter((item) => item.day && item.slots.some((slot) => slot.start_time && slot.end_time));
-  }
-
-  if (doctor?.available_days && doctor?.available_start_time && doctor?.available_end_time) {
-    return doctor.available_days
-      .split(',')
-      .map((day) => day.trim())
-      .filter(Boolean)
-      .map((day) => ({
-        day,
-        slots: [{ start_time: doctor.available_start_time, end_time: doctor.available_end_time }],
-      }));
-  }
-
-  return [];
-};
-
-const formatDateValue = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const getNextScheduleDates = (schedule, limit = 8, daysAhead = 60) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const availableDays = new Set(schedule.map((item) => item.day.toLowerCase()));
-  const dates = [];
-
-  for (let offset = 0; offset < daysAhead && dates.length < limit; offset += 1) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + offset);
-    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    if (availableDays.has(weekday)) {
-      dates.push(formatDateValue(date));
-    }
-  }
-
-  return dates;
-};
-
-const formatSlotDateLabel = (date) => (
-  new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-);
-
-const getScheduleTimesForDate = (schedule, selectedDate) => {
-  if (!selectedDate) return [];
-  const weekday = new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  const daySchedule = schedule.find((item) => item.day.toLowerCase() === weekday);
-  if (!daySchedule) return [];
-
-  return daySchedule.slots
-    .filter((slot) => slot.start_time && slot.end_time)
-    .map((slot, index) => ({
-      time: String(slot.start_time).slice(0, 5),
-      slotId: `${selectedDate}-${index}`,
-      startTime: slot.start_time,
-      endTime: slot.end_time,
-    }));
-};
-
-const getStoredSlotTimesForDate = (slots, selectedDate) => (
-  slots
-    .filter(slot => {
-      const slotDate = new Date(slot.start_time).toISOString().split('T')[0];
-      return slotDate === selectedDate && slot.status === 'available';
-    })
-    .map(slot => {
-      const startTime = new Date(slot.start_time);
-      const hours = String(startTime.getHours()).padStart(2, '0');
-      const minutes = String(startTime.getMinutes()).padStart(2, '0');
-      return {
-        time: `${hours}:${minutes}`,
-        slotId: slot.id,
-        startTime: slot.start_time,
-        endTime: slot.end_time,
-      };
-    })
-);
-
-const getScheduleSlotOptions = (schedule) => (
-  getNextScheduleDates(schedule).flatMap((date) => (
-    getScheduleTimesForDate(schedule, date).map((slot) => ({
-      value: `${date}|${slot.time}`,
-      date,
-      time: slot.time,
-      label: `${formatSlotDateLabel(date)} - ${slot.endTime ? `${slot.time} - ${String(slot.endTime).slice(0, 5)}` : slot.time}`,
-    }))
-  ))
-);
-
-const getStoredSlotOptions = (slots) => (
-  slots
-    .filter((slot) => slot.status === 'available')
-    .map((slot) => {
-      const date = new Date(slot.start_time).toISOString().split('T')[0];
-      const [timeSlot] = getStoredSlotTimesForDate([slot], date);
-      return timeSlot ? {
-        value: `${date}|${timeSlot.time}`,
-        date,
-        time: timeSlot.time,
-        label: `${formatSlotDateLabel(date)} - ${timeSlot.endTime ? `${timeSlot.time} - ${String(timeSlot.endTime).slice(0, 5)}` : timeSlot.time}`,
-      } : null;
-    })
-    .filter(Boolean)
-);
-
-const getErrorMessage = (err, fallback) => {
-  if (!err) return fallback;
-  if (err.detail) return err.detail;
-  if (err.response?.data?.detail) return err.response.data.detail;
-  if (err.response?.data?.error) return err.response.data.error;
-
-  const data = err.response?.data || err;
-  if (data?.gateway_response?.failedreason) return data.gateway_response.failedreason;
-  if (typeof data === 'object') {
-    const fieldError = Object.entries(data)
-      .filter(([key]) => key !== 'gateway_response')
-      .map(([, value]) => {
-        const message = Array.isArray(value)
-          ? value.map((item) => (typeof item === 'object' ? Object.values(item).flat().join(', ') : String(item))).join(', ')
-          : typeof value === 'object'
-            ? Object.values(value).flat().join(', ')
-            : String(value);
-        return message;
-      })
-      .join(' ');
-
-    if (fieldError) return fieldError;
-  }
-
-  if (err.message) return err.message;
-
-  return fallback;
-};
-
-// Main component: renders online doctor consultation page.
 export default function EDoctor() {
   // Set SEO metadata for this page
-  useSEO(pageMetadata.edoctor);
+  useSEO(pageMetadata.edoctor || { 
+    title: 'E-Doctor | Medi Sheba', 
+    description: 'Consult with qualified doctors online' 
+  });
   
   const { user } = useAuthStore();
   
@@ -202,9 +24,9 @@ export default function EDoctor() {
   const [error, setError] = useState(null);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 15;
-  const doctorFallbackImage = "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop";
+  const ITEMS_PER_PAGE = 21;
   const [activeTab, setActiveTab] = useState('doctors');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -219,11 +41,12 @@ export default function EDoctor() {
     scheduled_time: '',
     urgency: 'routine'
   });
-  const [availableSlotOptions, setAvailableSlotOptions] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [availableTimes, setAvailableTimes] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
-  const [bookingPaymentStarting, setBookingPaymentStarting] = useState(false);
-  const [bookingError, setBookingError] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
     fetchDoctors();
@@ -280,25 +103,13 @@ export default function EDoctor() {
     }
   };
 
-  const fetchAvailableSlots = async (doctor) => {
+  const fetchAvailableSlots = async (doctorId) => {
     try {
       setSlotsLoading(true);
-      const schedule = getAvailabilitySchedule(doctor);
-      if (schedule.length > 0) {
-        const slotOptions = getScheduleSlotOptions(schedule);
-        const firstOption = slotOptions[0];
-        setAvailableSlotOptions(slotOptions);
-        setBookingData(prev => ({
-          ...prev,
-          scheduled_date: firstOption?.date || '',
-          scheduled_time: firstOption?.time || '',
-        }));
-        return;
-      }
-
-      const doctorId = doctor?.id || doctor;
       const response = await edoctorAPI.listSlots({ doctor: doctorId });
       const slots = response.data.results || response.data;
+      setAvailableSlots(slots);
+
       // Extract unique dates from slots
       const datesSet = new Set();
       slots.forEach(slot => {
@@ -307,29 +118,43 @@ export default function EDoctor() {
       });
       
       const sortedDates = Array.from(datesSet).sort();
-      const slotOptions = getStoredSlotOptions(slots);
-      const firstOption = slotOptions[0];
-      setAvailableSlotOptions(slotOptions);
-      setBookingData(prev => ({
-        ...prev,
-        scheduled_date: firstOption?.date || '',
-        scheduled_time: firstOption?.time || '',
-      }));
+      setAvailableDates(sortedDates);
+      setBookingData(prev => ({ ...prev, scheduled_date: '', scheduled_time: '' }));
+      setAvailableTimes([]);
     } catch (err) {
       console.error('Error fetching slots:', err);
-      setAvailableSlotOptions([]);
+      setAvailableSlots([]);
+      setAvailableDates([]);
+      setAvailableTimes([]);
     } finally {
       setSlotsLoading(false);
     }
   };
 
-  const handleSlotChange = (value) => {
-    const [scheduledDate, scheduledTime] = value.split('|');
-    setBookingData({
-      ...bookingData,
-      scheduled_date: scheduledDate || '',
-      scheduled_time: scheduledTime || '',
-    });
+  const handleDateChange = (selectedDate) => {
+    setBookingData(prev => ({ ...prev, scheduled_date: selectedDate, scheduled_time: '' }));
+
+    // Filter times for selected date
+    const timesForDate = availableSlots
+      .filter(slot => {
+        const slotDate = new Date(slot.start_time).toISOString().split('T')[0];
+        return slotDate === selectedDate && slot.status === 'available';
+      })
+      .map(slot => {
+        const startTime = new Date(slot.start_time);
+        const endTime = new Date(slot.end_time);
+        const hours = String(startTime.getHours()).padStart(2, '0');
+        const minutes = String(startTime.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+        return {
+          time: timeStr,
+          slotId: slot.id,
+          startTime: slot.start_time,
+          endTime: slot.end_time
+        };
+      });
+
+    setAvailableTimes(timesForDate);
   };
 
   const handleSearch = () => {
@@ -338,6 +163,11 @@ export default function EDoctor() {
     // Apply specialization filter
     if (filterSpecialization) {
       filtered = filtered.filter(doc => doc.specialization === filterSpecialization);
+    }
+
+    // Apply verified only filter
+    if (verifiedOnly) {
+      filtered = filtered.filter(doc => doc.is_verified);
     }
 
     // Apply search
@@ -355,7 +185,7 @@ export default function EDoctor() {
 
   useEffect(() => {
     handleSearch();
-  }, [filterSpecialization]);
+  }, [filterSpecialization, verifiedOnly]);
 
   const getSpecializationLabel = (spec) => {
     const labels = {
@@ -375,79 +205,95 @@ export default function EDoctor() {
     return labels[spec] || spec;
   };
 
-  const startConsultationPayment = async (consultation) => {
-    const amount = Number(consultation.fee_amount ?? consultation.fee ?? selectedDoctor?.consultation_fee);
-
-    if (!amount || amount <= 0) {
-      throw { detail: 'Consultation fee is missing, so SSLCommerz payment cannot start.' };
+  const handleCallNow = (phoneNumber) => {
+    if (!phoneNumber) {
+      alert('Phone number not available for this doctor');
+      return;
     }
 
-    if (!consultation.id) {
-      throw { detail: 'Consultation reference is missing, so SSLCommerz payment cannot start.' };
+    const cleanedNumber = phoneNumber.replace(/\s+/g, '');
+    
+    // Try to detect if device is mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile, use tel: protocol to initiate call
+      window.location.href = `tel:${cleanedNumber}`;
+    } else {
+      // On desktop, copy to clipboard and show alert
+      navigator.clipboard.writeText(cleanedNumber).then(() => {
+        alert(`Phone number copied to clipboard: ${cleanedNumber}\n\nYou can now dial it manually.`);
+      }).catch(() => {
+        // Fallback if clipboard API fails
+        alert(`Call this number: ${cleanedNumber}`);
+      });
     }
-
-    const checkoutResponse = await paymentsAPI.initiateSSLCommerzPayment({
-      amount,
-      payment_type: 'edoctor',
-      reference_id: consultation.id,
-      reference_type: 'edoctor_consultation',
-    });
-    const checkoutUrl = checkoutResponse.gateway_url || checkoutResponse.redirect_url || checkoutResponse.GatewayPageURL || checkoutResponse.redirectGatewayURL;
-
-    if (!checkoutUrl) {
-      throw { detail: 'SSLCommerz did not return a checkout URL.' };
-    }
-
-    window.location.href = checkoutUrl;
   };
 
   const handleBookConsultation = async () => {
     if (!selectedDoctor || !bookingData.patient_name || !bookingData.chief_complaint || !bookingData.scheduled_date || !bookingData.scheduled_time) {
-      setBookingError('Please fill in all required fields.');
+      alert('Please fill in all required fields');
       return;
     }
-
-    setBookingError('');
-    setBookingPaymentStarting(true);
-    let consultation;
 
     try {
       const response = await edoctorAPI.createConsultation({
         ...bookingData,
         doctor: selectedDoctor.id
       });
-      consultation = response.data;
-    } catch (err) {
-      console.error('Error booking consultation:', err);
-      setBookingError(getErrorMessage(err, 'Failed to book consultation'));
-      setBookingPaymentStarting(false);
-      return;
-    }
-
-    fetchConsultations();
-
-    try {
-      await startConsultationPayment({ ...consultation, fee: selectedDoctor.consultation_fee });
-    } catch (err) {
-      console.error('Error starting consultation payment:', err);
-      const paymentError = getErrorMessage(err, 'Payment could not start. Please try again.');
-      setBookingPaymentStarting(false);
+      
+      // Show confirmation with booking details
       setBookingConfirmation({
-        id: consultation.id,
-        consultation_id: consultation.consultation_id,
+        id: response.data.id,
+        consultation_id: response.data.consultation_id,
         doctor_name: selectedDoctor.name,
         patient_name: bookingData.patient_name,
         scheduled_date: bookingData.scheduled_date,
         scheduled_time: bookingData.scheduled_time,
         chief_complaint: bookingData.chief_complaint,
         fee: selectedDoctor.consultation_fee,
-        status: consultation.status || 'scheduled',
-        payment_error: paymentError
+        status: 'confirmed'
       });
+      
+      fetchConsultations();
+    } catch (err) {
+      console.error('Error booking consultation:', err);
+      alert('Failed to book consultation');
     }
   };
 
-  // Page layout: consultation hero, doctor list, filters, and consultation booking modal.
+  const handlePaymentSuccess = async (paymentData) => {
+    try {
+      // Update consultation with payment reference
+      await edoctorAPI.updateConsultation(bookingConfirmation.id, {
+        payment_status: 'paid',
+        payment: paymentData.id,
+      });
+      
+      setShowPayment(false);
+      
+      // Close confirmation modal after a moment
+      setTimeout(() => {
+        setBookingConfirmation(null);
+        setShowBookingForm(false);
+        setBookingData({
+          patient_name: '',
+          patient_email: '',
+          patient_phone: '',
+          patient_age: '',
+          chief_complaint: '',
+          medical_history: '',
+          scheduled_date: '',
+          scheduled_time: '',
+          urgency: 'routine'
+        });
+      }, 1500);
+    } catch (err) {
+      console.error('Error updating consultation after payment:', err);
+      alert('Payment successful but failed to update consultation. Please contact support.');
+    }
+  };
+
   return (
     <div className="edoctor-container">
       <div className="edoctor-header">
@@ -521,8 +367,20 @@ export default function EDoctor() {
                 </button>
               </div>
 
+              <label className="checkbox-label">
+                <input 
+                  type="checkbox"
+                  checked={verifiedOnly}
+                  onChange={(e) => setVerifiedOnly(e.target.checked)}
+                />
+                <span>Verified Doctors Only</span>
+              </label>
             </div>
           </div>
+
+          <p className="results-count">
+            Showing <strong>{filteredDoctors.length}</strong> doctor(s) available
+          </p>
 
           {/* Doctors List */}
           {loading ? (
@@ -541,10 +399,11 @@ export default function EDoctor() {
                 <div key={doctor.id} className="doctor-card">
                   <div className="doctor-image">
                     <img 
-                      src={resolveImageUrl(doctor.image_url, doctorFallbackImage)} 
+                      src={doctor.image_url || "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"} 
                       alt={doctor.name}
-                      onError={(e) => e.target.src = doctorFallbackImage}
+                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"}
                     />
+                    {doctor.is_verified && <div className="badge">Verified</div>}
                   </div>
                   <div className="doctor-header">
                     <div className="doctor-basic">
@@ -583,12 +442,15 @@ export default function EDoctor() {
 
                     <div className="availability-info">
                       <div className="availability-times">
-                        <strong>⏰ Available:</strong>
-                        <span>{formatAvailabilitySchedule(doctor)}</span>
+                        <strong>⏰ Available Time:</strong>
+                        <span>{doctor.available_start_time && doctor.available_end_time ? `${doctor.available_start_time} - ${doctor.available_end_time}` : 'Check with hospital'}</span>
+                      </div>
+                      <div className="contact-for-serial">
+                        <strong>📞 How it works:</strong>
+                        <p>Contact for serial at {doctor.phone_number || 'N/A'}</p>
                       </div>
                     </div>
 
-                    {false && (
                     <div className="rating-section">
                       <div className="stars">
                         {[...Array(5)].map((_, i) => (
@@ -598,17 +460,21 @@ export default function EDoctor() {
                       <span className="rating-value">{doctor.rating}</span>
                       <span className="review-count">({doctor.review_count} reviews)</span>
                     </div>
-                    )}
                   </div>
 
                   <div className="doctor-actions">
+                    <button 
+                      className="btn-call"
+                      onClick={() => handleCallNow(doctor.phone_number)}
+                    >
+                      Call Now
+                    </button>
                     <button 
                       className="btn-book"
                       onClick={() => {
                         setSelectedDoctor(doctor);
                         setShowBookingForm(true);
-                        setBookingError('');
-                        fetchAvailableSlots(doctor);
+                        fetchAvailableSlots(doctor.id);
                       }}
                     >
                       Book Consultation
@@ -675,7 +541,6 @@ export default function EDoctor() {
               <button 
                 className="close-btn"
                 onClick={() => setShowBookingForm(false)}
-                aria-label="Close booking form"
               >
                 ✕
               </button>
@@ -743,35 +608,59 @@ export default function EDoctor() {
                 />
               </div>
 
-              <div className="form-group">
-                <label>Preferred Slot *</label>
-                {slotsLoading ? (
-                  <p style={{ color: '#999', fontSize: '14px' }}>Loading available slots...</p>
-                ) : availableSlotOptions.length > 0 ? (
-                  <select
-                    value={bookingData.scheduled_date && bookingData.scheduled_time ? `${bookingData.scheduled_date}|${bookingData.scheduled_time}` : ''}
-                    onChange={(e) => handleSlotChange(e.target.value)}
-                  >
-                    <option value="">Select preferred date and time</option>
-                    {availableSlotOptions.map((slotOption) => (
-                      <option key={slotOption.value} value={slotOption.value}>
-                        {slotOption.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <p style={{ color: '#e74c3c', fontSize: '14px' }}>No available slots</p>
-                )}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Preferred Date *</label>
+                  {slotsLoading ? (
+                    <p style={{ color: '#999', fontSize: '14px' }}>Loading available dates...</p>
+                  ) : availableDates.length > 0 ? (
+                    <select
+                      value={bookingData.scheduled_date}
+                      onChange={(e) => handleDateChange(e.target.value)}
+                    >
+                      <option value="">Select a date</option>
+                      {availableDates.map(date => (
+                        <option key={date} value={date}>
+                          {new Date(date).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p style={{ color: '#e74c3c', fontSize: '14px' }}>No available dates</p>
+                  )}
+                </div>
+                <div className="form-group">
+                  <label>Preferred Time *</label>
+                  {bookingData.scheduled_date && availableTimes.length > 0 ? (
+                    <select
+                      value={bookingData.scheduled_time}
+                      onChange={(e) => setBookingData({...bookingData, scheduled_time: e.target.value})}
+                    >
+                      <option value="">Select a time</option>
+                      {availableTimes.map(timeSlot => (
+                        <option key={timeSlot.slotId} value={timeSlot.time}>
+                          {timeSlot.time}
+                        </option>
+                      ))}
+                    </select>
+                  ) : bookingData.scheduled_date ? (
+                    <p style={{ color: '#e74c3c', fontSize: '14px' }}>No available times for this date</p>
+                  ) : (
+                    <p style={{ color: '#999', fontSize: '14px' }}>Select a date first</p>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">
                 <label>Urgency</label>
                 <select
                   value={bookingData.urgency}
-                  onChange={(e) => {
-                    setBookingError('');
-                    setBookingData({...bookingData, urgency: e.target.value});
-                  }}
+                  onChange={(e) => setBookingData({...bookingData, urgency: e.target.value})}
                 >
                   <option value="routine">Routine</option>
                   <option value="urgent">Urgent</option>
@@ -779,28 +668,18 @@ export default function EDoctor() {
                 </select>
               </div>
 
-              {bookingError && (
-                <div className="booking-inline-error" role="alert">
-                  {bookingError}
-                </div>
-              )}
-
               <div className="modal-actions">
                 <button 
                   className="btn-cancel"
-                  onClick={() => {
-                    setBookingError('');
-                    setShowBookingForm(false);
-                  }}
+                  onClick={() => setShowBookingForm(false)}
                 >
                   Cancel
                 </button>
                 <button 
                   className="btn-submit"
                   onClick={handleBookConsultation}
-                  disabled={bookingPaymentStarting}
                 >
-                  {bookingPaymentStarting ? 'Opening SSLCommerz...' : 'Book Consultation'}
+                  Book Consultation
                 </button>
               </div>
             </div>
@@ -827,9 +706,7 @@ export default function EDoctor() {
         }}>
           <div className="booking-modal confirmation-modal" onClick={(e) => e.stopPropagation()}>
             <div className="confirmation-icon">✓</div>
-            <h2 style={{ color: bookingConfirmation.payment_error ? '#c2410c' : '#27ae60', textAlign: 'center' }}>
-              {bookingConfirmation.payment_error ? 'Payment Not Started' : 'Consultation Booked Successfully!'}
-            </h2>
+            <h2 style={{ color: '#27ae60', textAlign: 'center' }}>Consultation Booked Successfully!</h2>
             
             <div className="confirmation-details">
               <div className="detail-item">
@@ -880,62 +757,53 @@ export default function EDoctor() {
                   {bookingConfirmation.status.charAt(0).toUpperCase() + bookingConfirmation.status.slice(1)}
                 </span>
               </div>
-
-              {bookingConfirmation.payment_error && (
-                <div className="detail-item payment-warning">
-                  <span className="label">Payment:</span>
-                  <span className="value">{bookingConfirmation.payment_error}</span>
-                </div>
-              )}
             </div>
 
             <div className="modal-actions">
-              {bookingConfirmation.payment_error && (
-                <button
-                  className="btn-submit"
-                  disabled={bookingPaymentStarting}
-                  onClick={async () => {
-                    try {
-                      setBookingPaymentStarting(true);
-                      await startConsultationPayment(bookingConfirmation);
-                    } catch (err) {
-                      console.error('Error retrying consultation payment:', err);
-                      setBookingPaymentStarting(false);
-                      setBookingConfirmation({
-                        ...bookingConfirmation,
-                        payment_error: getErrorMessage(err, 'Payment could not start. Please try again.')
-                      });
-                    }
-                  }}
-                >
-                  {bookingPaymentStarting ? 'Opening SSLCommerz...' : 'Pay with SSLCommerz'}
-                </button>
-              )}
-              {!bookingConfirmation.payment_error && (
-                <button 
-                  className="btn-submit"
-                  onClick={() => {
-                    setBookingConfirmation(null);
-                    setShowBookingForm(false);
-                    setBookingData({
-                      patient_name: '',
-                      patient_email: '',
-                      patient_phone: '',
-                      patient_age: '',
-                      chief_complaint: '',
-                      medical_history: '',
-                      scheduled_date: '',
-                      scheduled_time: '',
-                      urgency: 'routine'
-                    });
-                  }}
-                >
-                  Done
-                </button>
-              )}
+              <button 
+                className="btn-submit"
+                onClick={() => setShowPayment(true)}
+                style={{ backgroundColor: '#3498db', marginRight: '10px' }}
+              >
+                Proceed to Payment - BDT {parseFloat(bookingConfirmation.fee).toFixed(2)}
+              </button>
+              <button 
+                className="btn-submit"
+                onClick={() => {
+                  setBookingConfirmation(null);
+                  setShowBookingForm(false);
+                  setBookingData({
+                    patient_name: '',
+                    patient_email: '',
+                    patient_phone: '',
+                    patient_age: '',
+                    chief_complaint: '',
+                    medical_history: '',
+                    scheduled_date: '',
+                    scheduled_time: '',
+                    urgency: 'routine'
+                  });
+                }}
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Payment Modal for E-Doctor Consultation */}
+      {showPayment && bookingConfirmation && (
+        <Payment
+          isOpen={showPayment}
+          onClose={() => setShowPayment(false)}
+          paymentType="edoctor"
+          amount={parseFloat(bookingConfirmation.fee)}
+          referenceId={bookingConfirmation.id}
+          referenceType="edoctor_consultation"
+          serviceName={`E-Doctor Consultation with ${bookingConfirmation.doctor_name}`}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
       )}
     </div>
   );

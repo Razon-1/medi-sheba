@@ -1,17 +1,17 @@
-// Search keyword: Page E-Medicine - medicine search and pharmacy orders.
 import { useState, useEffect } from 'react';
-import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart } from 'lucide-react';
+import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart, Phone } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
 import OrderMedicinesModal from '../components/OrderMedicinesModal';
-import { resolveImageUrl } from '../utils/images';
 import '../styles/pages/EMedicine.css';
 
-// Main component: renders medicine search and pharmacy ordering page.
 export default function EMedicine() {
   // Set SEO metadata for this page
-  useSEO(pageMetadata.emedicine);
+  useSEO(pageMetadata.emedicine || { 
+    title: 'E-Medicine | Medi Sheba', 
+    description: 'Order medicines online with home delivery' 
+  });
   
   const [pharmacies, setPharmacies] = useState([]);
   const [filteredPharmacies, setFilteredPharmacies] = useState([]);
@@ -20,14 +20,12 @@ export default function EMedicine() {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [medicineSearchQuery, setMedicineSearchQuery] = useState('');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [activeTab, setActiveTab] = useState('pharmacies');
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentMedicinePage, setCurrentMedicinePage] = useState(1);
-  const ITEMS_PER_PAGE = 15;
-  const pharmacyFallbackImage = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop";
+  const ITEMS_PER_PAGE = 21;
 
   useEffect(() => {
     fetchPharmacies();
@@ -89,6 +87,11 @@ export default function EMedicine() {
       filtered = filtered.filter(pharm => pharm.pharmacy_type === filterType);
     }
 
+    // Apply verified only filter
+    if (verifiedOnly) {
+      filtered = filtered.filter(pharm => pharm.is_verified);
+    }
+
     // Apply search
     if (searchQuery.trim()) {
       filtered = filtered.filter(pharm =>
@@ -104,7 +107,7 @@ export default function EMedicine() {
 
   useEffect(() => {
     handleSearch();
-  }, [filterType]);
+  }, [filterType, verifiedOnly]);
 
   const getPharmacyTypeLabel = (type) => {
     const types = {
@@ -129,29 +132,36 @@ export default function EMedicine() {
     setIsOrderModalOpen(true);
   };
 
+  const handleCallNow = (pharmacy) => {
+    if (!pharmacy || !pharmacy.phone_number) {
+      alert('Phone number not available for this pharmacy');
+      return;
+    }
+
+    const phoneNumber = pharmacy.phone_number.replace(/\s+/g, '');
+    
+    // Try to detect if device is mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile, use tel: protocol to initiate call
+      window.location.href = `tel:${phoneNumber}`;
+    } else {
+      // On desktop, copy to clipboard and show alert
+      navigator.clipboard.writeText(phoneNumber).then(() => {
+        alert(`Phone number copied to clipboard: ${phoneNumber}\n\nYou can now dial it manually.`);
+      }).catch(() => {
+        // Fallback if clipboard API fails
+        alert(`Call this number: ${phoneNumber}`);
+      });
+    }
+  };
+
   const closeOrderModal = () => {
     setIsOrderModalOpen(false);
     setSelectedPharmacy(null);
   };
 
-  const filteredMedicines = medicines.filter((medicine) => {
-    const query = medicineSearchQuery.trim().toLowerCase();
-    if (!query) return true;
-
-    return [
-      medicine.name,
-      medicine.generic_name,
-      medicine.medicine_type,
-      medicine.manufacturer,
-      medicine.strength
-    ].some((value) => String(value || '').toLowerCase().includes(query));
-  });
-
-  useEffect(() => {
-    setCurrentMedicinePage(1);
-  }, [medicineSearchQuery]);
-
-  // Page layout: pharmacy/medicine search, medicine cards, and order medicine modal.
   return (
     <div className="emedicine-page">
       <div className="page-header">
@@ -222,7 +232,22 @@ export default function EMedicine() {
                 </button>
               </div>
 
+              <div className="verified-filter">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={verifiedOnly}
+                    onChange={(e) => setVerifiedOnly(e.target.checked)}
+                  />
+                  Verified Pharmacies Only
+                </label>
+              </div>
             </div>
+          </div>
+
+          {/* Results Count */}
+          <div className="filter-info">
+            <p>Showing <strong>{filteredPharmacies.length}</strong> pharmacy services available</p>
           </div>
 
           {/* Pharmacy List */}
@@ -245,10 +270,11 @@ export default function EMedicine() {
                 <div key={pharmacy.id} className="pharmacy-card">
                   <div className="pharmacy-image">
                     <img 
-                      src={resolveImageUrl(pharmacy.image_url, pharmacyFallbackImage)} 
+                      src={pharmacy.image_url || "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"} 
                       alt={pharmacy.name}
-                      onError={(e) => e.target.src = pharmacyFallbackImage}
+                      onError={(e) => e.target.src = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"}
                     />
+                    {pharmacy.is_verified && <div className="badge">Verified</div>}
                   </div>
                   <div className="pharmacy-header">
                     <div className="pharmacy-name-section">
@@ -260,31 +286,40 @@ export default function EMedicine() {
                         {getPharmacyTypeLabel(pharmacy.pharmacy_type)}
                       </span>
                     </div>
+                    <div className="verification-status">
+                      {pharmacy.is_verified ? (
+                        <span className="verified">✓ Verified</span>
+                      ) : (
+                        <span className="unverified">Unverified</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="pharmacy-details">
-                    <div className="detail-item">
-                      <Pill size={16} />
-                      <span className="label">License:</span>
-                      <span className="value">{pharmacy.license_number || 'N/A'}</span>
+                    <div className="detail-row">
+                      <div className="detail-item">
+                        <Pill size={16} />
+                        <span className="label">License:</span>
+                        <span className="value">{pharmacy.license_number}</span>
+                      </div>
+                      <div className="detail-item">
+                        <Clock size={16} />
+                        <span className="label">Delivery:</span>
+                        <span className="value">{pharmacy.delivery_time_hours}h</span>
+                      </div>
                     </div>
 
-                    <div className="detail-item">
-                      <Clock size={16} />
-                      <span className="label">Delivery:</span>
-                      <span className="value">{pharmacy.delivery_time_hours ? `${pharmacy.delivery_time_hours}h` : 'N/A'}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <Pill size={16} />
-                      <span className="label">Contact:</span>
-                      <span className="value">{pharmacy.phone_number || 'N/A'}</span>
-                    </div>
-
-                    <div className="detail-item">
-                      <DollarSign size={16} />
-                      <span className="label">Min Order:</span>
-                      <span className="value">BDT {pharmacy.min_order_amount || '0'}</span>
+                    <div className="detail-row">
+                      <div className="detail-item">
+                        <Pill size={16} />
+                        <span className="label">Contact:</span>
+                        <span className="value">{pharmacy.phone_number}</span>
+                      </div>
+                      <div className="detail-item">
+                        <DollarSign size={16} />
+                        <span className="label">Min Order:</span>
+                        <span className="value">BDT {pharmacy.min_order_amount}</span>
+                      </div>
                     </div>
 
                     <div className="address-info">
@@ -293,7 +328,6 @@ export default function EMedicine() {
                       <span className="value">{pharmacy.address}</span>
                     </div>
 
-                    {false && (
                     <div className="rating-section">
                       <div className="rating">
                         {[...Array(5)].map((_, i) => (
@@ -311,10 +345,13 @@ export default function EMedicine() {
                         <span className="reviews">({pharmacy.review_count} reviews)</span>
                       </div>
                     </div>
-                    )}
                   </div>
 
                   <div className="action-buttons">
+                    <button className="btn-call" onClick={() => handleCallNow(pharmacy)} title={`Call ${pharmacy.phone_number}`}>
+                      <Phone size={18} style={{ marginRight: '8px' }} />
+                      Call Now
+                    </button>
                     <button className="btn-order" onClick={() => handleOrderMedicines(pharmacy)}>Order Medicines</button>
                   </div>
                 </div>
@@ -344,20 +381,9 @@ export default function EMedicine() {
       {activeTab === 'medicines' && (
         <div className="medicines-section">
           <h2>Available Medicines</h2>
-          <div className="medicine-search-box">
-            <Pill size={20} />
-            <input
-              type="text"
-              placeholder="Search medicines by name, generic, type, or manufacturer..."
-              value={medicineSearchQuery}
-              onChange={(e) => setMedicineSearchQuery(e.target.value)}
-            />
-          </div>
           <div className="medicines-grid">
-            {filteredMedicines.length > 0 ? (
-              filteredMedicines
-                .slice((currentMedicinePage - 1) * ITEMS_PER_PAGE, currentMedicinePage * ITEMS_PER_PAGE)
-                .map(medicine => (
+            {medicines.length > 0 ? (
+              medicines.map(medicine => (
                 <div key={medicine.id} className="medicine-card">
                   <div className="medicine-header">
                     <h4>{medicine.name}</h4>
@@ -373,20 +399,10 @@ export default function EMedicine() {
               ))
             ) : (
               <div className="no-results">
-                <p>No medicines found</p>
+                <p>No medicines available</p>
               </div>
             )}
           </div>
-
-          {filteredMedicines.length > ITEMS_PER_PAGE && (
-            <Pagination
-              currentPage={currentMedicinePage}
-              totalPages={Math.ceil(filteredMedicines.length / ITEMS_PER_PAGE)}
-              totalItems={filteredMedicines.length}
-              itemsPerPage={ITEMS_PER_PAGE}
-              onPageChange={setCurrentMedicinePage}
-            />
-          )}
         </div>
       )}
 
