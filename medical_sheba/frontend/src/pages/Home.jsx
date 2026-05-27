@@ -1,7 +1,7 @@
 // Search keyword: Page Home - landing dashboard and main service links.
 import { Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Users, Building2, Droplet, Calendar, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search, Check, Zap } from 'lucide-react';
+import { Users, Building2, Droplet, CheckCircle, Stethoscope, Clock, Award, Truck, Pill, Bell, MapPin, Search, Check, Zap } from 'lucide-react';
 import { useSEO, pageMetadata } from '../utils/seo';
 import useAuthStore from '../context/authStore';
 import paymentsAPI from '../api/payments';
@@ -17,7 +17,6 @@ export default function Home() {
     active_users: null,
     hospitals: null,
     doctors: null,
-    appointments: null,
   });
   const { user } = useAuthStore();
   // Set SEO metadata for this page
@@ -53,7 +52,6 @@ export default function Home() {
     { icon: Users, label: 'Active Users', value: formatStatValue(homeStats.active_users) },
     { icon: Building2, label: 'Hospitals', value: formatStatValue(homeStats.hospitals) },
     { icon: Stethoscope, label: 'Doctors', value: formatStatValue(homeStats.doctors) },
-    { icon: Calendar, label: 'Appointments', value: formatStatValue(homeStats.appointments) },
   ];
 
   const features = [
@@ -74,12 +72,6 @@ export default function Home() {
       title: 'Blood Bank',
       description: 'Find blood donors and manage emergency requests',
       link: '/blood'
-    },
-    {
-      icon: Calendar,
-      title: 'Book Appointments',
-      description: 'Schedule appointments with just a few clicks',
-      link: '/appointments'
     },
     {
       icon: Truck,
