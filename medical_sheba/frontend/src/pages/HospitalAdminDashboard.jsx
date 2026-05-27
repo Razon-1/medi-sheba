@@ -1062,8 +1062,8 @@ const HospitalAdminDashboard = () => {
             appointments.map(appointment => (
               <tr key={appointment.id}>
                 <td>{appointment.appointment_no}</td>
-                <td>{appointment.patient?.first_name} {appointment.patient?.last_name}</td>
-                <td>Dr. {appointment.doctor?.user?.first_name} {appointment.doctor?.user?.last_name}</td>
+                <td>{appointment.patient_name || 'N/A'}</td>
+                <td>{appointment.doctor_name || 'N/A'}</td>
                 <td>{appointment.appointment_date || '-'}</td>
                 <td>{appointment.appointment_time || '-'}</td>
                 <td>{appointment.type}</td>
@@ -1113,8 +1113,8 @@ const HospitalAdminDashboard = () => {
             consultations.map(consultation => (
               <tr key={consultation.id}>
                 <td>{consultation.consultation_id}</td>
-                <td>{consultation.patient_name}</td>
-                <td>Dr. {consultation.doctor?.name}</td>
+                <td>{consultation.patient_name || 'N/A'}</td>
+                <td>{consultation.doctor_name ? 'Dr. ' + consultation.doctor_name : 'N/A'}</td>
                 <td>{consultation.scheduled_date || '-'}</td>
                 <td>{consultation.urgency}</td>
                 <td><span style={{backgroundColor: consultation.status === 'confirmed' ? '#d4edda' : '#fff3cd', padding: '4px 8px', borderRadius: '4px'}}>{consultation.status}</span></td>
