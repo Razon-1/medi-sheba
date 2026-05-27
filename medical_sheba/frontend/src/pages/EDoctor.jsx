@@ -24,7 +24,6 @@ export default function EDoctor() {
   const [error, setError] = useState(null);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 21;
   const [activeTab, setActiveTab] = useState('doctors');
@@ -165,11 +164,6 @@ export default function EDoctor() {
       filtered = filtered.filter(doc => doc.specialization === filterSpecialization);
     }
 
-    // Apply verified only filter
-    if (verifiedOnly) {
-      filtered = filtered.filter(doc => doc.is_verified);
-    }
-
     // Apply search
     if (searchQuery.trim()) {
       filtered = filtered.filter(doc =>
@@ -185,7 +179,7 @@ export default function EDoctor() {
 
   useEffect(() => {
     handleSearch();
-  }, [filterSpecialization, verifiedOnly]);
+  }, [filterSpecialization]);
 
   const getSpecializationLabel = (spec) => {
     const labels = {
@@ -205,30 +199,7 @@ export default function EDoctor() {
     return labels[spec] || spec;
   };
 
-  const handleCallNow = (phoneNumber) => {
-    if (!phoneNumber) {
-      alert('Phone number not available for this doctor');
-      return;
-    }
 
-    const cleanedNumber = phoneNumber.replace(/\s+/g, '');
-    
-    // Try to detect if device is mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // On mobile, use tel: protocol to initiate call
-      window.location.href = `tel:${cleanedNumber}`;
-    } else {
-      // On desktop, copy to clipboard and show alert
-      navigator.clipboard.writeText(cleanedNumber).then(() => {
-        alert(`Phone number copied to clipboard: ${cleanedNumber}\n\nYou can now dial it manually.`);
-      }).catch(() => {
-        // Fallback if clipboard API fails
-        alert(`Call this number: ${cleanedNumber}`);
-      });
-    }
-  };
 
   const handleBookConsultation = async () => {
     if (!selectedDoctor || !bookingData.patient_name || !bookingData.chief_complaint || !bookingData.scheduled_date || !bookingData.scheduled_time) {
@@ -367,14 +338,6 @@ export default function EDoctor() {
                 </button>
               </div>
 
-              <label className="checkbox-label">
-                <input 
-                  type="checkbox"
-                  checked={verifiedOnly}
-                  onChange={(e) => setVerifiedOnly(e.target.checked)}
-                />
-                <span>Verified Doctors Only</span>
-              </label>
             </div>
           </div>
 
@@ -403,7 +366,6 @@ export default function EDoctor() {
                       alt={doctor.name}
                       onError={(e) => e.target.src = "https://images.unsplash.com/photo-1612349317150-e716f8a01751?w=300&h=300&fit=crop"}
                     />
-                    {doctor.is_verified && <div className="badge">Verified</div>}
                   </div>
                   <div className="doctor-header">
                     <div className="doctor-basic">
@@ -450,25 +412,9 @@ export default function EDoctor() {
                         <p>Contact for serial at {doctor.phone_number || 'N/A'}</p>
                       </div>
                     </div>
-
-                    <div className="rating-section">
-                      <div className="stars">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i} className="star">★</span>
-                        ))}
-                      </div>
-                      <span className="rating-value">{doctor.rating}</span>
-                      <span className="review-count">({doctor.review_count} reviews)</span>
-                    </div>
                   </div>
 
                   <div className="doctor-actions">
-                    <button 
-                      className="btn-call"
-                      onClick={() => handleCallNow(doctor.phone_number)}
-                    >
-                      Call Now
-                    </button>
                     <button 
                       className="btn-book"
                       onClick={() => {

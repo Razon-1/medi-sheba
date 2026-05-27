@@ -157,12 +157,6 @@ export default function DoctorDetail() {
           </div>
 
           <div className="badges">
-            {doctor.is_verified && (
-              <span className="badge verified">
-                <CheckCircle size={16} />
-                Verified Doctor
-              </span>
-            )}
             {doctor.is_available && (
               <span className="badge available">
                 <CheckCircle size={16} />

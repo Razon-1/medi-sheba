@@ -278,24 +278,6 @@ export default function BloodBank() {
     }
   };
 
-  const handleContactDonor = (phoneNumber) => {
-    if (!phoneNumber) {
-      return;
-    }
-
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    if (isMobile) {
-      window.location.href = `tel:${phoneNumber}`;
-    } else {
-      navigator.clipboard.writeText(phoneNumber).then(() => {
-        alert(`Phone number copied to clipboard: ${phoneNumber}\n\nYou can now dial it manually.`);
-      }).catch(() => {
-        alert(`Call this number: ${phoneNumber}`);
-      });
-    }
-  };
-
   const formatDonationDate = (dateValue) => {
     if (!dateValue) {
       return 'Not provided';
@@ -504,13 +486,6 @@ export default function BloodBank() {
                         </span>
                       </div>
                     </div>
-                    <button
-                      className="btn-contact"
-                      onClick={() => handleContactDonor(phone)}
-                      disabled={!phone}
-                    >
-                      Contact Donor
-                    </button>
                   </div>
                 );
               })}

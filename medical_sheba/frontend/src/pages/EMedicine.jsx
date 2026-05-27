@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart, Phone } from 'lucide-react';
+import { Pill, MapPin, DollarSign, Clock, AlertCircle, Heart } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
@@ -20,7 +20,6 @@ export default function EMedicine() {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [activeTab, setActiveTab] = useState('pharmacies');
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
@@ -87,11 +86,6 @@ export default function EMedicine() {
       filtered = filtered.filter(pharm => pharm.pharmacy_type === filterType);
     }
 
-    // Apply verified only filter
-    if (verifiedOnly) {
-      filtered = filtered.filter(pharm => pharm.is_verified);
-    }
-
     // Apply search
     if (searchQuery.trim()) {
       filtered = filtered.filter(pharm =>
@@ -107,7 +101,7 @@ export default function EMedicine() {
 
   useEffect(() => {
     handleSearch();
-  }, [filterType, verifiedOnly]);
+  }, [filterType]);
 
   const getPharmacyTypeLabel = (type) => {
     const types = {
@@ -132,30 +126,7 @@ export default function EMedicine() {
     setIsOrderModalOpen(true);
   };
 
-  const handleCallNow = (pharmacy) => {
-    if (!pharmacy || !pharmacy.phone_number) {
-      alert('Phone number not available for this pharmacy');
-      return;
-    }
 
-    const phoneNumber = pharmacy.phone_number.replace(/\s+/g, '');
-    
-    // Try to detect if device is mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // On mobile, use tel: protocol to initiate call
-      window.location.href = `tel:${phoneNumber}`;
-    } else {
-      // On desktop, copy to clipboard and show alert
-      navigator.clipboard.writeText(phoneNumber).then(() => {
-        alert(`Phone number copied to clipboard: ${phoneNumber}\n\nYou can now dial it manually.`);
-      }).catch(() => {
-        // Fallback if clipboard API fails
-        alert(`Call this number: ${phoneNumber}`);
-      });
-    }
-  };
 
   const closeOrderModal = () => {
     setIsOrderModalOpen(false);
@@ -231,23 +202,7 @@ export default function EMedicine() {
                   Hospital
                 </button>
               </div>
-
-              <div className="verified-filter">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={verifiedOnly}
-                    onChange={(e) => setVerifiedOnly(e.target.checked)}
-                  />
-                  Verified Pharmacies Only
-                </label>
-              </div>
             </div>
-          </div>
-
-          {/* Results Count */}
-          <div className="filter-info">
-            <p>Showing <strong>{filteredPharmacies.length}</strong> pharmacy services available</p>
           </div>
 
           {/* Pharmacy List */}
@@ -274,7 +229,6 @@ export default function EMedicine() {
                       alt={pharmacy.name}
                       onError={(e) => e.target.src = "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop"}
                     />
-                    {pharmacy.is_verified && <div className="badge">Verified</div>}
                   </div>
                   <div className="pharmacy-header">
                     <div className="pharmacy-name-section">
@@ -285,13 +239,6 @@ export default function EMedicine() {
                       >
                         {getPharmacyTypeLabel(pharmacy.pharmacy_type)}
                       </span>
-                    </div>
-                    <div className="verification-status">
-                      {pharmacy.is_verified ? (
-                        <span className="verified">✓ Verified</span>
-                      ) : (
-                        <span className="unverified">Unverified</span>
-                      )}
                     </div>
                   </div>
 
@@ -327,31 +274,9 @@ export default function EMedicine() {
                       <span className="label">Address:</span>
                       <span className="value">{pharmacy.address}</span>
                     </div>
-
-                    <div className="rating-section">
-                      <div className="rating">
-                        {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            className="star"
-                            style={{
-                              color: i < Math.round(pharmacy.rating) ? '#FFA500' : '#ddd'
-                            }}
-                          >
-                            ★
-                          </span>
-                        ))}
-                        <span className="rating-value">{pharmacy.rating}</span>
-                        <span className="reviews">({pharmacy.review_count} reviews)</span>
-                      </div>
-                    </div>
                   </div>
 
                   <div className="action-buttons">
-                    <button className="btn-call" onClick={() => handleCallNow(pharmacy)} title={`Call ${pharmacy.phone_number}`}>
-                      <Phone size={18} style={{ marginRight: '8px' }} />
-                      Call Now
-                    </button>
                     <button className="btn-order" onClick={() => handleOrderMedicines(pharmacy)}>Order Medicines</button>
                   </div>
                 </div>
