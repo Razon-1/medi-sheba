@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
-import paymentsAPI from '../api/payments';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/App.css';
 import * as hospitalApi from '../api/hospitals';

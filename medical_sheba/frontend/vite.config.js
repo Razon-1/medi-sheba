@@ -19,6 +19,16 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'payments': ['./src/api/payments'],
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'icons': ['lucide-react']
+        }
+      }
+    }
   }
 })
