@@ -24,7 +24,9 @@ export default function EMedicine() {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [medicineCurrentPage, setMedicineCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 21;
+  const MEDICINES_PER_PAGE = 40;
 
   useEffect(() => {
     fetchPharmacies();
@@ -70,9 +72,29 @@ export default function EMedicine() {
 
   const fetchMedicines = async () => {
     try {
-      const response = await emedicineAPI.listMedicines();
-      const data = response.data.results || response.data;
-      setMedicines(data);
+      let allMedicines = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const response = await emedicineAPI.listMedicines({ page });
+        const data = response.data;
+
+        if (data.results) {
+          allMedicines = [...allMedicines, ...data.results];
+          hasMore = !!data.next;
+          page++;
+        } else if (Array.isArray(data)) {
+          allMedicines = data;
+          hasMore = false;
+        } else {
+          allMedicines = data;
+          hasMore = false;
+        }
+      }
+
+      setMedicines(allMedicines);
+      setMedicineCurrentPage(1);
     } catch (err) {
       console.error('Error fetching medicines:', err);
     }
@@ -308,7 +330,9 @@ export default function EMedicine() {
           <h2>Available Medicines</h2>
           <div className="medicines-grid">
             {medicines.length > 0 ? (
-              medicines.map(medicine => (
+              medicines
+                .slice((medicineCurrentPage - 1) * MEDICINES_PER_PAGE, medicineCurrentPage * MEDICINES_PER_PAGE)
+                .map(medicine => (
                 <div key={medicine.id} className="medicine-card">
                   <div className="medicine-header">
                     <h4>{medicine.name}</h4>
@@ -328,13 +352,23 @@ export default function EMedicine() {
               </div>
             )}
           </div>
+
+          {medicines.length > MEDICINES_PER_PAGE && (
+            <Pagination
+              currentPage={medicineCurrentPage}
+              totalPages={Math.ceil(medicines.length / MEDICINES_PER_PAGE)}
+              totalItems={medicines.length}
+              itemsPerPage={MEDICINES_PER_PAGE}
+              onPageChange={setMedicineCurrentPage}
+            />
+          )}
         </div>
       )}
 
       {/* Order Medicines Modal */}
       <OrderMedicinesModal
         pharmacy={selectedPharmacy}
-        medicines={medicines}
+        medicines={selectedPharmacy ? medicines.filter(medicine => medicine.pharmacy === selectedPharmacy.id) : []}
         isOpen={isOrderModalOpen}
         onClose={closeOrderModal}
         onSuccess={() => {

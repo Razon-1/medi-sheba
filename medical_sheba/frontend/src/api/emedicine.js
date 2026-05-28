@@ -44,6 +44,7 @@ export const emedicineAPI = {
   // Medicines
   listMedicines: async (filters = {}) => {
     const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page);
     if (filters.medicine_type) params.append('medicine_type', filters.medicine_type);
     if (filters.is_available) params.append('is_available', filters.is_available);
     if (filters.search) params.append('search', filters.search);
