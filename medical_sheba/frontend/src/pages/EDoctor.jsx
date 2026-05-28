@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Star, Clock, MapPin, Phone, AlertCircle } from 'lucide-react';
+import { Clock, MapPin, Phone, AlertCircle } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { edoctorAPI } from '../api/edoctor';
-import paymentsAPI from '../api/payments';
 import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
-import useAuthStore from '../context/authStore';
 import '../styles/pages/EDoctor.css';
 
 export default function EDoctor() {
@@ -15,18 +13,14 @@ export default function EDoctor() {
     description: 'Consult with qualified doctors online' 
   });
   
-  const { user } = useAuthStore();
-  
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] = useState([]);
-  const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterSpecialization, setFilterSpecialization] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 21;
-  const [activeTab, setActiveTab] = useState('doctors');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingData, setBookingData] = useState({
@@ -49,11 +43,7 @@ export default function EDoctor() {
 
   useEffect(() => {
     fetchDoctors();
-    // Only fetch consultations if user is authenticated
-    if (user) {
-      fetchConsultations();
-    }
-  }, [user]);
+  }, []);
 
   const fetchDoctors = async () => {
     try {
@@ -89,16 +79,6 @@ export default function EDoctor() {
       setError('Failed to load doctors');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchConsultations = async () => {
-    try {
-      const response = await edoctorAPI.listConsultations();
-      const data = response.data.results || response.data;
-      setConsultations(data);
-    } catch (err) {
-      console.error('Error fetching consultations:', err);
     }
   };
 
@@ -225,8 +205,6 @@ export default function EDoctor() {
         fee: selectedDoctor.consultation_fee,
         status: 'confirmed'
       });
-      
-      fetchConsultations();
     } catch (err) {
       console.error('Error booking consultation:', err);
       alert('Failed to book consultation');
@@ -271,25 +249,7 @@ export default function EDoctor() {
         <h1>Online Doctor Consultation</h1>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="edoctor-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'doctors' ? 'active' : ''}`}
-          onClick={() => setActiveTab('doctors')}
-        >
-          👨‍⚕️ Doctors
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'consultations' ? 'active' : ''}`}
-          onClick={() => setActiveTab('consultations')}
-        >
-          📋 My Consultations
-        </button>
-      </div>
-
-      {/* Doctors Tab */}
-      {activeTab === 'doctors' && (
-        <div className="edoctor-content">
+      <div className="edoctor-content">
           {/* Search and Filter Section */}
           <div className="edoctor-search-section">
             <div className="search-box">
@@ -441,38 +401,6 @@ export default function EDoctor() {
             />
           )}
         </div>
-      )}
-
-      {/* Consultations Tab */}
-      {activeTab === 'consultations' && (
-        <div className="edoctor-content">
-          <h2>Your Consultations</h2>
-          {consultations.length > 0 ? (
-            <div className="consultations-list">
-              {consultations.map(consultation => (
-                <div key={consultation.id} className="consultation-card">
-                  <div className="consultation-header">
-                    <h4>{consultation.consultation_id}</h4>
-                    <span className={`status-badge status-${consultation.status}`}>
-                      {consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="consultation-info">
-                    <p><strong>Doctor:</strong> {consultation.doctor_name}</p>
-                    <p><strong>Date:</strong> {consultation.scheduled_date}</p>
-                    <p><strong>Time:</strong> {consultation.scheduled_time}</p>
-                    <p><strong>Fee:</strong> BDT {parseFloat(consultation.fee_amount).toFixed(2)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="no-results">
-              <p>You haven't booked any consultations yet</p>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Booking Form Modal */}
       {showBookingForm && selectedDoctor && (
