@@ -576,7 +576,7 @@ const HospitalAdminDashboard = () => {
         setEdoctors(edoctors.filter(e => e.id !== id));
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.error || err.response?.data?.detail || err.message);
     }
   };
 

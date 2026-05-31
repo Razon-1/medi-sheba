@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
+from django.db.models.deletion import ProtectedError
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -41,7 +42,7 @@ class IsHospitalAdminOrReadOnly(BasePermission):
 
 class EDoctorProfileViewSet(viewsets.ModelViewSet):
     """ViewSet for doctor profiles with hospital admin management"""
-    queryset = EDoctorProfile.objects.all()
+    queryset = EDoctorProfile.objects.filter(is_deleted=False)
     permission_classes = [IsHospitalAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['specialization', 'is_available', 'is_verified', 'hospital']
@@ -51,17 +52,19 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        # Active e-doctor screens should never show profiles hidden by dashboard delete.
+        queryset = EDoctorProfile.objects.filter(is_deleted=False)
         # Hospital admins only see e-doctors from their hospital
         if user.is_authenticated and user.is_superuser:
-            return EDoctorProfile.objects.all()
+            return queryset
         if user.is_authenticated and 'hospital_admin' in user.roles:
             try:
                 hospital = Hospital.objects.get(admin_user=user)
-                return EDoctorProfile.objects.filter(hospital=hospital)
+                return queryset.filter(hospital=hospital)
             except Hospital.DoesNotExist:
                 return EDoctorProfile.objects.none()
         # Others see all available e-doctors
-        return EDoctorProfile.objects.all()
+        return queryset.filter(is_available=True)
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -69,6 +72,17 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return EDoctorProfileWriteSerializer
         return EDoctorProfileListSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        edoctor = self.get_object()
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            # Existing consultations protect the row, so hide it instead of deleting history.
+            edoctor.is_deleted = True
+            edoctor.is_available = False
+            edoctor.save(update_fields=['is_deleted', 'is_available', 'updated_at'])
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'])
     def my_edoctors(self, request):
@@ -83,10 +97,10 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
         
         try:
             if request.user.is_superuser:
-                edoctors = EDoctorProfile.objects.all()
+                edoctors = EDoctorProfile.objects.filter(is_deleted=False)
             else:
                 hospital = Hospital.objects.get(admin_user=request.user)
-                edoctors = EDoctorProfile.objects.filter(hospital=hospital)
+                edoctors = EDoctorProfile.objects.filter(hospital=hospital, is_deleted=False)
             serializer = EDoctorProfileListSerializer(edoctors, many=True)
             return Response(serializer.data)
         except Hospital.DoesNotExist:
@@ -114,14 +128,14 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def verified_only(self, request):
         """Get only verified doctors"""
-        doctors = EDoctorProfile.objects.filter(is_verified=True, is_available=True)
+        doctors = self.get_queryset().filter(is_verified=True, is_available=True)
         serializer = self.get_serializer(doctors, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def top_rated(self, request):
         """Get top-rated doctors"""
-        doctors = EDoctorProfile.objects.filter(
+        doctors = self.get_queryset().filter(
             is_available=True
         ).order_by('-rating')[:10]
         serializer = self.get_serializer(doctors, many=True)
@@ -132,7 +146,7 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
         """Get currently available doctors"""
         from django.utils import timezone
         current_time = timezone.now().time()
-        doctors = EDoctorProfile.objects.filter(
+        doctors = self.get_queryset().filter(
             is_available=True,
             available_start_time__lte=current_time,
             available_end_time__gte=current_time
@@ -143,7 +157,11 @@ class EDoctorProfileViewSet(viewsets.ModelViewSet):
 
 class ConsultationSlotViewSet(viewsets.ReadOnlyModelViewSet):
     """Consultation slots viewset"""
-    queryset = ConsultationSlot.objects.filter(is_available=True)
+    queryset = ConsultationSlot.objects.filter(
+        is_available=True,
+        doctor__is_deleted=False,
+        doctor__is_available=True,
+    )
     serializer_class = ConsultationSlotSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, OrderingFilter]

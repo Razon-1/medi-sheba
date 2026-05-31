@@ -122,6 +122,12 @@ class EDoctorConsultationCreateSerializer(serializers.ModelSerializer):
         patient_phone = (attrs.get('patient_phone') or '').strip()
         active_statuses = ['scheduled', 'confirmed', 'ongoing']
 
+        # Direct API booking must also respect dashboard delete/unavailable state.
+        if doctor and (doctor.is_deleted or not doctor.is_available):
+            raise serializers.ValidationError({
+                'doctor': 'This e-doctor is no longer available for consultation.'
+            })
+
         if doctor and scheduled_date and scheduled_time:
             base_query = EDoctorConsultation.objects.filter(
                 doctor=doctor,

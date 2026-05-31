@@ -74,6 +74,8 @@ class EDoctorProfile(models.Model):
     
     # Image
     image_url = models.CharField(max_length=500, null=True, blank=True)
+    # Soft delete keeps old consultation history while hiding the e-doctor from active lists.
+    is_deleted = models.BooleanField(default=False)
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
