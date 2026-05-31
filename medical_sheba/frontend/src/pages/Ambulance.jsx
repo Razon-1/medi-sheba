@@ -5,6 +5,7 @@ import Pagination from '../components/Pagination';
 import { ambulanceAPI } from '../api/ambulance';
 import { useSEO, pageMetadata } from '../utils/seo';
 import { resolveImageUrl } from '../utils/images';
+import { fetchPaginatedList } from '../utils/pagination';
 import '../styles/pages/Ambulance.css';
 
 // Main component: renders public ambulance services and booking request form.
@@ -44,28 +45,16 @@ export default function Ambulance() {
   const fetchAmbulances = async () => {
     try {
       setLoading(true);
-      let allAmbulances = [];
-      let page = 1;
-      let hasMore = true;
-
-      // Fetch all pages from backend API (which uses 20-item pagination)
-      while (hasMore) {
-        const response = await ambulanceAPI.listServices({ page });
-        const data = response.data;
-        
-        if (data.results) {
-          allAmbulances = [...allAmbulances, ...data.results];
-          // Check if there are more pages
-          hasMore = !!data.next;
-          page++;
-        } else if (Array.isArray(data)) {
-          allAmbulances = data;
-          hasMore = false;
-        } else {
-          allAmbulances = data;
-          hasMore = false;
+      const allAmbulances = await fetchPaginatedList(
+        (page) => ambulanceAPI.listServices({ page }),
+        {
+          onFirstPage: (firstAmbulances) => {
+            setAmbulances(firstAmbulances);
+            setFilteredAmbulances(firstAmbulances);
+            setLoading(false);
+          },
         }
-      }
+      );
       
       setAmbulances(allAmbulances);
       setFilteredAmbulances(allAmbulances);

@@ -5,6 +5,7 @@ import useAuthStore from '../context/authStore';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/App.css';
 import * as hospitalApi from '../api/hospitals';
+import paymentsAPI from '../api/payments';
 
 // Main component: renders hospital creation and subscription setup page.
 const HospitalCreatePage = () => {

@@ -155,6 +155,7 @@ export default function Appointments() {
   const [error, setError] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [cancelError, setCancelError] = useState('');
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
@@ -206,7 +207,13 @@ export default function Appointments() {
     createdAt: consultation.created_at,
     updatedAt: consultation.updated_at,
     cancelMessage: 'E-Doctor consultations can be cancelled before hospital confirmation.',
-    cancel: () => edoctorAPI.cancelConsultation(consultation.id),
+    cancel: async (reason) => {
+      try {
+        return await edoctorAPI.cancelConsultation(consultation.id, reason);
+      } catch (err) {
+        return edoctorAPI.updateConsultationStatus(consultation.id, 'cancelled');
+      }
+    },
   });
 
   const normalizeAmbulanceRequest = (request) => ({
@@ -330,12 +337,14 @@ export default function Appointments() {
   const openCancelModal = (service) => {
     setCancelTarget(service);
     setCancelReason('');
+    setCancelError('');
   };
 
   const closeCancelModal = () => {
     if (cancelling) return;
     setCancelTarget(null);
     setCancelReason('');
+    setCancelError('');
   };
 
   const handleCancelService = async () => {
@@ -343,12 +352,21 @@ export default function Appointments() {
 
     try {
       setCancelling(true);
+      setCancelError('');
+      setError(null);
       await cancelTarget.cancel(cancelReason.trim());
-      closeCancelModal();
+      setServices((current) => current.map((service) => (
+        service.id === cancelTarget.id
+          ? { ...service, status: 'cancelled', updatedAt: new Date().toISOString() }
+          : service
+      )));
+      setCancelTarget(null);
+      setCancelReason('');
       await fetchServices();
     } catch (err) {
       console.error('Cancel service error:', err);
-      const message = err.response?.data?.detail || err.response?.data?.error || 'Unable to cancel this service right now.';
+      const message = err.response?.data?.detail || err.response?.data?.error || err.detail || err.error || 'Unable to cancel this service right now.';
+      setCancelError(message);
       setError(message);
     } finally {
       setCancelling(false);
@@ -692,6 +710,11 @@ export default function Appointments() {
                   placeholder="Optional, but helpful for the provider..."
                 />
               </label>
+              {cancelError && (
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                  {cancelError}
+                </div>
+              )}
             </div>
             <div className="flex flex-col-reverse gap-3 border-t border-gray-200 p-5 sm:flex-row sm:justify-end">
               <button

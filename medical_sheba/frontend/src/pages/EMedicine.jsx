@@ -4,6 +4,7 @@ import Pagination from '../components/Pagination';
 import { emedicineAPI } from '../api/emedicine';
 import { useSEO, pageMetadata } from '../utils/seo';
 import OrderMedicinesModal from '../components/OrderMedicinesModal';
+import { fetchPaginatedList } from '../utils/pagination';
 import '../styles/pages/EMedicine.css';
 
 export default function EMedicine() {
@@ -36,28 +37,16 @@ export default function EMedicine() {
   const fetchPharmacies = async () => {
     try {
       setLoading(true);
-      let allPharmacies = [];
-      let page = 1;
-      let hasMore = true;
-
-      // Fetch all pages from backend API (which uses 20-item pagination)
-      while (hasMore) {
-        const response = await emedicineAPI.listPharmacies({ page });
-        const data = response.data;
-        
-        if (data.results) {
-          allPharmacies = [...allPharmacies, ...data.results];
-          // Check if there are more pages
-          hasMore = !!data.next;
-          page++;
-        } else if (Array.isArray(data)) {
-          allPharmacies = data;
-          hasMore = false;
-        } else {
-          allPharmacies = data;
-          hasMore = false;
+      const allPharmacies = await fetchPaginatedList(
+        (page) => emedicineAPI.listPharmacies({ page }),
+        {
+          onFirstPage: (firstPharmacies) => {
+            setPharmacies(firstPharmacies);
+            setFilteredPharmacies(firstPharmacies);
+            setLoading(false);
+          },
         }
-      }
+      );
       
       setPharmacies(allPharmacies);
       setFilteredPharmacies(allPharmacies);
@@ -72,26 +61,15 @@ export default function EMedicine() {
 
   const fetchMedicines = async () => {
     try {
-      let allMedicines = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const response = await emedicineAPI.listMedicines({ page });
-        const data = response.data;
-
-        if (data.results) {
-          allMedicines = [...allMedicines, ...data.results];
-          hasMore = !!data.next;
-          page++;
-        } else if (Array.isArray(data)) {
-          allMedicines = data;
-          hasMore = false;
-        } else {
-          allMedicines = data;
-          hasMore = false;
+      const allMedicines = await fetchPaginatedList(
+        (page) => emedicineAPI.listMedicines({ page }),
+        {
+          onFirstPage: (firstMedicines) => {
+            setMedicines(firstMedicines);
+            setMedicineCurrentPage(1);
+          },
         }
-      }
+      );
 
       setMedicines(allMedicines);
       setMedicineCurrentPage(1);

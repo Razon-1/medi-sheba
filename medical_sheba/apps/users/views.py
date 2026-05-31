@@ -29,15 +29,22 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['district', 'is_active', 'is_verified']
     search_fields = ['email', 'phone', 'first_name', 'last_name']
     ordering_fields = ['created_at', 'first_name']
     ordering = ['-created_at']
 
+    def _is_platform_admin(self, user):
+        return (
+            user.is_authenticated
+            and (user.is_superuser or 'admin' in getattr(user, 'roles', []))
+        )
+
     def get_queryset(self):
         user = self.request.user
-        if user.is_authenticated and user.is_superuser:
+        if self._is_platform_admin(user):
             return User.objects.all()
         if user.is_authenticated:
             return User.objects.filter(pk=user.pk)

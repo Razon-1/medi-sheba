@@ -43,8 +43,8 @@ export const edoctorAPI = {
   confirmConsultation: (id) =>
     apiClient.post(`/edoctor/consultations/${id}/confirm/`),
   
-  cancelConsultation: (id) =>
-    apiClient.post(`/edoctor/consultations/${id}/cancel/`),
+  cancelConsultation: (id, reason = '') =>
+    apiClient.post(`/edoctor/consultations/${id}/cancel/`, { reason }),
   
   startConsultation: (id) =>
     apiClient.post(`/edoctor/consultations/${id}/start_consultation/`),

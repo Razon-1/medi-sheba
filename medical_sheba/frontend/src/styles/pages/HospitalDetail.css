@@ -364,11 +364,9 @@
 
 .cta-buttons {
   display: flex;
-  gap: 1rem;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
-  max-width: 520px;
+  max-width: 260px;
   margin: 0 auto;
 }
 

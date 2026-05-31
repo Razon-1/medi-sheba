@@ -4,7 +4,72 @@ import Pagination from '../components/Pagination';
 import { edoctorAPI } from '../api/edoctor';
 import Payment from '../components/Payment';
 import { useSEO, pageMetadata } from '../utils/seo';
+import { fetchPaginatedList } from '../utils/pagination';
 import '../styles/pages/EDoctor.css';
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const formatDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const normalizeTimeValue = (time) => {
+  if (!time) return '';
+  return String(time).slice(0, 5);
+};
+
+const buildFallbackSlotsFromSchedule = (doctor, daysAhead = 30) => {
+  const schedule = Array.isArray(doctor?.availability_schedule) && doctor.availability_schedule.length > 0
+    ? doctor.availability_schedule
+    : String(doctor?.available_days || '')
+        .split(',')
+        .map((day) => day.trim())
+        .filter(Boolean)
+        .map((day) => ({
+          day,
+          slots: [{
+            start_time: normalizeTimeValue(doctor?.available_start_time),
+            end_time: normalizeTimeValue(doctor?.available_end_time),
+          }],
+        }));
+
+  if (!schedule.length) return [];
+
+  const slots = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let offset = 0; offset < daysAhead; offset += 1) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + offset);
+    const weekday = WEEKDAYS[date.getDay()];
+    const dateKey = formatDateKey(date);
+
+    schedule
+      .filter((item) => String(item.day || '').trim().toLowerCase() === weekday.toLowerCase())
+      .forEach((item, itemIndex) => {
+        (item.slots || []).forEach((slot, slotIndex) => {
+          const startTime = normalizeTimeValue(slot.start_time);
+          const endTime = normalizeTimeValue(slot.end_time);
+          if (!startTime || !endTime) return;
+
+          slots.push({
+            id: `schedule-${dateKey}-${itemIndex}-${slotIndex}`,
+            start_time: `${dateKey}T${startTime}:00`,
+            end_time: `${dateKey}T${endTime}:00`,
+            status: 'available',
+            is_available: true,
+            generated_from_schedule: true,
+          });
+        });
+      });
+  }
+
+  return slots;
+};
 
 export default function EDoctor() {
   // Set SEO metadata for this page
@@ -48,28 +113,16 @@ export default function EDoctor() {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      let allDoctors = [];
-      let page = 1;
-      let hasMore = true;
-
-      // Fetch all pages from backend API (which uses 20-item pagination)
-      while (hasMore) {
-        const response = await edoctorAPI.listDoctors({ page });
-        const data = response.data;
-        
-        if (data.results) {
-          allDoctors = [...allDoctors, ...data.results];
-          // Check if there are more pages
-          hasMore = !!data.next;
-          page++;
-        } else if (Array.isArray(data)) {
-          allDoctors = data;
-          hasMore = false;
-        } else {
-          allDoctors = data;
-          hasMore = false;
+      const allDoctors = await fetchPaginatedList(
+        (page) => edoctorAPI.listDoctors({ page }),
+        {
+          onFirstPage: (firstDoctors) => {
+            setDoctors(firstDoctors);
+            setFilteredDoctors(firstDoctors);
+            setLoading(false);
+          },
         }
-      }
+      );
       
       setDoctors(allDoctors);
       setFilteredDoctors(allDoctors);
@@ -86,7 +139,11 @@ export default function EDoctor() {
     try {
       setSlotsLoading(true);
       const response = await edoctorAPI.listSlots({ doctor: doctorId });
-      const slots = response.data.results || response.data;
+      const apiSlots = response.data.results || response.data;
+      const doctor = doctors.find((item) => item.id === doctorId) || selectedDoctor;
+      const slots = Array.isArray(apiSlots) && apiSlots.length > 0
+        ? apiSlots
+        : buildFallbackSlotsFromSchedule(doctor);
       setAvailableSlots(slots);
 
       // Extract unique dates from slots
@@ -102,8 +159,16 @@ export default function EDoctor() {
       setAvailableTimes([]);
     } catch (err) {
       console.error('Error fetching slots:', err);
-      setAvailableSlots([]);
-      setAvailableDates([]);
+      const doctor = doctors.find((item) => item.id === doctorId) || selectedDoctor;
+      const fallbackSlots = buildFallbackSlotsFromSchedule(doctor);
+      const datesSet = new Set();
+      fallbackSlots.forEach((slot) => {
+        const date = new Date(slot.start_time).toISOString().split('T')[0];
+        if (date) datesSet.add(date);
+      });
+
+      setAvailableSlots(fallbackSlots);
+      setAvailableDates(Array.from(datesSet).sort());
       setAvailableTimes([]);
     } finally {
       setSlotsLoading(false);
@@ -137,6 +202,7 @@ export default function EDoctor() {
   };
 
   const handleSearch = () => {
+    const query = searchQuery.trim().toLowerCase();
     let filtered = doctors;
 
     // Apply specialization filter
@@ -145,12 +211,24 @@ export default function EDoctor() {
     }
 
     // Apply search
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(doc =>
-        doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.hospital_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    if (query) {
+      filtered = filtered.filter((doc) => {
+        const searchableText = [
+          doc.name,
+          doc.specialization,
+          doc.specialization_display,
+          doc.hospital_name,
+          doc.hospital_display_name,
+          doc.phone_number,
+          doc.qualification,
+          doc.specialties,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        return searchableText.includes(query);
+      });
     }
 
     setFilteredDoctors(filtered);
@@ -159,7 +237,7 @@ export default function EDoctor() {
 
   useEffect(() => {
     handleSearch();
-  }, [filterSpecialization]);
+  }, [doctors, filterSpecialization, searchQuery]);
 
   const getSpecializationLabel = (spec) => {
     const labels = {
@@ -259,6 +337,7 @@ export default function EDoctor() {
                 placeholder="Search by doctor name, specialization, or hospital..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
               <button onClick={handleSearch}>Search</button>
             </div>
@@ -633,29 +712,9 @@ export default function EDoctor() {
               <button 
                 className="btn-submit"
                 onClick={() => setShowPayment(true)}
-                style={{ backgroundColor: '#3498db', marginRight: '10px' }}
+                style={{ backgroundColor: '#3498db', width: '100%' }}
               >
                 Proceed to Payment - BDT {parseFloat(bookingConfirmation.fee).toFixed(2)}
-              </button>
-              <button 
-                className="btn-submit"
-                onClick={() => {
-                  setBookingConfirmation(null);
-                  setShowBookingForm(false);
-                  setBookingData({
-                    patient_name: '',
-                    patient_email: '',
-                    patient_phone: '',
-                    patient_age: '',
-                    chief_complaint: '',
-                    medical_history: '',
-                    scheduled_date: '',
-                    scheduled_time: '',
-                    urgency: 'routine'
-                  });
-                }}
-              >
-                Done
               </button>
             </div>
           </div>

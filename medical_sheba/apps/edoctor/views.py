@@ -174,10 +174,9 @@ class IsPatientOrReadOnly(BasePermission):
             return obj.doctor.hospital.admin_user == request.user
         if not request.user.is_authenticated:
             return False
-        if obj.status == 'confirmed' and getattr(view, 'action', None) == 'cancel':
-            return False
         return (
-            obj.patient_email == request.user.email
+            obj.patient_id == request.user.id
+            or obj.patient_email == request.user.email
             or (getattr(request.user, 'phone', None) and obj.patient_phone == request.user.phone)
         )
 
@@ -267,13 +266,24 @@ class EDoctorConsultationViewSet(viewsets.ModelViewSet):
     def cancel(self, request, pk=None):
         """Cancel a consultation"""
         consultation = self.get_object()
-        if consultation.status == 'scheduled':
+        if consultation.status == 'cancelled':
+            serializer = EDoctorConsultationDetailSerializer(consultation)
+            return Response(serializer.data)
+
+        if consultation.status in ['scheduled', 'confirmed']:
             consultation.status = 'cancelled'
-            consultation.save(update_fields=['status', 'updated_at'])
+            update_fields = ['status', 'updated_at']
+            if consultation.slot:
+                consultation.slot.status = 'available'
+                consultation.slot.is_available = True
+                consultation.slot.save(update_fields=['status', 'is_available', 'updated_at'])
+                consultation.slot = None
+                update_fields.append('slot')
+            consultation.save(update_fields=update_fields)
             serializer = EDoctorConsultationDetailSerializer(consultation)
             return Response(serializer.data)
         return Response(
-            {'error': 'Cannot cancel consultation in this status'},
+            {'error': 'Cannot cancel consultation after it has started or completed.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 

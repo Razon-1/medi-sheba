@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import useAuthStore from '../context/authStore';
 import { medicineAPI } from '../api/emedicine';
 import { uploadImage } from '../api/hospitals';
+import paymentsAPI from '../api/payments';
 import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/pages/PharmacyCreatePage.css';
 import '../styles/App.css';

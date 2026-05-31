@@ -5,13 +5,8 @@ import DoctorCard from '../components/DoctorCard';
 import Pagination from '../components/Pagination';
 import { doctorsAPI } from '../api/doctors';
 import { useSEO, pageMetadata } from '../utils/seo';
+import { fetchPaginatedList } from '../utils/pagination';
 import '../styles/pages/Doctors.css';
-
-const getListData = (data) => {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.results)) return data.results;
-  return [];
-};
 
 // Main component: renders the doctors listing page.
 export default function Doctors() {
@@ -33,7 +28,16 @@ export default function Doctors() {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const allDoctors = await fetchAllPages((page) => doctorsAPI.list({ page }));
+      const allDoctors = await fetchPaginatedList(
+        (page) => doctorsAPI.list({ page }),
+        {
+          onFirstPage: (firstDoctors) => {
+            setDoctors(firstDoctors);
+            setFilteredDoctors(firstDoctors);
+            setLoading(false);
+          },
+        }
+      );
       
       setDoctors(allDoctors);
       setFilteredDoctors(allDoctors);
@@ -126,26 +130,3 @@ export default function Doctors() {
     </div>
   );
 }
-
-const fetchAllPages = async (fetchPage) => {
-  let allItems = [];
-  let page = 1;
-  let hasMore = true;
-
-  while (hasMore) {
-    const response = await fetchPage(page);
-    const data = response.data;
-    const pageItems = getListData(data);
-
-    if (Array.isArray(data?.results)) {
-      allItems = [...allItems, ...pageItems];
-      hasMore = Boolean(data.next);
-      page += 1;
-    } else {
-      allItems = pageItems;
-      hasMore = false;
-    }
-  }
-
-  return allItems;
-};

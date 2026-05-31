@@ -312,20 +312,13 @@ export default function HospitalDetail() {
       {/* CTA Section */}
       <section className="cta-section">
         <h2>Need Medical Attention?</h2>
-        <p>Schedule an appointment or contact the hospital directly</p>
+        <p>Find doctors and schedule your appointment</p>
         <div className="cta-buttons">
           <button 
             onClick={() => navigate('/doctors')} 
             className="btn-primary"
           >
             Find Doctors
-          </button>
-          <button 
-            onClick={() => handleCallNow(hospital.phone_primary)}
-            className="btn-secondary"
-          >
-            <Phone size={18} />
-            Call Now
           </button>
         </div>
       </section>

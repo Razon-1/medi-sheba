@@ -5,6 +5,7 @@ import Pagination from '../components/Pagination';
 import { bloodAPI } from '../api/blood';
 import useAuthStore from '../context/authStore';
 import { useSEO, pageMetadata } from '../utils/seo';
+import { fetchPaginatedList } from '../utils/pagination';
 import '../styles/pages/Blood.css';
 
 // Main component: renders blood donor search and blood request tools.
@@ -60,23 +61,20 @@ export default function BloodBank() {
   const fetchDonors = async (savedDonor = null) => {
     try {
       setLoading(true);
-      let allDonorsData = [];
-      let page = 1;
-      let hasMore = true;
-      
-      while (hasMore) {
-        const response = await bloodAPI.listDonors({ page });
-        const data = response.data;
-        const pageDonors = Array.isArray(data?.results)
-          ? data.results
-          : Array.isArray(data)
-            ? data
-            : [];
-
-        allDonorsData = [...allDonorsData, ...pageDonors];
-        hasMore = !!data?.next;
-        page++;
-      }
+      const allDonorsData = await fetchPaginatedList(
+        (page) => bloodAPI.listDonors({ page }),
+        {
+          onFirstPage: (firstDonors) => {
+            const firstVisibleDonors = mergeSavedDonor(firstDonors, savedDonor);
+            setAllDonors(firstVisibleDonors);
+            setBloodDonors(getCurrentPageDonors(firstVisibleDonors, 1));
+            setTotalCount(firstVisibleDonors.length);
+            setTotalPages(Math.ceil(firstVisibleDonors.length / ITEMS_PER_PAGE));
+            setCurrentPage(1);
+            setLoading(false);
+          },
+        }
+      );
 
       const visibleDonors = mergeSavedDonor(allDonorsData, savedDonor);
 

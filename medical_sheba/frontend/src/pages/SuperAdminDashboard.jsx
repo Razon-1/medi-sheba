@@ -14,10 +14,14 @@ import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/AdminDashboard.css';
 
 const adminRoleOptions = ['hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin', 'admin'];
-const adminRoleLabels = {
+const userRoleOptions = ['patient', 'hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin', 'doctor', 'donor', 'admin'];
+const userRoleLabels = {
+  patient: 'Patient',
   hospital_admin: 'Hospital Admin',
   pharmacy_admin: 'Pharmacy Admin',
   ambulance_driver_admin: 'Ambulance Driver Admin',
+  doctor: 'Doctor',
+  donor: 'Donor',
   admin: 'Super Admin',
 };
 const paymentStatuses = ['pending', 'processing', 'success', 'failed', 'cancelled', 'refunded'];
@@ -42,6 +46,12 @@ const getRows = (response) => {
   return Array.isArray(data) ? data : data?.results || [];
 };
 
+const getTotalCount = (response) => {
+  const data = response?.data ?? response;
+  if (typeof data?.count === 'number') return data.count;
+  return getRows(response).length;
+};
+
 const getMessage = (err, fallback) => {
   const data = err?.response?.data || err?.data || err;
   if (data?.detail) return data.detail;
@@ -58,6 +68,17 @@ const getMessage = (err, fallback) => {
     if (fieldMessages.length) return fieldMessages.join(' ');
   }
   return err?.message || fallback;
+};
+
+const getUserRoleValue = (account) => {
+  if (account.is_superuser) return 'admin';
+  return (account.roles || []).find((role) => userRoleOptions.includes(role)) || account.roles?.[0] || 'patient';
+};
+
+const getUserRoleLabel = (account) => {
+  if (account.is_superuser) return 'Main Super Admin';
+  const roles = account.roles?.length ? account.roles : ['patient'];
+  return roles.map((role) => userRoleLabels[role] || role).join(', ');
 };
 
 const validateAdminForm = (admin) => {
@@ -113,6 +134,14 @@ export default function SuperAdminDashboard() {
     consultations: [],
     payments: [],
     subscriptions: [],
+  });
+  const [summaryCounts, setSummaryCounts] = useState({
+    users: 0,
+    hospitals: 0,
+    pharmacies: 0,
+    ambulances: 0,
+    payments: 0,
+    subscriptions: 0,
   });
   const [newAdmin, setNewAdmin] = useState({
     full_name: '',
@@ -170,12 +199,9 @@ export default function SuperAdminDashboard() {
       ]);
 
       const users = getRows(usersRes);
-      const businessAdmins = users.filter((item) => (
-        item.is_superuser || (item.roles || []).some((role) => adminRoleOptions.includes(role))
-      ));
 
       setData({
-        admins: businessAdmins,
+        admins: users,
         hospitals: getRows(hospitalsRes),
         pharmacies: getRows(pharmaciesRes),
         ambulances: getRows(ambulancesRes),
@@ -185,6 +211,14 @@ export default function SuperAdminDashboard() {
         consultations: getRows(consultationsRes),
         payments: getRows(paymentsRes),
         subscriptions: getRows(subscriptionsRes),
+      });
+      setSummaryCounts({
+        users: getTotalCount(usersRes),
+        hospitals: getTotalCount(hospitalsRes),
+        pharmacies: getTotalCount(pharmaciesRes),
+        ambulances: getTotalCount(ambulancesRes),
+        payments: getTotalCount(paymentsRes),
+        subscriptions: getTotalCount(subscriptionsRes),
       });
     } catch (err) {
       setError(getMessage(err, 'Failed to load super admin data'));
@@ -198,13 +232,13 @@ export default function SuperAdminDashboard() {
   }, [isSuperAdmin]);
 
   const counts = useMemo(() => ({
-    Admins: data.admins.length,
-    Hospitals: data.hospitals.length,
-    Pharmacies: data.pharmacies.length,
-    Ambulances: data.ambulances.length,
-    Payments: data.payments.length,
-    Subscriptions: data.subscriptions.length,
-  }), [data]);
+    Users: summaryCounts.users,
+    Hospitals: summaryCounts.hospitals,
+    Pharmacies: summaryCounts.pharmacies,
+    Ambulances: summaryCounts.ambulances,
+    Payments: summaryCounts.payments,
+    Subscriptions: summaryCounts.subscriptions,
+  }), [summaryCounts]);
 
   const runAction = async (action, message = 'Updated successfully') => {
     try {
@@ -273,6 +307,10 @@ export default function SuperAdminDashboard() {
         ...current,
         admins: current.admins.filter((item) => item.id !== admin.id),
       }));
+      setSummaryCounts((current) => ({
+        ...current,
+        users: Math.max(0, current.users - 1),
+      }));
     }, 'Admin account deleted');
   };
 
@@ -307,6 +345,12 @@ export default function SuperAdminDashboard() {
           ? current[type].map((row) => row.id === item.id ? { ...row, is_available: false } : row)
           : current[type].filter((row) => row.id !== item.id),
       }));
+      if (type !== 'pharmacies') {
+        setSummaryCounts((current) => ({
+          ...current,
+          [type]: Math.max(0, current[type] - 1),
+        }));
+      }
     }, type === 'pharmacies' ? 'Pharmacy disabled' : 'Service deleted');
   };
 
@@ -381,6 +425,10 @@ export default function SuperAdminDashboard() {
         ...current,
         payments: current.payments.filter((item) => item.id !== payment.id),
       }));
+      setSummaryCounts((current) => ({
+        ...current,
+        payments: Math.max(0, current.payments - 1),
+      }));
     }, 'Payment deleted');
   };
 
@@ -425,6 +473,10 @@ export default function SuperAdminDashboard() {
         ...current,
         subscriptions: current.subscriptions.filter((item) => item.id !== subscription.id),
       }));
+      setSummaryCounts((current) => ({
+        ...current,
+        subscriptions: Math.max(0, current.subscriptions - 1),
+      }));
     }, 'Subscription deleted');
   };
 
@@ -451,13 +503,16 @@ export default function SuperAdminDashboard() {
                 <td>{admin.email}</td>
                 <td>{admin.phone}</td>
                 <td>
-                  <select
-                    value={(admin.roles || []).find((role) => adminRoleOptions.includes(role)) || 'hospital_admin'}
-                    onChange={(event) => updateAdmin(admin, { roles: [event.target.value] })}
-                    disabled={admin.is_superuser}
-                  >
-                    {adminRoleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
-                  </select>
+                  {admin.is_superuser ? (
+                    <strong>{getUserRoleLabel(admin)}</strong>
+                  ) : (
+                    <select
+                      value={getUserRoleValue(admin)}
+                      onChange={(event) => updateAdmin(admin, { roles: [event.target.value] })}
+                    >
+                      {userRoleOptions.map((role) => <option key={role} value={role}>{userRoleLabels[role] || role}</option>)}
+                    </select>
+                  )}
                 </td>
                 <td>
                   <input type="checkbox" checked={admin.is_active} onChange={(event) => updateAdmin(admin, { is_active: event.target.checked })} />
@@ -642,7 +697,9 @@ export default function SuperAdminDashboard() {
       return (
         <>
           <SubscriptionCreateForm
-            admins={data.admins}
+            admins={data.admins.filter((account) => (
+              account.is_superuser || (account.roles || []).some((role) => adminRoleOptions.includes(role))
+            ))}
             form={newSubscription}
             setForm={setNewSubscription}
             onSubmit={createSubscription}
@@ -785,7 +842,7 @@ function AdminCreateForm({ newAdmin, setNewAdmin, onSubmit, saving, fieldErrors,
         <div className="form-group">
           <label>Role *</label>
           <select value={newAdmin.roles[0]} onChange={(event) => setNewAdmin({ ...newAdmin, roles: [event.target.value] })} className={fieldErrors.roles ? 'input-error' : ''}>
-            {adminRoleOptions.map((role) => <option key={role} value={role}>{adminRoleLabels[role]}</option>)}
+            {adminRoleOptions.map((role) => <option key={role} value={role}>{userRoleLabels[role]}</option>)}
           </select>
           {fieldErrors.roles && <span className="field-error">{fieldErrors.roles}</span>}
         </div>
