@@ -15,7 +15,7 @@ import { useSEO, pageMetadata } from '../utils/seo';
 import '../styles/AdminDashboard.css';
 
 const adminRoleOptions = ['hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin', 'admin'];
-const userRoleOptions = ['patient', 'hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin', 'doctor', 'donor', 'admin'];
+const adminRoleSet = new Set(adminRoleOptions);
 const userRoleLabels = {
   patient: 'Patient',
   hospital_admin: 'Hospital Admin',
@@ -32,6 +32,7 @@ const subscriptionRevenueRoles = ['hospital_admin', 'pharmacy_admin', 'ambulance
 // Super admin tab definitions: each id matches a renderTable branch below.
 const tabs = [
   { id: 'admins', label: 'Admins', icon: Users },
+  { id: 'patients', label: 'Patients', icon: Users },
   { id: 'hospitals', label: 'Hospitals', icon: Building2 },
   { id: 'doctors', label: 'Doctors', icon: Stethoscope },
   { id: 'pharmacies', label: 'Pharmacies', icon: Pill },
@@ -103,13 +104,26 @@ const getMessage = (err, fallback) => {
 
 const getUserRoleValue = (account) => {
   if (account.is_superuser) return 'admin';
-  return (account.roles || []).find((role) => userRoleOptions.includes(role)) || account.roles?.[0] || 'patient';
+  return (account.roles || []).find((role) => adminRoleSet.has(role)) || 'hospital_admin';
 };
 
 const getUserRoleLabel = (account) => {
   if (account.is_superuser) return 'Main Super Admin';
-  const roles = account.roles?.length ? account.roles : ['patient'];
-  return roles.map((role) => userRoleLabels[role] || role).join(', ');
+  const roles = (account.roles || []).filter((role) => adminRoleSet.has(role));
+  return roles.map((role) => userRoleLabels[role] || role).join(', ') || 'Unknown Admin';
+};
+
+const isAdminAccount = (account) => (
+  account.is_superuser || (account.roles || []).some((role) => adminRoleSet.has(role))
+);
+
+const isPatientAccount = (account) => (
+  !isAdminAccount(account) && (account.roles || []).includes('patient')
+);
+
+const getAccountName = (account) => {
+  const fullName = [account.first_name, account.last_name].filter(Boolean).join(' ').trim();
+  return fullName || account.email || `User #${account.id}`;
 };
 
 // Search keyword: Super Admin Subscription Admin Type Lookup - maps subscription user to admin role.
@@ -419,7 +433,7 @@ export default function SuperAdminDashboard() {
   };
 
   const deleteAdmin = async (admin) => {
-    if (!window.confirm(`Delete admin account ${admin.email}?`)) return;
+    if (!window.confirm(`Delete account ${admin.email}?`)) return;
     await runAction(async () => {
       await authAPI.deleteUser(admin.id);
       setData((current) => ({
@@ -430,7 +444,7 @@ export default function SuperAdminDashboard() {
         ...current,
         users: Math.max(0, current.users - 1),
       }));
-    }, 'Admin account deleted');
+    }, 'Account deleted');
   };
 
   const updateService = async (type, item, updates) => {
@@ -741,8 +755,8 @@ export default function SuperAdminDashboard() {
             fieldErrors={adminFormErrors}
             setFieldErrors={setAdminFormErrors}
           />
-          <Table headers={['Name', 'Email', 'Phone', 'Roles', 'Active', 'Actions']}>
-            {data.admins.map((admin) => (
+          <Table headers={['Name', 'Email', 'Phone', 'Admin Type', 'Active', 'Actions']}>
+            {data.admins.filter(isAdminAccount).map((admin) => (
               <tr key={admin.id}>
                 <td>{admin.first_name} {admin.last_name}</td>
                 <td>{admin.email}</td>
@@ -755,7 +769,7 @@ export default function SuperAdminDashboard() {
                       value={getUserRoleValue(admin)}
                       onChange={(event) => updateAdmin(admin, { roles: [event.target.value] })}
                     >
-                      {userRoleOptions.map((role) => <option key={role} value={role}>{userRoleLabels[role] || role}</option>)}
+                      {adminRoleOptions.map((role) => <option key={role} value={role}>{userRoleLabels[role] || role}</option>)}
                     </select>
                   )}
                 </td>
@@ -763,13 +777,38 @@ export default function SuperAdminDashboard() {
                   <input type="checkbox" checked={admin.is_active} onChange={(event) => updateAdmin(admin, { is_active: event.target.checked })} />
                 </td>
                 <td>
-                  <button className="btn-edit" onClick={() => updateAdmin(admin, { password: window.prompt('New password for this admin:') || undefined })}>Password</button>
+                  <button className="btn-edit" onClick={() => updateAdmin(admin, { password: window.prompt('New password for this account:') || undefined })}>Password</button>
                   {!admin.is_superuser && <button className="btn-delete" onClick={() => deleteAdmin(admin)}>Delete</button>}
                 </td>
               </tr>
             ))}
           </Table>
         </>
+      );
+    }
+
+    if (activeTab === 'patients') {
+      // Patients tab: manage patient accounts separately from platform admin accounts.
+      return (
+        <Table headers={['Name', 'Email', 'Phone', 'District', 'Verified', 'Active', 'Joined', 'Actions']}>
+          {data.admins.filter(isPatientAccount).map((patient) => (
+            <tr key={patient.id}>
+              <td>{getAccountName(patient)}</td>
+              <td>{patient.email}</td>
+              <td>{patient.phone}</td>
+              <td>{patient.district || 'N/A'}</td>
+              <td>{patient.is_verified ? 'Yes' : 'No'}</td>
+              <td>
+                <input type="checkbox" checked={patient.is_active} onChange={(event) => updateAdmin(patient, { is_active: event.target.checked })} />
+              </td>
+              <td>{patient.created_at ? new Date(patient.created_at).toLocaleDateString() : 'N/A'}</td>
+              <td>
+                <button className="btn-edit" onClick={() => updateAdmin(patient, { password: window.prompt('New password for this account:') || undefined })}>Password</button>
+                <button className="btn-delete" onClick={() => deleteAdmin(patient)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </Table>
       );
     }
 
@@ -1019,7 +1058,7 @@ export default function SuperAdminDashboard() {
           />
           <SubscriptionCreateForm
             admins={data.admins.filter((account) => (
-              account.is_superuser || (account.roles || []).some((role) => adminRoleOptions.includes(role))
+              isAdminAccount(account)
             ))}
             form={newSubscription}
             setForm={setNewSubscription}
