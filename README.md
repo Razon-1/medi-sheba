@@ -256,12 +256,6 @@ python manage.py runserver
 # Collect static files
 python manage.py collectstatic
 
-# Create seed data
-python manage.py seed_data
-python manage.py seed_emedicine
-python manage.py seed_edoctor
-python manage.py seed_ambulance
-
 # Run tests
 python manage.py test
 
