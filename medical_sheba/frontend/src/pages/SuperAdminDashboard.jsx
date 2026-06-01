@@ -5,6 +5,7 @@ import { Activity, Building2, CalendarDays, CreditCard, Pill, Stethoscope, Truck
 import useAuthStore from '../context/authStore';
 import { authAPI } from '../api/auth';
 import { hospitalsAPI } from '../api/hospitals';
+import { doctorsAPI } from '../api/doctors';
 import { emedicineAPI } from '../api/emedicine';
 import { ambulanceAPI } from '../api/ambulance';
 import { appointmentsAPI } from '../api/appointments';
@@ -31,12 +32,15 @@ const subscriptionStatuses = ['active', 'inactive', 'expired', 'cancelled'];
 const tabs = [
   { id: 'admins', label: 'Admins', icon: Users },
   { id: 'hospitals', label: 'Hospitals', icon: Building2 },
+  { id: 'doctors', label: 'Doctors', icon: Stethoscope },
   { id: 'pharmacies', label: 'Pharmacies', icon: Pill },
+  { id: 'medicines', label: 'Medicines', icon: Pill },
   { id: 'ambulances', label: 'Ambulances', icon: Truck },
   { id: 'appointments', label: 'Appointments', icon: CalendarDays },
   { id: 'medicineOrders', label: 'Medicine Orders', icon: Activity },
   { id: 'ambulanceRequests', label: 'Ambulance Requests', icon: Truck },
-  { id: 'consultations', label: 'E-Doctor', icon: Stethoscope },
+  { id: 'edoctors', label: 'E-Doctors', icon: Stethoscope },
+  { id: 'consultations', label: 'Consultations', icon: Stethoscope },
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
 ];
@@ -50,6 +54,31 @@ const getTotalCount = (response) => {
   const data = response?.data ?? response;
   if (typeof data?.count === 'number') return data.count;
   return getRows(response).length;
+};
+
+const fetchAllRows = async (fetchPage, filters = {}) => {
+  const firstResponse = await fetchPage(filters);
+  const firstData = firstResponse?.data ?? firstResponse;
+  const firstRows = getRows(firstResponse);
+
+  if (!firstData?.next) {
+    return { rows: firstRows, count: getTotalCount(firstResponse) };
+  }
+
+  const rows = [...firstRows];
+  const count = typeof firstData.count === 'number' ? firstData.count : rows.length;
+  let page = Number(filters.page || 1) + 1;
+  let hasNext = Boolean(firstData.next);
+
+  while (hasNext && page <= 100) {
+    const response = await fetchPage({ ...filters, page });
+    const data = response?.data ?? response;
+    rows.push(...getRows(response));
+    hasNext = Boolean(data?.next);
+    page += 1;
+  }
+
+  return { rows, count };
 };
 
 const getMessage = (err, fallback) => {
@@ -80,6 +109,22 @@ const getUserRoleLabel = (account) => {
   const roles = account.roles?.length ? account.roles : ['patient'];
   return roles.map((role) => userRoleLabels[role] || role).join(', ');
 };
+
+const getDoctorName = (doctor) => {
+  const user = doctor.user || {};
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+  return fullName || doctor.name || doctor.email || `Doctor #${doctor.id}`;
+};
+
+const parseMoney = (value) => {
+  const amount = Number.parseFloat(value);
+  return Number.isFinite(amount) ? amount : 0;
+};
+
+const formatCurrency = (amount) => `BDT ${parseMoney(amount).toLocaleString(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})}`;
 
 const validateAdminForm = (admin) => {
   const errors = {};
@@ -126,11 +171,14 @@ export default function SuperAdminDashboard() {
   const [data, setData] = useState({
     admins: [],
     hospitals: [],
+    doctors: [],
     pharmacies: [],
+    medicines: [],
     ambulances: [],
     appointments: [],
     medicineOrders: [],
     ambulanceRequests: [],
+    edoctors: [],
     consultations: [],
     payments: [],
     subscriptions: [],
@@ -138,8 +186,11 @@ export default function SuperAdminDashboard() {
   const [summaryCounts, setSummaryCounts] = useState({
     users: 0,
     hospitals: 0,
+    doctors: 0,
     pharmacies: 0,
+    medicines: 0,
     ambulances: 0,
+    edoctors: 0,
     payments: 0,
     subscriptions: 0,
   });
@@ -175,50 +226,60 @@ export default function SuperAdminDashboard() {
       setLoading(true);
       setError('');
       const [
-        usersRes,
-        hospitalsRes,
-        pharmaciesRes,
-        ambulancesRes,
-        appointmentsRes,
-        ordersRes,
-        ambulanceRequestsRes,
-        consultationsRes,
-        paymentsRes,
-        subscriptionsRes,
+        usersData,
+        hospitalsData,
+        doctorsData,
+        pharmaciesData,
+        medicinesData,
+        ambulancesData,
+        appointmentsData,
+        ordersData,
+        ambulanceRequestsData,
+        edoctorsData,
+        consultationsData,
+        paymentsData,
+        subscriptionsData,
       ] = await Promise.all([
-        authAPI.listUsers(),
-        hospitalsAPI.list(),
-        emedicineAPI.listPharmacies(),
-        ambulanceAPI.listServices(),
-        appointmentsAPI.list(),
-        emedicineAPI.listOrders(),
-        ambulanceAPI.listRequests(),
-        edoctorAPI.listConsultations(),
-        paymentsAPI.listPayments(),
-        paymentsAPI.listSubscriptions(),
+        fetchAllRows(authAPI.listUsers),
+        fetchAllRows(hospitalsAPI.list),
+        fetchAllRows(doctorsAPI.list),
+        fetchAllRows(emedicineAPI.listPharmacies),
+        fetchAllRows(emedicineAPI.listMedicines),
+        fetchAllRows(ambulanceAPI.listServices),
+        fetchAllRows(appointmentsAPI.list),
+        fetchAllRows(emedicineAPI.listOrders),
+        fetchAllRows(ambulanceAPI.listRequests),
+        fetchAllRows(edoctorAPI.listDoctors),
+        fetchAllRows(edoctorAPI.listConsultations),
+        fetchAllRows(paymentsAPI.listPayments),
+        fetchAllRows(paymentsAPI.listSubscriptions),
       ]);
 
-      const users = getRows(usersRes);
-
       setData({
-        admins: users,
-        hospitals: getRows(hospitalsRes),
-        pharmacies: getRows(pharmaciesRes),
-        ambulances: getRows(ambulancesRes),
-        appointments: getRows(appointmentsRes),
-        medicineOrders: getRows(ordersRes),
-        ambulanceRequests: getRows(ambulanceRequestsRes),
-        consultations: getRows(consultationsRes),
-        payments: getRows(paymentsRes),
-        subscriptions: getRows(subscriptionsRes),
+        admins: usersData.rows,
+        hospitals: hospitalsData.rows,
+        doctors: doctorsData.rows,
+        pharmacies: pharmaciesData.rows,
+        medicines: medicinesData.rows,
+        ambulances: ambulancesData.rows,
+        appointments: appointmentsData.rows,
+        medicineOrders: ordersData.rows,
+        ambulanceRequests: ambulanceRequestsData.rows,
+        edoctors: edoctorsData.rows,
+        consultations: consultationsData.rows,
+        payments: paymentsData.rows,
+        subscriptions: subscriptionsData.rows,
       });
       setSummaryCounts({
-        users: getTotalCount(usersRes),
-        hospitals: getTotalCount(hospitalsRes),
-        pharmacies: getTotalCount(pharmaciesRes),
-        ambulances: getTotalCount(ambulancesRes),
-        payments: getTotalCount(paymentsRes),
-        subscriptions: getTotalCount(subscriptionsRes),
+        users: usersData.count,
+        hospitals: hospitalsData.count,
+        doctors: doctorsData.count,
+        pharmacies: pharmaciesData.count,
+        medicines: medicinesData.count,
+        ambulances: ambulancesData.count,
+        edoctors: edoctorsData.count,
+        payments: paymentsData.count,
+        subscriptions: subscriptionsData.count,
       });
     } catch (err) {
       setError(getMessage(err, 'Failed to load super admin data'));
@@ -231,14 +292,25 @@ export default function SuperAdminDashboard() {
     if (isSuperAdmin) loadDashboard();
   }, [isSuperAdmin]);
 
-  const counts = useMemo(() => ({
-    Users: summaryCounts.users,
-    Hospitals: summaryCounts.hospitals,
-    Pharmacies: summaryCounts.pharmacies,
-    Ambulances: summaryCounts.ambulances,
-    Payments: summaryCounts.payments,
-    Subscriptions: summaryCounts.subscriptions,
-  }), [summaryCounts]);
+  const subscriptionRevenue = useMemo(() => {
+    return data.subscriptions.reduce((total, subscription) => {
+      const isPaidSubscription = !subscription.is_trial && ['active', 'expired'].includes(subscription.status);
+      return isPaidSubscription ? total + parseMoney(subscription.amount) : total;
+    }, 0);
+  }, [data.subscriptions]);
+
+  const summaryCards = useMemo(() => ([
+    { label: 'Users', value: summaryCounts.users },
+    { label: 'Hospitals', value: summaryCounts.hospitals },
+    { label: 'Doctors', value: summaryCounts.doctors },
+    { label: 'Pharmacies', value: summaryCounts.pharmacies },
+    { label: 'Medicines', value: summaryCounts.medicines },
+    { label: 'Ambulances', value: summaryCounts.ambulances },
+    { label: 'E-Doctors', value: summaryCounts.edoctors },
+    { label: 'Payments', value: summaryCounts.payments },
+    { label: 'Subscriptions', value: summaryCounts.subscriptions },
+    { label: 'Subscription Revenue', value: formatCurrency(subscriptionRevenue) },
+  ]), [summaryCounts, subscriptionRevenue]);
 
   const runAction = async (action, message = 'Updated successfully') => {
     try {
@@ -335,23 +407,76 @@ export default function SuperAdminDashboard() {
     await runAction(async () => {
       const apiMap = {
         hospitals: hospitalsAPI.delete,
-        pharmacies: (id) => emedicineAPI.updatePharmacy(id, { is_available: false }),
+        pharmacies: emedicineAPI.deletePharmacy,
         ambulances: ambulanceAPI.deleteAmbulance,
       };
-      await apiMap[type](item.id);
+      try {
+        await apiMap[type](item.id);
+      } catch (err) {
+        if (type !== 'pharmacies') throw err;
+        await emedicineAPI.updatePharmacy(item.id, { is_available: false });
+      }
       setData((current) => ({
         ...current,
-        [type]: type === 'pharmacies'
-          ? current[type].map((row) => row.id === item.id ? { ...row, is_available: false } : row)
-          : current[type].filter((row) => row.id !== item.id),
+        [type]: current[type].filter((row) => row.id !== item.id),
       }));
-      if (type !== 'pharmacies') {
-        setSummaryCounts((current) => ({
-          ...current,
-          [type]: Math.max(0, current[type] - 1),
-        }));
-      }
-    }, type === 'pharmacies' ? 'Pharmacy disabled' : 'Service deleted');
+      setSummaryCounts((current) => ({
+        ...current,
+        [type]: Math.max(0, current[type] - 1),
+      }));
+    }, 'Service deleted');
+  };
+
+  const updateDoctor = async (doctor, updates) => {
+    await runAction(async () => {
+      const response = await doctorsAPI.patch(doctor.id, updates);
+      const updated = response.data || response;
+      setData((current) => ({
+        ...current,
+        doctors: current.doctors.map((item) => item.id === doctor.id ? { ...item, ...updated } : item),
+      }));
+    }, 'Doctor updated');
+  };
+
+  const deleteDoctor = async (doctor) => {
+    if (!window.confirm(`Delete ${getDoctorName(doctor)}?`)) return;
+    await runAction(async () => {
+      await doctorsAPI.delete(doctor.id);
+      setData((current) => ({
+        ...current,
+        doctors: current.doctors.filter((item) => item.id !== doctor.id),
+      }));
+      setSummaryCounts((current) => ({
+        ...current,
+        doctors: Math.max(0, current.doctors - 1),
+      }));
+    }, 'Doctor deleted');
+  };
+
+  const updateMedicine = async (medicine, updates) => {
+    await runAction(async () => {
+      const response = await emedicineAPI.updateMedicine(medicine.id, updates);
+      const updated = response.data || response;
+      setData((current) => ({
+        ...current,
+        medicines: current.medicines.map((item) => item.id === medicine.id ? { ...item, ...updated } : item),
+      }));
+    }, 'Medicine updated');
+  };
+
+  const deleteMedicine = async (medicine) => {
+    if (!window.confirm(`Delete medicine ${medicine.name}?`)) return;
+    await runAction(async () => {
+      await emedicineAPI.deleteMedicine(medicine.id);
+      setData((current) => ({
+        ...current,
+        medicines: current.medicines.filter((item) => item.id !== medicine.id),
+      }));
+      setSummaryCounts((current) => ({
+        ...current,
+        medicines: Math.max(0, current.medicines - 1),
+      }));
+    }, 'Medicine deleted');
   };
 
   const updateMedicineOrder = async (order, status) => {
@@ -364,6 +489,17 @@ export default function SuperAdminDashboard() {
     }, 'Medicine order updated');
   };
 
+  const deleteMedicineOrder = async (order) => {
+    if (!window.confirm(`Delete medicine order ${order.order_id}?`)) return;
+    await runAction(async () => {
+      await emedicineAPI.deleteOrder(order.id);
+      setData((current) => ({
+        ...current,
+        medicineOrders: current.medicineOrders.filter((item) => item.id !== order.id),
+      }));
+    }, 'Medicine order deleted');
+  };
+
   const updateAmbulanceRequest = async (request, status) => {
     await runAction(async () => {
       await ambulanceAPI.updateStatus(request.id, status);
@@ -372,6 +508,17 @@ export default function SuperAdminDashboard() {
         ambulanceRequests: current.ambulanceRequests.map((item) => item.id === request.id ? { ...item, status } : item),
       }));
     }, 'Ambulance request updated');
+  };
+
+  const deleteAmbulanceRequest = async (request) => {
+    if (!window.confirm(`Delete ambulance request ${request.request_id}?`)) return;
+    await runAction(async () => {
+      await ambulanceAPI.deleteRequest(request.id);
+      setData((current) => ({
+        ...current,
+        ambulanceRequests: current.ambulanceRequests.filter((item) => item.id !== request.id),
+      }));
+    }, 'Ambulance request deleted');
   };
 
   const updateAppointment = async (appointment, status) => {
@@ -385,6 +532,17 @@ export default function SuperAdminDashboard() {
     }, 'Appointment updated');
   };
 
+  const deleteAppointment = async (appointment) => {
+    if (!window.confirm(`Delete appointment ${appointment.appointment_no}?`)) return;
+    await runAction(async () => {
+      await appointmentsAPI.delete(appointment.id);
+      setData((current) => ({
+        ...current,
+        appointments: current.appointments.filter((item) => item.id !== appointment.id),
+      }));
+    }, 'Appointment deleted');
+  };
+
   const updateConsultation = async (consultation, status) => {
     await runAction(async () => {
       if (status === 'confirmed') await edoctorAPI.confirmConsultation(consultation.id);
@@ -396,6 +554,43 @@ export default function SuperAdminDashboard() {
         consultations: current.consultations.map((item) => item.id === consultation.id ? { ...item, status } : item),
       }));
     }, 'E-Doctor consultation updated');
+  };
+
+  const deleteConsultation = async (consultation) => {
+    if (!window.confirm(`Delete consultation ${consultation.consultation_id}?`)) return;
+    await runAction(async () => {
+      await edoctorAPI.deleteConsultation(consultation.id);
+      setData((current) => ({
+        ...current,
+        consultations: current.consultations.filter((item) => item.id !== consultation.id),
+      }));
+    }, 'E-Doctor consultation deleted');
+  };
+
+  const updateEdoctor = async (edoctor, updates) => {
+    await runAction(async () => {
+      const response = await edoctorAPI.patchEdoctor(edoctor.id, updates);
+      const updated = response.data || response;
+      setData((current) => ({
+        ...current,
+        edoctors: current.edoctors.map((item) => item.id === edoctor.id ? { ...item, ...updated } : item),
+      }));
+    }, 'E-Doctor updated');
+  };
+
+  const deleteEdoctor = async (edoctor) => {
+    if (!window.confirm(`Delete E-Doctor ${edoctor.name}?`)) return;
+    await runAction(async () => {
+      await edoctorAPI.deleteEdoctor(edoctor.id);
+      setData((current) => ({
+        ...current,
+        edoctors: current.edoctors.filter((item) => item.id !== edoctor.id),
+      }));
+      setSummaryCounts((current) => ({
+        ...current,
+        edoctors: Math.max(0, current.edoctors - 1),
+      }));
+    }, 'E-Doctor deleted');
   };
 
   const updatePayment = async (payment, updates) => {
@@ -549,6 +744,28 @@ export default function SuperAdminDashboard() {
       );
     }
 
+    if (activeTab === 'doctors') {
+      // Doctors tab: show every in-person doctor profile across all hospitals.
+      return (
+        <Table headers={['Doctor', 'Hospital', 'Specialty', 'Fee', 'Available', 'Verified', 'Actions']}>
+          {data.doctors.map((doctor) => (
+            <tr key={doctor.id}>
+              <td>{getDoctorName(doctor)}<br />{doctor.user?.email || doctor.bmdc_number}</td>
+              <td>{doctor.hospital_name || doctor.hospital || 'Unassigned'}</td>
+              <td>{doctor.specialty}{doctor.subspecialty ? ` / ${doctor.subspecialty}` : ''}</td>
+              <td>BDT {Number(doctor.consultation_fee || 0).toFixed(2)}</td>
+              <td><input type="checkbox" checked={Boolean(doctor.is_available)} onChange={(event) => updateDoctor(doctor, { is_available: event.target.checked })} /></td>
+              <td>{doctor.is_verified ? 'Yes' : 'No'}</td>
+              <td>
+                <button className="btn-edit" onClick={() => updateDoctor(doctor, { consultation_fee: Number(window.prompt('Consultation fee:', doctor.consultation_fee) || doctor.consultation_fee) })}>Fee</button>
+                <button className="btn-delete" onClick={() => deleteDoctor(doctor)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      );
+    }
+
     if (activeTab === 'pharmacies') {
       // Pharmacies tab: view, edit, enable/disable pharmacy services.
       return (
@@ -563,6 +780,30 @@ export default function SuperAdminDashboard() {
               <td>
                 <button className="btn-edit" onClick={() => updateService('pharmacies', pharmacy, { name: window.prompt('Pharmacy name:', pharmacy.name) || pharmacy.name })}>Edit</button>
                 <button className="btn-delete" onClick={() => deleteService('pharmacies', pharmacy)}>Disable</button>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      );
+    }
+
+    if (activeTab === 'medicines') {
+      // Medicines tab: show every medicine item added by pharmacy admins.
+      return (
+        <Table headers={['Medicine', 'Generic', 'Pharmacy', 'Type', 'Price', 'Stock', 'Available', 'Actions']}>
+          {data.medicines.map((medicine) => (
+            <tr key={medicine.id}>
+              <td>{medicine.name}<br />{medicine.strength}{medicine.strength_unit}</td>
+              <td>{medicine.generic_name}</td>
+              <td>{medicine.pharmacy_name || medicine.pharmacy}</td>
+              <td>{medicine.medicine_type}</td>
+              <td>BDT {Number(medicine.price || 0).toFixed(2)}</td>
+              <td>{medicine.stock}</td>
+              <td><input type="checkbox" checked={Boolean(medicine.is_available)} onChange={(event) => updateMedicine(medicine, { is_available: event.target.checked })} /></td>
+              <td>
+                <button className="btn-edit" onClick={() => updateMedicine(medicine, { price: Number(window.prompt('Medicine price:', medicine.price) || medicine.price) })}>Price</button>
+                <button className="btn-edit" onClick={() => updateMedicine(medicine, { stock: Number(window.prompt('Stock:', medicine.stock) || medicine.stock) })}>Stock</button>
+                <button className="btn-delete" onClick={() => deleteMedicine(medicine)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -595,7 +836,7 @@ export default function SuperAdminDashboard() {
     if (activeTab === 'appointments') {
       // Appointments tab: view and update appointment statuses.
       return (
-        <Table headers={['Appointment', 'Patient', 'Type', 'Payment', 'Status', 'Update']}>
+        <Table headers={['Appointment', 'Patient', 'Type', 'Payment', 'Status', 'Actions']}>
           {data.appointments.map((appointment) => (
             <tr key={appointment.id}>
               <td>{appointment.appointment_no}</td>
@@ -609,6 +850,7 @@ export default function SuperAdminDashboard() {
                   <option value="confirmed">confirmed</option>
                   <option value="cancelled">cancelled</option>
                 </select>
+                <button className="btn-delete" onClick={() => deleteAppointment(appointment)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -619,7 +861,7 @@ export default function SuperAdminDashboard() {
     if (activeTab === 'medicineOrders') {
       // Medicine Orders tab: view and update medicine delivery orders.
       return (
-        <Table headers={['Order', 'Patient', 'Pharmacy', 'Amount', 'Urgency', 'Payment', 'Status']}>
+        <Table headers={['Order', 'Patient', 'Pharmacy', 'Amount', 'Urgency', 'Payment', 'Actions']}>
           {data.medicineOrders.map((order) => (
             <tr key={order.id}>
               <td>{order.order_id}</td>
@@ -634,6 +876,7 @@ export default function SuperAdminDashboard() {
                     <option key={status} value={status}>{status}</option>
                   ))}
                 </select>
+                <button className="btn-delete" onClick={() => deleteMedicineOrder(order)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -644,7 +887,7 @@ export default function SuperAdminDashboard() {
     if (activeTab === 'ambulanceRequests') {
       // Ambulance Requests tab: view and update ambulance booking requests.
       return (
-        <Table headers={['Request', 'Patient', 'Pickup', 'Urgency', 'Fare', 'Payment', 'Status']}>
+        <Table headers={['Request', 'Patient', 'Pickup', 'Urgency', 'Fare', 'Payment', 'Actions']}>
           {data.ambulanceRequests.map((request) => (
             <tr key={request.id}>
               <td>{request.request_id}</td>
@@ -659,6 +902,7 @@ export default function SuperAdminDashboard() {
                     <option key={status} value={status}>{status}</option>
                   ))}
                 </select>
+                <button className="btn-delete" onClick={() => deleteAmbulanceRequest(request)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -685,6 +929,28 @@ export default function SuperAdminDashboard() {
               <td>
                 <button className="btn-edit" onClick={() => refundPayment(payment)} disabled={payment.status !== 'success'}>Refund</button>
                 <button className="btn-delete" onClick={() => deletePayment(payment)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </Table>
+      );
+    }
+
+    if (activeTab === 'edoctors') {
+      // E-Doctors tab: show every E-Doctor profile across the platform.
+      return (
+        <Table headers={['Doctor', 'Specialization', 'Hospital', 'Fee', 'Available', 'Verified', 'Actions']}>
+          {data.edoctors.map((edoctor) => (
+            <tr key={edoctor.id}>
+              <td>{edoctor.name}<br />{edoctor.phone_number || edoctor.doctor_id}</td>
+              <td>{edoctor.specialization_display || edoctor.specialization}</td>
+              <td>{edoctor.hospital_display_name || edoctor.hospital_name || 'Private Practice'}</td>
+              <td>BDT {Number(edoctor.consultation_fee || 0).toFixed(2)}</td>
+              <td><input type="checkbox" checked={Boolean(edoctor.is_available)} onChange={(event) => updateEdoctor(edoctor, { is_available: event.target.checked })} /></td>
+              <td>{edoctor.is_verified ? 'Yes' : 'No'}</td>
+              <td>
+                <button className="btn-edit" onClick={() => updateEdoctor(edoctor, { consultation_fee: Number(window.prompt('Consultation fee:', edoctor.consultation_fee) || edoctor.consultation_fee) })}>Fee</button>
+                <button className="btn-delete" onClick={() => deleteEdoctor(edoctor)}>Delete</button>
               </td>
             </tr>
           ))}
@@ -730,9 +996,9 @@ export default function SuperAdminDashboard() {
       );
     }
 
-    // E-Doctor tab: view and update e-doctor consultation statuses.
+    // Consultations tab: view and update e-doctor consultation statuses.
     return (
-      <Table headers={['Consultation', 'Patient', 'Doctor', 'Fee', 'Paid', 'Status', 'Action']}>
+      <Table headers={['Consultation', 'Patient', 'Doctor', 'Fee', 'Paid', 'Status', 'Actions']}>
         {data.consultations.map((consultation) => (
           <tr key={consultation.id}>
             <td>{consultation.consultation_id}</td>
@@ -747,6 +1013,7 @@ export default function SuperAdminDashboard() {
                   <option key={status} value={status}>{status}</option>
                 ))}
               </select>
+              <button className="btn-delete" onClick={() => deleteConsultation(consultation)}>Delete</button>
             </td>
           </tr>
         ))}
@@ -756,7 +1023,7 @@ export default function SuperAdminDashboard() {
 
   // Page layout: dashboard summary cards, tab buttons, and selected super admin table.
   return (
-    <div className="admin-dashboard">
+    <div className="admin-dashboard super-admin-dashboard">
       <div className="admin-header">
         <h1>Super Admin Control</h1>
         <p>Control admins, services, payments, subscriptions, appointments, and requests.</p>
@@ -766,7 +1033,7 @@ export default function SuperAdminDashboard() {
       {success && <div className="success-message">{success}</div>}
 
       <div className="review-summary" style={{ marginBottom: 24 }}>
-        {Object.entries(counts).map(([label, value]) => (
+        {summaryCards.map(({ label, value }) => (
           <div key={label} className="revenue-card">
             <p>{label}</p>
             <strong>{value}</strong>
@@ -775,7 +1042,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Tab buttons: generated from the tabs list above and used to switch activeTab. */}
-      <div className="admin-tabs">
+      <div className="admin-tabs super-admin-tabs">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button key={id} type="button" className={`tab-button ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
             <Icon size={16} /> {label}

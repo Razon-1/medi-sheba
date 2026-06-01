@@ -4,6 +4,10 @@
   padding: 20px;
 }
 
+.super-admin-dashboard {
+  max-width: 1480px;
+}
+
 .admin-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -38,6 +42,29 @@
   margin-bottom: 20px;
   border-bottom: 2px solid #e0e0e0;
   flex-wrap: wrap;
+}
+
+.super-admin-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.super-admin-tabs .tab-button {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 132px;
+  min-height: 48px;
+  padding: 10px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow-wrap: normal;
 }
 
 .tab-button {
@@ -606,6 +633,10 @@
 
   .admin-tabs {
     gap: 5px;
+  }
+
+  .super-admin-tabs .tab-button {
+    min-width: 132px;
   }
 
   .tab-button {

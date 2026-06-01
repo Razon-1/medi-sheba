@@ -29,6 +29,10 @@ export const emedicineAPI = {
     return apiClient.patch(`/emedicine/pharmacies/${id}/`, data);
   },
 
+  deletePharmacy: async (id) => {
+    return apiClient.delete(`/emedicine/pharmacies/${id}/`);
+  },
+
   filterByPharmacyType: async (type) => {
     return apiClient.get(`/emedicine/pharmacies/by_pharmacy_type/?type=${type}`);
   },
@@ -75,6 +79,7 @@ export const emedicineAPI = {
   // Orders
   listOrders: async (filters = {}) => {
     const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page);
     if (filters.status) params.append('status', filters.status);
     if (filters.urgency) params.append('urgency', filters.urgency);
     if (filters.pharmacy) params.append('pharmacy', filters.pharmacy);
@@ -104,6 +109,10 @@ export const emedicineAPI = {
 
   updateOrder: async (id, data) => {
     return apiClient.patch(`/emedicine/orders/${id}/`, data);
+  },
+
+  deleteOrder: async (id) => {
+    return apiClient.delete(`/emedicine/orders/${id}/`);
   },
 
   markMedicineDelivered: async (orderId, medicineName, quantity = 1) => {

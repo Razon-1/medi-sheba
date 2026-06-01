@@ -61,6 +61,9 @@ export const edoctorAPI = {
   updateConsultation: (id, data) =>
     apiClient.patch(`/edoctor/consultations/${id}/`, data),
 
+  deleteConsultation: (id) =>
+    apiClient.delete(`/edoctor/consultations/${id}/`),
+
   // Hospital admin methods
   myEdoctors: () =>
     apiClient.get('/edoctor/doctors/my_edoctors/'),
@@ -70,6 +73,9 @@ export const edoctorAPI = {
   
   updateEdoctor: (id, data) =>
     apiClient.put(`/edoctor/doctors/${id}/`, data),
+
+  patchEdoctor: (id, data) =>
+    apiClient.patch(`/edoctor/doctors/${id}/`, data),
   
   deleteEdoctor: (id) =>
     apiClient.delete(`/edoctor/doctors/${id}/`),
@@ -87,6 +93,7 @@ export const edoctorAPI = {
 export const getMyEdoctors = () => edoctorAPI.myEdoctors();
 export const addEdoctor = (data) => edoctorAPI.createEdoctor(data);
 export const updateEdoctor = (id, data) => edoctorAPI.updateEdoctor(id, data);
+export const patchEdoctor = (id, data) => edoctorAPI.patchEdoctor(id, data);
 export const deleteEdoctor = (id) => edoctorAPI.deleteEdoctor(id);
 export const getEdoctors = () => edoctorAPI.listDoctors();
 

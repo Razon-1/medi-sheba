@@ -12,6 +12,9 @@ export const doctorsAPI = {
   
   update: (id, data) =>
     client.put(`/doctors/${id}/`, data),
+
+  patch: (id, data) =>
+    client.patch(`/doctors/${id}/`, data),
   
   delete: (id) =>
     client.delete(`/doctors/${id}/`),
@@ -27,5 +30,6 @@ export const doctorsAPI = {
 export const getMyDoctors = () => doctorsAPI.myDoctors();
 export const addDoctor = (data) => doctorsAPI.create(data);
 export const updateDoctor = (id, data) => doctorsAPI.update(id, data);
+export const patchDoctor = (id, data) => doctorsAPI.patch(id, data);
 export const deleteDoctor = (id) => doctorsAPI.delete(id);
 export const getDoctors = () => doctorsAPI.list();

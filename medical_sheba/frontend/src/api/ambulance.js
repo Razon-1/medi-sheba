@@ -30,6 +30,7 @@ export const ambulanceAPI = {
   // Get all ambulance requests
   listRequests: async (filters = {}) => {
     const params = new URLSearchParams();
+    if (filters.page) params.append('page', filters.page);
     if (filters.status) params.append('status', filters.status);
     if (filters.vehicle_type) params.append('vehicle_type_required', filters.vehicle_type);
     if (filters.urgency) params.append('urgency', filters.urgency);
@@ -65,6 +66,10 @@ export const ambulanceAPI = {
   // Update request (for payment and other fields)
   updateRequest: async (id, data) => {
     return apiClient.patch(`/ambulance/requests/${id}/`, data);
+  },
+
+  deleteRequest: async (id) => {
+    return apiClient.delete(`/ambulance/requests/${id}/`);
   },
 
   // Accept request (assign ambulance)
