@@ -642,6 +642,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
     
     def _handle_subscription_payment(self, payment):
         """Mark subscription as active after payment"""
+        # Search keyword: Backend Subscription Payment Activation - updates subscription after successful payment.
         # Link payment to subscription if reference_id is provided
         if payment.reference_id:
             try:
@@ -827,6 +828,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+# Search keyword: Backend Subscription ViewSet - API for super admin subscription CRUD/revenue data.
 class SubscriptionViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionSerializer
     permission_classes = [IsAuthenticated]
@@ -849,6 +851,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def create_subscription(self, request):
         """Create a new subscription and initiate payment"""
+        # Search keyword: Backend Subscription Create Payment Flow - admin plan pricing and payment intent.
         plan = request.data.get('plan')
         duration = request.data.get('duration')
         amount_override = request.data.get('amount')

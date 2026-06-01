@@ -87,6 +87,7 @@ class PaymentVerifySerializer(serializers.Serializer):
     gateway_response = serializers.JSONField(required=False)
 
 
+# Search keyword: Backend Subscription Serializer - full subscription fields used by super admin.
 class SubscriptionSerializer(serializers.ModelSerializer):
     user_email = serializers.SerializerMethodField()
     plan_display = serializers.CharField(source='get_plan_display', read_only=True)
@@ -111,6 +112,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return obj.is_active()
 
 
+# Search keyword: Backend Subscription List Serializer - list data for super admin revenue/table.
 class SubscriptionListSerializer(serializers.ModelSerializer):
     user = serializers.IntegerField(source='user_id', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)

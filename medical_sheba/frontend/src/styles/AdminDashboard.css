@@ -45,6 +45,7 @@
 }
 
 .super-admin-tabs {
+  /* Search keyword: Super Admin Tabs Layout - horizontal scroll for all admin management options. */
   display: flex;
   flex-wrap: nowrap;
   gap: 10px;
@@ -532,6 +533,86 @@
   display: block;
   margin-top: 0.5rem;
   color: #666;
+}
+
+/* Search keyword: Super Admin Subscription Revenue Graph Styles - admin-type revenue chart. */
+.subscription-revenue-panel {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+  margin-bottom: 18px;
+}
+
+.subscription-revenue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.subscription-revenue-header h2 {
+  margin: 0 0 0.25rem;
+}
+
+.subscription-revenue-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.subscription-revenue-total {
+  text-align: right;
+}
+
+.subscription-revenue-total span,
+.subscription-revenue-meta {
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.subscription-revenue-total strong {
+  display: block;
+  color: #111827;
+  font-size: 1.6rem;
+  margin-top: 0.25rem;
+}
+
+.subscription-revenue-chart {
+  display: grid;
+  gap: 1rem;
+}
+
+.subscription-revenue-row {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.subscription-revenue-row-main,
+.subscription-revenue-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.subscription-revenue-row-main span,
+.subscription-revenue-row-main strong {
+  color: #111827;
+  font-weight: 800;
+}
+
+.subscription-revenue-bar-track {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.subscription-revenue-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1d72b8, #28a745);
+  border-radius: inherit;
 }
 
 .review-chart-card {

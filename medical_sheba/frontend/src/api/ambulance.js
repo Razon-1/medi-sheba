@@ -28,6 +28,7 @@ export const ambulanceAPI = {
   },
 
   // Get all ambulance requests
+  // Search keyword: Super Admin Ambulance Requests All Pages - supports paginated all-requests loading.
   listRequests: async (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page);
@@ -68,6 +69,7 @@ export const ambulanceAPI = {
     return apiClient.patch(`/ambulance/requests/${id}/`, data);
   },
 
+  // Search keyword: Super Admin Ambulance Requests CRUD - delete ambulance request from all requests table.
   deleteRequest: async (id) => {
     return apiClient.delete(`/ambulance/requests/${id}/`);
   },

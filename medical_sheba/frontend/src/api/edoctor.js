@@ -61,6 +61,7 @@ export const edoctorAPI = {
   updateConsultation: (id, data) =>
     apiClient.patch(`/edoctor/consultations/${id}/`, data),
 
+  // Search keyword: Super Admin E-Doctor Consultations CRUD - delete consultation from all consultations table.
   deleteConsultation: (id) =>
     apiClient.delete(`/edoctor/consultations/${id}/`),
 
@@ -74,6 +75,7 @@ export const edoctorAPI = {
   updateEdoctor: (id, data) =>
     apiClient.put(`/edoctor/doctors/${id}/`, data),
 
+  // Search keyword: Super Admin E-Doctors CRUD - partial update for all e-doctors table.
   patchEdoctor: (id, data) =>
     apiClient.patch(`/edoctor/doctors/${id}/`, data),
   

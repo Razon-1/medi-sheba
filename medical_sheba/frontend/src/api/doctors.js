@@ -13,6 +13,7 @@ export const doctorsAPI = {
   update: (id, data) =>
     client.put(`/doctors/${id}/`, data),
 
+  // Search keyword: Super Admin Doctors CRUD - partial update for all doctors table.
   patch: (id, data) =>
     client.patch(`/doctors/${id}/`, data),
   

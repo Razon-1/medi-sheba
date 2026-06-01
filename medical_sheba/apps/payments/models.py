@@ -97,6 +97,7 @@ class Payment(models.Model):
         self.save()
 
 
+# Search keyword: Backend Subscription Model - source data for super admin subscription revenue.
 class Subscription(models.Model):
     PLAN_CHOICES = [
         ('basic', 'Basic'),
@@ -129,6 +130,7 @@ class Subscription(models.Model):
     end_date = models.DateTimeField()
     renewal_date = models.DateTimeField(null=True, blank=True)
     
+    # Search keyword: Backend Subscription Payment Link - connects paid payment records to subscriptions.
     # Payment reference
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions')
     

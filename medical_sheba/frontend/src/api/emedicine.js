@@ -29,6 +29,7 @@ export const emedicineAPI = {
     return apiClient.patch(`/emedicine/pharmacies/${id}/`, data);
   },
 
+  // Search keyword: Super Admin Pharmacy CRUD - delete pharmacy from all pharmacies table.
   deletePharmacy: async (id) => {
     return apiClient.delete(`/emedicine/pharmacies/${id}/`);
   },
@@ -72,11 +73,13 @@ export const emedicineAPI = {
     return apiClient.patch(`/emedicine/medicines/${id}/`, data);
   },
 
+  // Search keyword: Super Admin Medicines CRUD - delete medicine from all medicines table.
   deleteMedicine: async (id) => {
     return apiClient.delete(`/emedicine/medicines/${id}/`);
   },
 
   // Orders
+  // Search keyword: Super Admin Medicine Orders All Pages - supports paginated all-orders loading.
   listOrders: async (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page);
@@ -111,6 +114,7 @@ export const emedicineAPI = {
     return apiClient.patch(`/emedicine/orders/${id}/`, data);
   },
 
+  // Search keyword: Super Admin Medicine Orders CRUD - delete medicine order from all orders table.
   deleteOrder: async (id) => {
     return apiClient.delete(`/emedicine/orders/${id}/`);
   },

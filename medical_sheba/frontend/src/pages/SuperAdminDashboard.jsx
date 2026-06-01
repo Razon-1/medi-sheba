@@ -27,6 +27,7 @@ const userRoleLabels = {
 };
 const paymentStatuses = ['pending', 'processing', 'success', 'failed', 'cancelled', 'refunded'];
 const subscriptionStatuses = ['active', 'inactive', 'expired', 'cancelled'];
+const subscriptionRevenueRoles = ['hospital_admin', 'pharmacy_admin', 'ambulance_driver_admin', 'admin'];
 
 // Super admin tab definitions: each id matches a renderTable branch below.
 const tabs = [
@@ -56,6 +57,7 @@ const getTotalCount = (response) => {
   return getRows(response).length;
 };
 
+// Search keyword: Super Admin Load All Database Rows - follows paginated API responses for all tabs.
 const fetchAllRows = async (fetchPage, filters = {}) => {
   const firstResponse = await fetchPage(filters);
   const firstData = firstResponse?.data ?? firstResponse;
@@ -108,6 +110,13 @@ const getUserRoleLabel = (account) => {
   if (account.is_superuser) return 'Main Super Admin';
   const roles = account.roles?.length ? account.roles : ['patient'];
   return roles.map((role) => userRoleLabels[role] || role).join(', ');
+};
+
+// Search keyword: Super Admin Subscription Admin Type Lookup - maps subscription user to admin role.
+const getSubscriptionAdminRole = (subscription, admins) => {
+  const admin = admins.find((account) => Number(account.id) === Number(subscription.user));
+  if (admin?.is_superuser) return 'admin';
+  return (admin?.roles || []).find((role) => subscriptionRevenueRoles.includes(role)) || 'unknown';
 };
 
 const getDoctorName = (doctor) => {
@@ -225,6 +234,7 @@ export default function SuperAdminDashboard() {
     try {
       setLoading(true);
       setError('');
+      // Search keyword: Super Admin Dashboard Database Loading - fetch all CRUD tab data from backend APIs.
       const [
         usersData,
         hospitalsData,
@@ -292,12 +302,49 @@ export default function SuperAdminDashboard() {
     if (isSuperAdmin) loadDashboard();
   }, [isSuperAdmin]);
 
+  // Search keyword: Super Admin Subscription Revenue Total - calculates total paid subscription revenue.
   const subscriptionRevenue = useMemo(() => {
     return data.subscriptions.reduce((total, subscription) => {
       const isPaidSubscription = !subscription.is_trial && ['active', 'expired'].includes(subscription.status);
       return isPaidSubscription ? total + parseMoney(subscription.amount) : total;
     }, 0);
   }, [data.subscriptions]);
+
+  // Search keyword: Super Admin Subscription Revenue By Admin Type - groups revenue by hospital/pharmacy/ambulance admins.
+  const subscriptionRevenueByRole = useMemo(() => {
+    const initialRevenue = [...subscriptionRevenueRoles, 'unknown'].reduce((totals, role) => ({
+      ...totals,
+      [role]: {
+        count: 0,
+        revenue: 0,
+        label: userRoleLabels[role] || 'Unknown Admin',
+      },
+    }), {});
+
+    return data.subscriptions.reduce((totals, subscription) => {
+      const isPaidSubscription = !subscription.is_trial && ['active', 'expired'].includes(subscription.status);
+      if (!isPaidSubscription) return totals;
+
+      const role = getSubscriptionAdminRole(subscription, data.admins);
+      const current = totals[role] || totals.unknown;
+      return {
+        ...totals,
+        [role]: {
+          ...current,
+          count: current.count + 1,
+          revenue: current.revenue + parseMoney(subscription.amount),
+        },
+      };
+    }, initialRevenue);
+  }, [data.admins, data.subscriptions]);
+
+  // Search keyword: Super Admin Subscription Revenue Graph Data - sorted bar chart data for subscription revenue.
+  const subscriptionRevenueBreakdown = useMemo(() => {
+    return Object.entries(subscriptionRevenueByRole)
+      .map(([role, item]) => ({ role, ...item }))
+      .filter((item) => item.revenue > 0 || item.count > 0)
+      .sort((first, second) => second.revenue - first.revenue);
+  }, [subscriptionRevenueByRole]);
 
   const summaryCards = useMemo(() => ([
     { label: 'Users', value: summaryCounts.users },
@@ -427,6 +474,7 @@ export default function SuperAdminDashboard() {
     }, 'Service deleted');
   };
 
+  // Search keyword: Super Admin Doctors CRUD Actions - update/delete all hospital doctors.
   const updateDoctor = async (doctor, updates) => {
     await runAction(async () => {
       const response = await doctorsAPI.patch(doctor.id, updates);
@@ -453,6 +501,7 @@ export default function SuperAdminDashboard() {
     }, 'Doctor deleted');
   };
 
+  // Search keyword: Super Admin Medicines CRUD Actions - update/delete all pharmacy medicines.
   const updateMedicine = async (medicine, updates) => {
     await runAction(async () => {
       const response = await emedicineAPI.updateMedicine(medicine.id, updates);
@@ -567,6 +616,7 @@ export default function SuperAdminDashboard() {
     }, 'E-Doctor consultation deleted');
   };
 
+  // Search keyword: Super Admin E-Doctors CRUD Actions - update/delete all e-doctor profiles.
   const updateEdoctor = async (edoctor, updates) => {
     await runAction(async () => {
       const response = await edoctorAPI.patchEdoctor(edoctor.id, updates);
@@ -962,6 +1012,11 @@ export default function SuperAdminDashboard() {
       // Subscriptions tab: create, update, cancel, and delete admin subscriptions.
       return (
         <>
+          {/* Search keyword: Super Admin Subscription Revenue Graph - admin-type revenue chart. */}
+          <SubscriptionRevenuePanel
+            totalRevenue={subscriptionRevenue}
+            breakdown={subscriptionRevenueBreakdown}
+          />
           <SubscriptionCreateForm
             admins={data.admins.filter((account) => (
               account.is_superuser || (account.roles || []).some((role) => adminRoleOptions.includes(role))
@@ -971,10 +1026,12 @@ export default function SuperAdminDashboard() {
             onSubmit={createSubscription}
             saving={saving}
           />
-          <Table headers={['User', 'Plan', 'Duration', 'Amount', 'End Date', 'Trial', 'Status', 'Actions']}>
+          {/* Search keyword: Super Admin Subscription Admin Type Table - shows which admin type owns each subscription. */}
+          <Table headers={['Admin', 'Admin Type', 'Plan', 'Duration', 'Amount', 'End Date', 'Trial', 'Status', 'Actions']}>
             {data.subscriptions.map((subscription) => (
               <tr key={subscription.id}>
                 <td>{subscription.user_email}</td>
+                <td>{userRoleLabels[getSubscriptionAdminRole(subscription, data.admins)] || 'Unknown Admin'}</td>
                 <td>{subscription.plan}</td>
                 <td>{subscription.duration}</td>
                 <td>BDT {Number(subscription.amount || 0).toFixed(2)}</td>
@@ -1116,6 +1173,53 @@ function AdminCreateForm({ newAdmin, setNewAdmin, onSubmit, saving, fieldErrors,
         <button type="submit" className="btn btn-primary" disabled={saving} style={{ alignSelf: 'flex-end', height: 'fit-content' }}>Add Admin</button>
       </div>
     </form>
+  );
+}
+
+// Search keyword: Component Subscription Revenue Panel - renders total and admin-type revenue bars.
+function SubscriptionRevenuePanel({ totalRevenue, breakdown }) {
+  const maxRevenue = Math.max(...breakdown.map((item) => item.revenue), 0);
+
+  return (
+    <div className="subscription-revenue-panel">
+      <div className="subscription-revenue-header">
+        <div>
+          <h2>Subscription Revenue by Admin Type</h2>
+          <p>Total subscription revenue from admin plans.</p>
+        </div>
+        <div className="subscription-revenue-total">
+          <span>Total Revenue</span>
+          <strong>{formatCurrency(totalRevenue)}</strong>
+        </div>
+      </div>
+
+      <div className="subscription-revenue-chart">
+        {breakdown.length === 0 ? (
+          <div className="empty-pie">No paid subscription revenue found.</div>
+        ) : (
+          breakdown.map((item) => {
+            const width = maxRevenue ? `${Math.max(6, (item.revenue / maxRevenue) * 100)}%` : '0%';
+            const percentage = totalRevenue ? Math.round((item.revenue / totalRevenue) * 100) : 0;
+
+            return (
+              <div key={item.role} className="subscription-revenue-row">
+                <div className="subscription-revenue-row-main">
+                  <span>{item.label}</span>
+                  <strong>{formatCurrency(item.revenue)}</strong>
+                </div>
+                <div className="subscription-revenue-bar-track" aria-label={`${item.label} revenue ${percentage}%`}>
+                  <div className="subscription-revenue-bar" style={{ width }} />
+                </div>
+                <div className="subscription-revenue-meta">
+                  <span>{item.count} subscriptions</span>
+                  <span>{percentage}%</span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }
 
