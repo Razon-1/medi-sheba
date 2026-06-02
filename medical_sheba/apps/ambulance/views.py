@@ -278,6 +278,7 @@ class AmbulanceRequestViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Distance must be greater than 0 km'}, status=status.HTTP_400_BAD_REQUEST)
 
         ambulance_request.distance_km = distance_km
+        # Final ambulance fare = trip distance in km * ambulance price per km.
         ambulance_request.final_fare = (distance_km * ambulance_request.ambulance.cost_per_km).quantize(Decimal('0.01'))
         ambulance_request.save(update_fields=['distance_km', 'final_fare', 'updated_at'])
 
