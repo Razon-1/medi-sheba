@@ -1,3 +1,10 @@
+/* Search keyword: Component Subscription CSS - subscription status card, plan display, and subscription actions. */
+/* Section guide:
+   - Used by subscription-related React components.
+   - Controls subscription status card, active/inactive state, feature list, and action buttons.
+   - For Home page pricing cards, use styles/pages/Home.css instead.
+*/
+/* Subscription.jsx main wrapper: whole subscription page/component area. */
 /* Subscription Component Styles */
 
 .subscription-container {
@@ -8,6 +15,7 @@
   min-height: 100vh;
 }
 
+/* Subscription.jsx header: title and subtitle above subscription cards/status. */
 .subscription-header {
   text-align: center;
   margin-bottom: 40px;
@@ -33,6 +41,7 @@
   color: #666;
 }
 
+/* Subscription.jsx error message: shown when subscription data/payment fails. */
 /* Error Message */
 .error-message {
   background: #ffe6e6;
@@ -44,6 +53,7 @@
   font-weight: 500;
 }
 
+/* Subscription.jsx active subscription details: current plan/status card area. */
 /* Active Subscription Details */
 .active-subscription-details {
   background: white;
@@ -53,6 +63,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Subscription.jsx status section: heading plus active subscription status card. */
 .subscription-status {
   margin-bottom: 20px;
 }
@@ -64,6 +75,7 @@
   font-weight: 600;
 }
 
+/* Subscription.jsx status card: active/trial/expired subscription summary styling. */
 .status-card {
   border: 2px solid #667eea;
   border-radius: 12px;
@@ -71,10 +83,12 @@
   background: linear-gradient(135deg, #e6f3ff 0%, #f0e6ff 100%);
 }
 
+/* Subscription.jsx status info: plan badge and status text. */
 .status-info {
   margin-bottom: 20px;
 }
 
+/* Subscription.jsx plan badge: visual label for the plan name/type. */
 .plan-badge {
   display: inline-block;
   padding: 8px 16px;
@@ -90,6 +104,7 @@
   font-size: 14px;
 }
 
+/* Subscription.jsx status feature list: current plan benefits. */
 .status-features {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding-top: 20px;
@@ -124,6 +139,7 @@
   font-weight: 600;
 }
 
+/* Subscription.jsx plans grid: layout for available subscription plan cards. */
 /* Plans Grid */
 .subscription-plans-grid {
   display: grid;
@@ -132,6 +148,7 @@
   margin-top: 30px;
 }
 
+/* Subscription.jsx plan card: one available subscription option. */
 /* Plan Card */
 .subscription-plan-card {
   background: white;
@@ -159,6 +176,7 @@
   border-color: #764ba2;
 }
 
+/* Subscription.jsx popular badge: marker on highlighted plan cards. */
 .popular-badge {
   position: absolute;
   top: 0;

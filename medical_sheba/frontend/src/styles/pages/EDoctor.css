@@ -1,4 +1,11 @@
+/* Search keyword: Page E-Doctor CSS - telemedicine doctor listing, filters, consultation modal, status, and e-doctor colors. */
+/* Section guide:
+   - Used by EDoctor.jsx.
+   - Controls telemedicine header, search/filter panels, e-doctor cards/list, consultation booking modal, status alerts, and responsive layout.
+*/
+/* EDoctor.jsx page wrapper and telemedicine listing styles. */
 /* E-Doctor Page Styling */
+/* EDoctor.jsx page container. */
 .edoctor-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -6,6 +13,7 @@
   background-color: #f5f5f5;
 }
 
+/* EDoctor.jsx page header: title and subtitle. */
 .edoctor-header {
   background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
   color: white;
@@ -29,6 +37,7 @@
   opacity: 0.9;
 }
 
+/* EDoctor.jsx tab navigation: doctors vs consultations/history tabs. */
 /* Tab Navigation */
 .edoctor-tabs {
   display: flex;
@@ -66,6 +75,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* EDoctor.jsx search/filter section for online doctors. */
 /* Search and Filter Section */
 .edoctor-search-section {
   margin-bottom: 30px;
@@ -115,6 +125,7 @@
   background-color: #16a085;
 }
 
+/* EDoctor.jsx specialization/availability filter buttons. */
 /* Filter Section */
 .filter-section {
   margin-top: 20px;
@@ -172,6 +183,7 @@
   accent-color: #1abc9c;
 }
 
+/* EDoctor.jsx results count text. */
 /* Results Count */
 .results-count {
   color: #666;
@@ -184,6 +196,7 @@
   font-weight: 600;
 }
 
+/* EDoctor.jsx doctors list: online doctor cards container. */
 /* Doctors List */
 .doctors-list {
   display: grid;
@@ -193,6 +206,7 @@
   align-items: stretch;
 }
 
+/* EDoctor.jsx online doctor card. */
 .doctor-card {
   background: white;
   border: 1px solid #e0e0e0;
@@ -275,6 +289,7 @@
   white-space: nowrap;
 }
 
+/* EDoctor.jsx doctor details rows: fee, availability, serial/contact details. */
 /* Doctor Details */
 .doctor-details {
   margin-bottom: 15px;
@@ -354,6 +369,7 @@
   margin: 0;
 }
 
+/* EDoctor.jsx doctor card rating display. */
 /* Rating Section */
 .rating-section {
   display: flex;
@@ -386,6 +402,7 @@
   font-size: 0.85em;
 }
 
+/* EDoctor.jsx doctor card actions: call/book consultation. */
 /* Doctor Actions */
 .doctor-actions {
   display: grid;
@@ -460,6 +477,7 @@
   color: #333;
 }
 
+/* EDoctor.jsx consultations list: patient booked online consultations. */
 /* Consultations List */
 .consultations-list {
   display: grid;
@@ -522,6 +540,7 @@
   color: #333;
 }
 
+/* EDoctor.jsx booking modal: online consultation request form. */
 /* Booking Modal */
 .booking-modal-overlay {
   position: fixed;
@@ -682,6 +701,7 @@
   background-color: #16a085;
 }
 
+/* EDoctor.jsx confirmation modal: booking/payment confirmation screen. */
 /* Confirmation Modal Styles */
 .confirmation-modal {
   animation: slideIn 0.3s ease-out;

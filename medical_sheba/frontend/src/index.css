@@ -1,3 +1,8 @@
+/* Search keyword: Global Tailwind Entry CSS - app-wide Tailwind layers, shared tokens, and utility classes. */
+/* Section guide:
+   - Tailwind base/components/utilities imports for the whole frontend.
+   - Use this file for app-wide Tailwind utility extensions, not page-specific colors.
+*/
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

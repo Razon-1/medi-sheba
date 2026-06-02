@@ -1,3 +1,9 @@
+/* Search keyword: Page Hospital Detail CSS - hospital profile detail page, info cards, doctors/reviews section, and hospital colors. */
+/* Section guide:
+   - Used by HospitalDetail.jsx.
+   - Controls hospital detail hero/profile, facility info cards, emergency/service details, doctor count/list area, reviews, and CTA buttons.
+*/
+/* HospitalDetail.jsx page wrapper. */
 .hospital-detail {
   width: 100%;
   background-color: #f8f9fa;
@@ -5,6 +11,7 @@
   min-height: calc(100vh - 200px);
 }
 
+/* HospitalDetail.jsx back button. */
 .btn-back {
   display: inline-flex;
   align-items: center;
@@ -29,6 +36,7 @@
   color: var(--primary-blue);
 }
 
+/* HospitalDetail.jsx loading/error state block. */
 /* Loading & Error States */
 .loading-container,
 .error-container {
@@ -54,7 +62,9 @@
   margin-bottom: 1rem;
 }
 
+/* HospitalDetail.jsx header/profile section: image, emergency badge, hospital name, rating. */
 /* Header Section */
+/* HospitalDetail.jsx detail header layout. */
 .detail-header {
   background: white;
   border-radius: 0.75rem;
@@ -68,6 +78,7 @@
   border: 1px solid #e5e7eb;
 }
 
+/* HospitalDetail.jsx hospital image area. */
 .header-image {
   position: relative;
   width: 100%;
@@ -84,6 +95,7 @@
   display: block;
 }
 
+/* HospitalDetail.jsx emergency availability badge. */
 .emergency-badge {
   position: absolute;
   top: 1rem;
@@ -140,6 +152,7 @@
   font-size: 0.95rem;
 }
 
+/* HospitalDetail.jsx main detail content sections. */
 /* Detail Content */
 .detail-content {
   max-width: 1200px;
@@ -164,6 +177,7 @@
   padding-bottom: 0.75rem;
 }
 
+/* HospitalDetail.jsx contact cards section. */
 /* Contact Section */
 .contact-grid {
   display: grid;
@@ -171,6 +185,7 @@
   gap: 1.5rem;
 }
 
+/* HospitalDetail.jsx one contact card. */
 .contact-card {
   display: flex;
   gap: 1rem;
@@ -225,6 +240,7 @@
   font-weight: 400 !important;
 }
 
+/* HospitalDetail.jsx facilities cards section. */
 /* Facilities Section */
 .facilities-section {
   background: white;
@@ -240,6 +256,7 @@
   gap: 1.5rem;
 }
 
+/* HospitalDetail.jsx one facility card. */
 .facility-card {
   display: flex;
   align-items: center;
@@ -286,6 +303,7 @@
   margin: 0.5rem 0 0 0;
 }
 
+/* HospitalDetail.jsx services and special facilities lists. */
 /* Services Section */
 .services-list,
 .special-facilities-list {
@@ -325,6 +343,7 @@
   font-size: 0.95rem;
 }
 
+/* HospitalDetail.jsx about hospital section. */
 /* About Section */
 .about-content {
   line-height: 1.8;
@@ -337,6 +356,7 @@
   text-align: justify;
 }
 
+/* HospitalDetail.jsx bottom CTA section for finding doctors/booking. */
 /* CTA Section */
 .cta-section {
   background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));

@@ -1,3 +1,9 @@
+/* Search keyword: Page Pharmacy Create CSS - pharmacy setup form, subscription prompt area, upload fields, and create page colors. */
+/* Section guide:
+   - Used by PharmacyCreatePage.jsx.
+   - Controls pharmacy setup/create form, subscription access notice, image upload fields, form sections, and submit/cancel actions.
+*/
+/* PharmacyCreatePage.jsx page wrapper. */
 .pharmacy-create-container {
   min-height: 100vh;
   background:
@@ -6,6 +12,7 @@
   padding: clamp(1rem, 2vw, 2rem);
 }
 
+/* PharmacyCreatePage.jsx header: setup title and intro text. */
 .create-header {
   text-align: center;
   color: #14325b;
@@ -28,6 +35,7 @@
   margin: 0 auto;
 }
 
+/* PharmacyCreatePage.jsx small plan/status pill in header. */
 .header-pill {
   display: inline-flex;
   align-items: center;
@@ -41,6 +49,7 @@
   font-weight: 700;
 }
 
+/* PharmacyCreatePage.jsx form card/container. */
 .create-form-container {
   max-width: 980px;
   margin: 0 auto;
@@ -53,6 +62,7 @@
   backdrop-filter: blur(10px);
 }
 
+/* PharmacyCreatePage.jsx main pharmacy creation form. */
 .pharmacy-form {
   width: 100%;
   max-width: none;
@@ -64,6 +74,7 @@
   box-shadow: none;
 }
 
+/* PharmacyCreatePage.jsx one grouped form section. */
 .form-section {
   min-width: 0;
   margin-bottom: 0;
@@ -89,6 +100,7 @@
   padding-bottom: 1rem;
 }
 
+/* PharmacyCreatePage.jsx form row layout. */
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -100,6 +112,7 @@
   margin-bottom: 0;
 }
 
+/* PharmacyCreatePage.jsx field group: label plus input/select/textarea. */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -138,6 +151,7 @@
   min-height: 100px;
 }
 
+/* PharmacyCreatePage.jsx error banner above form. */
 .error-banner {
   grid-column: 1 / -1;
   display: flex;
@@ -158,6 +172,7 @@
   color: #f44;
 }
 
+/* PharmacyCreatePage.jsx submit/cancel actions. */
 .form-actions {
   grid-column: 1 / -1;
   display: flex;
@@ -211,6 +226,7 @@
   border-color: #cbd5e1;
 }
 
+/* PharmacyCreatePage.jsx informational note/helper box. */
 .form-info {
   grid-column: 1 / -1;
   margin-top: 1.5rem;

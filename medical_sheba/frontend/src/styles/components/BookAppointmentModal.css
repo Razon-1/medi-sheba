@@ -1,3 +1,10 @@
+/* Search keyword: Component Book Appointment Modal CSS - appointment modal overlay, doctor info, form fields, alerts, and buttons. */
+/* Section guide:
+   - Used by BookAppointmentModal.jsx.
+   - Controls modal overlay, modal header, doctor summary, appointment form, date/time fields, alerts, and modal buttons.
+   - Related doctor listing card styles are in styles/components/DoctorCard.css.
+*/
+/* BookAppointmentModal.jsx overlay: dark background behind appointment popup. */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -12,6 +19,7 @@
   padding: 1rem;
 }
 
+/* BookAppointmentModal.jsx modal card: appointment booking popup container. */
 .modal-content {
   background: white;
   border-radius: 1rem;
@@ -34,6 +42,7 @@
   }
 }
 
+/* BookAppointmentModal.jsx header: title and close button. */
 .modal-header {
   display: flex;
   align-items: center;
@@ -66,10 +75,12 @@
   color: var(--text-dark);
 }
 
+/* BookAppointmentModal.jsx body: contains doctor summary, alerts, and appointment form. */
 .modal-body {
   padding: 1.75rem;
 }
 
+/* BookAppointmentModal.jsx doctor summary: selected doctor info shown before booking fields. */
 .doctor-summary {
   display: flex;
   align-items: center;
@@ -112,6 +123,7 @@
   margin: 0.25rem 0;
 }
 
+/* BookAppointmentModal.jsx error alert: login/payment/form validation errors. */
 .error-alert {
   display: flex;
   align-items: flex-start;
@@ -154,6 +166,7 @@
   background: #B91C1C;
 }
 
+/* BookAppointmentModal.jsx success message: shown after appointment request succeeds. */
 .success-message {
   display: flex;
   flex-direction: column;
@@ -181,6 +194,7 @@
   line-height: 1.5;
 }
 
+/* BookAppointmentModal.jsx payment button: proceeds to payment after booking. */
 .btn-proceed-payment {
   display: inline-flex;
   align-items: center;
@@ -213,12 +227,14 @@
   outline-offset: 3px;
 }
 
+/* BookAppointmentModal.jsx appointment form: patient details, date/time, and notes. */
 .appointment-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
+/* BookAppointmentModal.jsx form field group. */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -255,6 +271,7 @@
   font-family: inherit;
 }
 
+/* BookAppointmentModal.jsx action row: cancel and confirm buttons. */
 .form-actions {
   display: flex;
   gap: 1rem;
@@ -301,6 +318,7 @@
   cursor: not-allowed;
 }
 
+/* BookAppointmentModal.jsx availability section: doctor schedule/availability display. */
 /* Availability Section Styles */
 .availability-section {
   display: grid;
@@ -344,6 +362,7 @@
   line-height: 1.4;
 }
 
+/* BookAppointmentModal.jsx phone confirmation notice: tells patient about phone follow-up. */
 /* Phone Confirmation Notice */
 .phone-notice {
   display: flex;

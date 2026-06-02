@@ -1,10 +1,18 @@
+/* Search keyword: Page E-Medicine CSS - pharmacy/medicine listing, filters, pharmacy cards, medicine cards, and order colors. */
+/* Section guide:
+   - Used by EMedicine.jsx.
+   - Controls pharmacy search/filter section, pharmacy cards, medicine list/cards, order buttons, availability badges, and responsive layout.
+   - Order popup styles are in styles/components/OrderMedicinesModal.css.
+*/
 /* E-Medicine Page Styling */
 
+/* EMedicine.jsx page wrapper: public e-medicine/pharmacy listing page. */
 .emedicine-page {
   min-height: 100vh;
   background-color: #f5f7fa;
 }
 
+/* EMedicine.jsx page header: title and subtitle. */
 /* Page Header */
 .page-header {
   background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
@@ -28,6 +36,7 @@
   margin: 0 auto;
 }
 
+/* EMedicine.jsx tab navigation: switches pharmacy/medicine views. */
 /* Tab Navigation */
 .tab-navigation {
   display: flex;
@@ -60,6 +69,7 @@
   font-weight: 700;
 }
 
+/* EMedicine.jsx search/filter section: search input and filters. */
 /* Search and Filter Section */
 .search-filter-section {
   max-width: 1200px;
@@ -115,6 +125,7 @@
   transform: scale(0.98);
 }
 
+/* EMedicine.jsx filter buttons: pharmacy type/medicine filters. */
 /* Filter Buttons */
 .filter-buttons {
   background: white;
@@ -195,6 +206,7 @@
   font-weight: 500;
 }
 
+/* EMedicine.jsx pharmacy list: container for pharmacy cards. */
 /* Pharmacy List */
 .pharmacy-list {
   max-width: 1200px;
@@ -206,6 +218,7 @@
   margin-bottom: 50px;
 }
 
+/* EMedicine.jsx pharmacy card: one pharmacy listing. */
 .pharmacy-card {
   background: white;
   border-radius: 10px;
@@ -222,6 +235,7 @@
   transform: translateY(-2px);
 }
 
+/* EMedicine.jsx pharmacy card image. */
 .pharmacy-image {
   position: relative;
   width: 100%;
@@ -254,6 +268,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* EMedicine.jsx pharmacy card header: name, type, verification. */
 .pharmacy-header {
   display: flex;
   flex-direction: column;
@@ -278,6 +293,7 @@
   font-weight: 600;
 }
 
+/* EMedicine.jsx pharmacy verification badge. */
 .verification-status {
   text-align: left;
 }
@@ -294,6 +310,7 @@
   font-size: 0.95rem;
 }
 
+/* EMedicine.jsx pharmacy details: address, phone, delivery, minimum order. */
 /* Pharmacy Details */
 .pharmacy-details {
   margin-bottom: 0;
@@ -399,6 +416,7 @@
   margin-left: 5px;
 }
 
+/* EMedicine.jsx pharmacy card actions: call/order buttons. */
 /* Action Buttons */
 .action-buttons {
   display: grid;
@@ -458,6 +476,7 @@
   transform: translateY(0);
 }
 
+/* EMedicine.jsx medicines section: medicine search and medicine cards. */
 /* Medicines Section */
 .medicines-section {
   max-width: 1200px;
@@ -510,6 +529,7 @@
   margin-bottom: 50px;
 }
 
+/* EMedicine.jsx medicine card: one medicine item. */
 .medicine-card {
   background: white;
   border-radius: 10px;
@@ -562,6 +582,7 @@
   margin-top: 12px;
 }
 
+/* EMedicine.jsx empty/loading state. */
 /* No Results */
 .no-results {
   text-align: center;

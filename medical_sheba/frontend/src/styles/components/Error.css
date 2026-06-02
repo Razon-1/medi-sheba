@@ -1,3 +1,9 @@
+/* Search keyword: Component Error CSS - error page/container, error icon, message, and retry/back button design. */
+/* Section guide:
+   - Used by shared error UI components.
+   - Controls centered error container, error icon, title/message text, and retry/back buttons.
+*/
+/* Error component wrapper: centers error message and retry button. */
 .error-container {
   display: flex;
   flex-direction: column;
@@ -12,6 +18,7 @@
   box-shadow: 0 4px 12px rgba(231, 76, 60, 0.1);
 }
 
+/* Error component icon: large visual error indicator. */
 .error-icon {
   color: var(--danger-red);
   animation: shake 0.5s ease-in-out;
@@ -23,6 +30,7 @@
   75% { transform: translateX(5px); }
 }
 
+/* Error component message text. */
 .error-message {
   color: var(--text-dark);
   text-align: center;
@@ -31,6 +39,7 @@
   line-height: 1.6;
 }
 
+/* Error component retry button. */
 .btn-retry {
   background: linear-gradient(135deg, var(--danger-red), var(--accent-coral));
   color: white;

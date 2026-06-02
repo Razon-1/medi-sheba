@@ -1,3 +1,10 @@
+/* Search keyword: Component Hospital Card CSS - hospital listing card colors, image, badges, details, and view button. */
+/* Section guide:
+   - Used by HospitalCard.jsx on Hospitals and related hospital listing areas.
+   - Controls hospital image, type/status badges, details rows, emergency indicator, and view details button.
+   - Page-level hospital grid/search styles reuse styles/pages/Doctors.css and styles/pages/Hospitals.css.
+*/
+/* HospitalCard.jsx wrapper: one hospital listing card. */
 .hospital-card {
   background: white;
   border-radius: 1rem;
@@ -16,6 +23,7 @@
   border-color: var(--primary-blue);
 }
 
+/* HospitalCard.jsx image area: hospital photo container. */
 .hospital-image {
   width: 100%;
   height: 280px;
@@ -35,6 +43,7 @@
   transform: scale(1.08);
 }
 
+/* HospitalCard.jsx badge: status/type badge overlay. */
 .hospital-badge {
   position: absolute;
   top: 1rem;
@@ -48,6 +57,7 @@
   box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
 }
 
+/* HospitalCard.jsx details section: name, type, stats, contact, services. */
 .hospital-info {
   padding: 1.75rem;
   flex: 1;
@@ -70,6 +80,7 @@
   letter-spacing: 0.3px;
 }
 
+/* HospitalCard.jsx quick stats: doctors/beds/rating summary. */
 .quick-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -95,6 +106,7 @@
   height: 18px;
 }
 
+/* HospitalCard.jsx contact info rows. */
 .contact-info {
   display: flex;
   flex-direction: column;
@@ -119,6 +131,7 @@
   height: 16px;
 }
 
+/* HospitalCard.jsx services list section. */
 .services-section {
   margin-bottom: 1rem;
 }
@@ -155,6 +168,7 @@
   color: var(--accent-teal);
 }
 
+/* HospitalCard.jsx view details button. */
 .btn-view {
   background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
   color: white;

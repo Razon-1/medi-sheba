@@ -1,3 +1,10 @@
+/* Search keyword: Page Auth CSS - login/register/reset page layout, auth background, and auth page colors. */
+/* Section guide:
+   - Used by Login.jsx, Register.jsx, ResetPassword.jsx page shell.
+   - Controls auth page background, centered layout, auth card positioning, and responsive auth page spacing.
+   - Shared form fields are in styles/components/AuthForm.css.
+*/
+/* Login.jsx/Register.jsx/ResetPassword.jsx page wrapper. */
 .auth-page {
   width: 100%;
   min-height: calc(100vh - 200px);
@@ -8,11 +15,13 @@
   background: linear-gradient(135deg, var(--primary-light), rgba(0, 102, 204, 0.05));
 }
 
+/* Auth pages centered form container. */
 .auth-container {
   width: 100%;
   max-width: 450px;
 }
 
+/* Auth pages card around the auth form. */
 .auth-box {
   background: white;
   padding: 3.5rem 2.5rem;
@@ -30,6 +39,7 @@
   letter-spacing: 0.3px;
 }
 
+/* Auth pages error message. */
 .error-message {
   background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(255, 107, 107, 0.08));
   color: var(--danger-red);
@@ -42,6 +52,7 @@
   box-shadow: 0 2px 8px rgba(231, 76, 60, 0.1);
 }
 
+/* Auth pages bottom links: login/register/forgot password. */
 .auth-link {
   text-align: center;
   margin-top: 1.75rem;

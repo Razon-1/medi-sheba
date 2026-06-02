@@ -1,3 +1,10 @@
+/* Search keyword: Page Doctors and Hospitals Listing CSS - shared listing page header, search, filters, grids, and cards layout. */
+/* Section guide:
+   - Used by Doctors.jsx and reused by Hospitals.jsx/Blood.jsx for listing layout.
+   - Controls page header, search/filter area, doctors/hospitals grid, empty/loading state, and listing responsiveness.
+   - Individual card designs live in DoctorCard.css and HospitalCard.css.
+*/
+/* Doctors.jsx/Hospitals.jsx/Blood.jsx shared listing page wrapper. */
 .doctors-page,
 .hospitals-page,
 .blood-page,
@@ -6,6 +13,7 @@
   width: 100%;
 }
 
+/* Listing pages header: large title/banner area. */
 .page-header {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
   color: white;
@@ -46,6 +54,7 @@
   font-weight: 400;
 }
 
+/* Listing pages search section: search input and action button area. */
 .search-section {
   margin-bottom: 2.5rem;
 }
@@ -58,6 +67,7 @@
   box-shadow: none;
 }
 
+/* Listing pages search box: icon plus text input. */
 .search-box {
   display: flex;
   gap: 0;
@@ -95,6 +105,7 @@
   box-shadow: none;
 }
 
+/* Listing pages search button. */
 .btn-search {
   background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
   color: white;
@@ -110,6 +121,7 @@
   opacity: 0.95;
 }
 
+/* Listing pages filter info: result count/filter status text. */
 .filter-info {
   text-align: center;
   margin-bottom: 2rem;
@@ -117,6 +129,7 @@
   font-weight: 600;
 }
 
+/* Doctors.jsx/Hospitals.jsx card grid: listing card container. */
 .doctors-grid,
 .hospitals-grid {
   display: grid;
@@ -132,6 +145,7 @@
   justify-content: center;
 }
 
+/* Blood.jsx actions area: blood search/filter controls. */
 .blood-actions {
   display: flex;
   justify-content: space-between;
@@ -147,6 +161,7 @@
   margin-bottom: 0;
 }
 
+/* Blood.jsx donor/request table. */
 .blood-table {
   background-color: white;
   border-radius: 1rem;
@@ -179,6 +194,7 @@
   background-color: var(--bg-lighter);
 }
 
+/* Blood.jsx blood group badge. */
 .blood-type {
   background: linear-gradient(135deg, var(--primary-light), rgba(0, 102, 204, 0.1));
   color: var(--primary-blue);
@@ -190,6 +206,7 @@
   border-left: 3px solid var(--primary-blue);
 }
 
+/* Blood.jsx contact donor button. */
 .btn-contact {
   background: linear-gradient(135deg, var(--accent-teal), var(--primary-blue));
   color: white;
@@ -207,6 +224,7 @@
   box-shadow: 0 6px 16px rgba(0, 169, 145, 0.3);
 }
 
+/* Listing pages empty/loading state. */
 .no-results {
   text-align: center;
   padding: 4rem 2rem;

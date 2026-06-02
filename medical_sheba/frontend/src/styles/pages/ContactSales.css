@@ -1,4 +1,11 @@
+/* Search keyword: Page Contact Sales CSS - contact sales page card, contact links, and sales page colors. */
+/* Section guide:
+   - Used by ContactSales.jsx.
+   - Controls contact sales wrapper, central card, heading/description, phone/email/WhatsApp links, and sales page spacing.
+*/
+/* ContactSales.jsx page wrapper and sales contact card styling. */
 /* Simple contact sales page styling */
+/* ContactSales.jsx page wrapper. */
 .contact-sales-page {
   display: flex;
   justify-content: center;
@@ -6,6 +13,7 @@
   padding: 48px 20px;
 }
 
+/* ContactSales.jsx main contact card. */
 .contact-card {
   max-width: 720px;
   width: 100%;
@@ -22,6 +30,7 @@
   color: #0b3b83;
 }
 
+/* ContactSales.jsx phone/email/WhatsApp contact list. */
 .contact-list {
   list-style: none;
   padding: 0;
@@ -39,6 +48,7 @@
   margin-left: 8px;
 }
 
+/* ContactSales.jsx note text below contact options. */
 .contact-note p {
   margin: 16px 0 0 0;
   color: #444;

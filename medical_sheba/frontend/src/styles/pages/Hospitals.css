@@ -1,6 +1,14 @@
+/* Search keyword: Page Hospitals CSS - hospital listing page overrides; mostly reuses Doctors.css shared listing design. */
+/* Section guide:
+   - Used by Hospitals.jsx.
+   - Imports/reuses Doctors.css for shared listing/search/grid design.
+   - Add hospital-specific listing overrides here when Hospitals page needs different layout/colors.
+*/
+/* Hospitals.jsx mostly reuses Doctors.css; only hospital-specific grid overrides are below. */
 /* Using same styles as Doctors page */
 @import 'Doctors.css';
 
+/* Hospitals.jsx card grid override: hospital listing layout. */
 .hospitals-page .hospitals-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: center;

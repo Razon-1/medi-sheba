@@ -1,9 +1,16 @@
+/* Search keyword: Component Review List CSS - review cards, rating display, reviewer text, and empty review state. */
+/* Section guide:
+   - Used by review list components on doctor/hospital detail pages.
+   - Controls review cards, reviewer name/date, star rating display, review text, and empty review message.
+*/
+/* ReviewList.jsx wrapper: list of review items. */
 .review-list {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
+/* ReviewList.jsx one review card/item. */
 .review-item {
   border: 1px solid #E0E0E0;
   border-radius: 8px;
@@ -17,6 +24,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* ReviewList.jsx review header: reviewer name/date/rating. */
 .review-header {
   display: flex;
   justify-content: space-between;
@@ -37,11 +45,13 @@
   color: #999;
 }
 
+/* ReviewList.jsx star rating display. */
 .review-rating {
   display: flex;
   gap: 0.25rem;
 }
 
+/* ReviewList.jsx verified reviewer badge. */
 .verified-badge {
   display: inline-flex;
   align-items: center;
@@ -55,6 +65,7 @@
   margin-bottom: 0.75rem;
 }
 
+/* ReviewList.jsx optional review title. */
 .review-title {
   margin: 0.5rem 0;
   font-size: 1rem;
@@ -62,6 +73,7 @@
   font-weight: 600;
 }
 
+/* ReviewList.jsx review body text. */
 .review-text {
   margin: 0.75rem 0;
   color: #666;
@@ -77,6 +89,7 @@
   border-top: 1px solid #E0E0E0;
 }
 
+/* ReviewList.jsx helpful button. */
 .helpful-btn {
   display: flex;
   align-items: center;

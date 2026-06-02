@@ -1,3 +1,10 @@
+/* Search keyword: Component Order Medicines Modal CSS - medicine order modal, cart, totals, form fields, and payment button. */
+/* Section guide:
+   - Used by OrderMedicinesModal.jsx.
+   - Controls medicine order popup, selected medicine cart, quantity controls, delivery form, totals, and submit/payment button.
+   - E-Medicine page listing styles are in styles/pages/EMedicine.css.
+*/
+/* OrderMedicinesModal.jsx modal scope: all medicine order popup styles live under this class. */
 /* Order Medicines Modal Styles */
 
 .order-medicines-modal {
@@ -9,6 +16,7 @@
   overflow-y: auto;
 }
 
+/* OrderMedicinesModal.jsx pharmacy summary: selected pharmacy contact/address/minimum order. */
 /* Pharmacy Summary */
 .pharmacy-summary {
   padding: 1rem;
@@ -43,6 +51,7 @@
   color: #27ae60;
 }
 
+/* OrderMedicinesModal.jsx medicines list: available medicines to add to cart. */
 /* Medicines List Section */
 .medicines-list-section {
   margin-bottom: 1.5rem;
@@ -85,6 +94,7 @@
   background: #94a3b8;
 }
 
+/* OrderMedicinesModal.jsx medicine item: one selectable medicine row. */
 .medicine-item {
   display: flex;
   justify-content: space-between;
@@ -143,6 +153,7 @@
   margin: 0.25rem 0 0 0;
 }
 
+/* OrderMedicinesModal.jsx add medicine button. */
 .btn-add-medicine {
   padding: 0.4rem 0.8rem;
   background: #27ae60;
@@ -173,6 +184,7 @@
   font-size: 0.9rem;
 }
 
+/* OrderMedicinesModal.jsx cart section: selected medicines and quantity controls. */
 /* Cart Section */
 .cart-section {
   padding: 1rem;
@@ -198,6 +210,7 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+/* OrderMedicinesModal.jsx cart item row. */
 .cart-item {
   display: grid;
   grid-template-columns: 1fr 120px 100px 40px;
@@ -232,6 +245,7 @@
   justify-self: center;
 }
 
+/* OrderMedicinesModal.jsx quantity plus/minus button. */
 .qty-btn {
   background: white;
   border: 1px solid #d1d5db;
@@ -289,6 +303,7 @@
   color: #991b1b;
 }
 
+/* OrderMedicinesModal.jsx order total: subtotal/total amount summary. */
 /* Order Total */
 .order-total {
   background: white;
@@ -319,6 +334,7 @@
   border-top: 2px solid #e5e7eb;
 }
 
+/* OrderMedicinesModal.jsx patient information: name, phone, delivery address fields. */
 /* Patient Information Section */
 .patient-info-section {
   padding: 1rem;
@@ -374,6 +390,7 @@
   min-height: 80px;
 }
 
+/* OrderMedicinesModal.jsx prescription notes/upload text area. */
 /* Prescription Section */
 .prescription-section {
   display: flex;
@@ -415,6 +432,7 @@
   color: #27ae60;
 }
 
+/* OrderMedicinesModal.jsx form actions: cancel/confirm order buttons. */
 /* Form Actions */
 .order-medicines-modal .form-actions {
   margin-top: 1.5rem;

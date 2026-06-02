@@ -1,13 +1,23 @@
+/* Search keyword: Shared Admin Dashboard CSS - hospital admin, super admin, revenue review, tables, tabs, forms, and dashboard colors. */
+/* Section guide:
+   - Used by HospitalAdminDashboard.jsx and SuperAdminDashboard.jsx.
+   - Controls dashboard container, tab buttons, admin tables, forms, modals, and action buttons.
+   - Revenue Review colors: search .review-summary, .revenue-card, .review-chart-card, .revenue-pie-chart.
+   - Super admin subscription revenue graph: search .subscription-revenue-panel and .subscription-revenue-bar.
+*/
+/* HospitalAdminDashboard.jsx page wrapper: hospital admin dashboard layout. */
 .admin-dashboard {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
+/* SuperAdminDashboard.jsx page wrapper: super admin dashboard layout. */
 .super-admin-dashboard {
   max-width: 1480px;
 }
 
+/* Admin dashboards header: page title and hospital/pharmacy/admin name text. */
 .admin-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -36,6 +46,7 @@
   opacity: 0.9;
 }
 
+/* HospitalAdminDashboard.jsx tab row: Doctors, E-Doctors, Appointments, Revenue Review, Hospital Info. */
 .admin-tabs {
   display: flex;
   gap: 10px;
@@ -44,6 +55,7 @@
   flex-wrap: wrap;
 }
 
+/* SuperAdminDashboard.jsx tab row: users, services, payments, subscriptions, requests. */
 .super-admin-tabs {
   /* Search keyword: Super Admin Tabs Layout - horizontal scroll for all admin management options. */
   display: flex;
@@ -68,6 +80,7 @@
   overflow-wrap: normal;
 }
 
+/* Admin dashboards tab button: one selectable tab. */
 .tab-button {
   padding: 12px 20px;
   border: none;
@@ -89,6 +102,7 @@
   border-bottom-color: #667eea;
 }
 
+/* Admin dashboards content panel: selected tab body. */
 .admin-content {
   background: white;
   padding: 25px;
@@ -143,6 +157,7 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Admin dashboards shared button base style. */
 .btn {
   padding: 10px 15px;
   border: none;
@@ -203,6 +218,7 @@
   background: #da190b;
 }
 
+/* Admin dashboards data table: doctors, hospitals, payments, appointments, subscriptions, etc. */
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -230,6 +246,7 @@
   background: #f9f9f9;
 }
 
+/* Admin dashboards modal overlay: background behind add/edit forms. */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -243,6 +260,7 @@
   z-index: 1000;
 }
 
+/* Admin dashboards modal card: add/edit form popup container. */
 .modal-content {
   background: white;
   padding: 30px;
@@ -381,6 +399,7 @@
   box-sizing: border-box;
 }
 
+/* Admin dashboards form actions: save/cancel/delete button row. */
 .form-actions {
   display: flex;
   gap: 10px;
@@ -452,11 +471,13 @@
   color: #333;
 }
 
+/* HospitalAdminDashboard.jsx Revenue Review tab wrapper. */
 .review-tab {
   display: grid;
   gap: 1.5rem;
 }
 
+/* Revenue Review header: title, description, and period selector area. */
 .review-header {
   display: flex;
   flex-wrap: wrap;
@@ -476,12 +497,14 @@
   color: #555;
 }
 
+/* Revenue Review period selector: 7/30/90 day buttons. */
 .review-periods {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
+/* Revenue Review period button: one period filter button. */
 .period-button {
   border: 1px solid #d0d7e6;
   background: #fff;
@@ -499,17 +522,20 @@
   border-color: #1d72b8;
 }
 
+/* Revenue Review layout: summary cards on left and chart card on right. */
 .review-grid {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
   gap: 1.5rem;
 }
 
+/* Revenue Review summary column: contains total, appointment, and consultation revenue cards. */
 .review-summary {
   display: grid;
   gap: 1rem;
 }
 
+/* Revenue Review card: one revenue number card; edit background/text colors here. */
 .revenue-card {
   background: white;
   padding: 1.25rem;
@@ -536,6 +562,7 @@
 }
 
 /* Search keyword: Super Admin Subscription Revenue Graph Styles - admin-type revenue chart. */
+/* SuperAdminDashboard.jsx subscription revenue panel: admin-type revenue chart container. */
 .subscription-revenue-panel {
   background: white;
   padding: 1.5rem;
@@ -609,12 +636,14 @@
   overflow: hidden;
 }
 
+/* SuperAdminDashboard.jsx subscription revenue bar: gradient fill for each revenue row. */
 .subscription-revenue-bar {
   height: 100%;
   background: linear-gradient(90deg, #1d72b8, #28a745);
   border-radius: inherit;
 }
 
+/* Revenue Review chart card: card around pie chart and legend. */
 .review-chart-card {
   background: white;
   padding: 1.5rem;
@@ -632,6 +661,7 @@
   color: #222;
 }
 
+/* Revenue Review pie chart SVG: size/stroke; slice colors come from JSX breakdown color values. */
 .revenue-pie-chart {
   display: block;
   max-width: 220px;
@@ -644,6 +674,7 @@
   stroke-width: 2;
 }
 
+/* Revenue Review pie legend: labels and values for chart slices. */
 .pie-legend {
   display: grid;
   gap: 0.75rem;

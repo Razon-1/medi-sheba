@@ -1,11 +1,20 @@
+/* Search keyword: Page Subscription Payment CSS - subscription checkout page, payment status, summary card, and proceed button. */
+/* Section guide:
+   - Used by the subscription payment/checkout page.
+   - Controls checkout container, plan/payment status, summary card, total amount, and proceed payment button.
+   - For reusable payment modal styling, use components/Payment.css.
+*/
+/* SubscriptionPayment.jsx page wrapper and checkout status styles. */
 /* Subscription Payment Page Styles */
 
+/* SubscriptionPayment.jsx full page wrapper. */
 .subscription-payment-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 40px 20px;
 }
 
+/* SubscriptionPayment.jsx centered subscription checkout container. */
 .subscription-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -15,6 +24,7 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
+/* SubscriptionPayment.jsx page header: title and subtitle. */
 .subscription-header {
   text-align: center;
   margin-bottom: 40px;
@@ -33,6 +43,7 @@
   margin: 0;
 }
 
+/* SubscriptionPayment.jsx current subscription card: existing active plan/status. */
 /* Current Subscription Card */
 .current-subscription-card {
   background: linear-gradient(135deg, #e6f3ff 0%, #f0e6ff 100%);
@@ -42,6 +53,7 @@
   margin-bottom: 30px;
 }
 
+/* SubscriptionPayment.jsx subscription status text/card. */
 .subscription-status {
   display: flex;
   justify-content: space-between;
@@ -62,6 +74,7 @@
   font-size: 14px;
 }
 
+/* SubscriptionPayment.jsx cancel subscription button. */
 .btn-cancel-subscription {
   background: #ff6b6b;
   color: white;
@@ -84,6 +97,7 @@
   cursor: not-allowed;
 }
 
+/* SubscriptionPayment.jsx alerts: error and success messages. */
 /* Alerts */
 .error-alert,
 .success-alert {
@@ -105,6 +119,7 @@
   color: #1b5e20;
 }
 
+/* SubscriptionPayment.jsx tabs: plan category/monthly-yearly views. */
 /* Tabs */
 .tabs {
   display: flex;
@@ -113,6 +128,7 @@
   border-bottom: 2px solid #eee;
 }
 
+/* SubscriptionPayment.jsx one tab button. */
 .tab-btn {
   padding: 12px 24px;
   background: none;
@@ -134,6 +150,7 @@
   border-bottom-color: #667eea;
 }
 
+/* SubscriptionPayment.jsx plans grid: available plan cards. */
 /* Plans Grid */
 .plans-grid {
   display: grid;
@@ -142,6 +159,7 @@
   margin-bottom: 40px;
 }
 
+/* SubscriptionPayment.jsx plan card: one selectable subscription plan. */
 .plan-card {
   border: 2px solid #eee;
   border-radius: 12px;
@@ -161,6 +179,7 @@
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
+/* SubscriptionPayment.jsx plan card header: plan name and current badge. */
 .plan-header {
   margin-bottom: 20px;
   border-bottom: 2px solid currentColor;
@@ -184,6 +203,7 @@
   margin-top: 5px;
 }
 
+/* SubscriptionPayment.jsx plan features list. */
 /* Plan Features */
 .plan-features {
   flex: 1;
@@ -216,6 +236,7 @@
   flex-shrink: 0;
 }
 
+/* SubscriptionPayment.jsx duration selector: monthly/yearly radio cards. */
 /* Duration Selector */
 .duration-selector {
   margin: 20px 0;
@@ -249,6 +270,7 @@
   cursor: pointer;
 }
 
+/* SubscriptionPayment.jsx one duration option card. */
 .duration-option {
   display: flex;
   justify-content: space-between;
@@ -288,6 +310,7 @@
   margin-left: 8px;
 }
 
+/* SubscriptionPayment.jsx plan selection button. */
 /* Plan Selection Button */
 .btn-select-plan {
   padding: 12px 20px;
@@ -305,6 +328,7 @@
   color: white;
 }
 
+/* SubscriptionPayment.jsx feature comparison table. */
 /* Comparison Table */
 .comparison-table {
   overflow-x: auto;
@@ -344,6 +368,7 @@
   background: #fafafa;
 }
 
+/* SubscriptionPayment.jsx payment summary section: selected plan, duration, total. */
 /* Payment Summary Section */
 .payment-summary-section {
   display: flex;
@@ -351,6 +376,7 @@
   margin-top: 40px;
 }
 
+/* SubscriptionPayment.jsx summary card. */
 .summary-card {
   background: #f9f9f9;
   border: 2px solid #667eea;
@@ -370,6 +396,7 @@
   margin-bottom: 25px;
 }
 
+/* SubscriptionPayment.jsx summary row: label/value pair. */
 .summary-item {
   display: flex;
   justify-content: space-between;
@@ -402,6 +429,7 @@
   font-size: 24px;
 }
 
+/* SubscriptionPayment.jsx proceed payment button. */
 /* Payment Button */
 .btn-proceed-payment {
   width: 100%;

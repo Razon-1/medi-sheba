@@ -1,3 +1,9 @@
+/* Search keyword: Component Loading CSS - loading spinner, loading container, and loading text colors. */
+/* Section guide:
+   - Used by shared loading states across pages/components.
+   - Controls spinner animation, loading text, and centered loading container.
+*/
+/* Loading component wrapper: centers spinner and message. */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -8,6 +14,7 @@
   min-height: 400px;
 }
 
+/* Loading component spinner circle animation. */
 .loading-spinner {
   width: 60px;
   height: 60px;
@@ -27,6 +34,7 @@
   }
 }
 
+/* Loading component loading message text. */
 .loading-container p {
   color: var(--text-gray);
   font-weight: 600;

@@ -1,3 +1,9 @@
+/* Search keyword: Global Responsive CSS - mobile/tablet overrides for pages, cards, dashboards, modals, and tables. */
+/* Section guide:
+   - Final mobile/tablet override layer for many pages and shared components.
+   - Use when layout looks wrong only on small screens.
+   - Common targets: grids, admin dashboards, modals, payment UI, cards, and tables.
+*/
 /* Final responsive layer for the full React app.
    Keep this imported after page/component styles so it can normalize older pages. */
 

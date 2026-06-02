@@ -1,3 +1,9 @@
+/* Search keyword: Page Home CSS - hero, stats, service cards, subscription plans, why choose us, CTA, and home theme colors. */
+/* Section guide:
+   - Used by Home.jsx.
+   - Controls hero banner, Trusted by Millions stats, Our Services cards, Subscription Plans, Why Choose Us, CTA banner, and mobile Home layout.
+   - Most Home colors use global variables from styles/App.css.
+*/
 .home {
   width: 100%;
 }

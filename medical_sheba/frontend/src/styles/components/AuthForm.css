@@ -1,9 +1,17 @@
+/* Search keyword: Component Auth Form CSS - shared login/register/reset form card, inputs, buttons, and auth form colors. */
+/* Section guide:
+   - Used by shared auth form components on Login, Register, and Reset Password pages.
+   - Controls auth form card, labels, inputs, password fields, validation text, and submit buttons.
+   - Page background/layout is in styles/pages/Auth.css.
+*/
+/* AuthForm.jsx wrapper: shared auth form content for login/register/reset. */
 .auth-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
+/* AuthForm.jsx field group: label plus input/textarea. */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -43,6 +51,7 @@
   background: white;
 }
 
+/* AuthForm.jsx password input wrapper: input plus show/hide button. */
 .password-input {
   position: relative;
   display: flex;
@@ -64,6 +73,7 @@
   box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
 }
 
+/* AuthForm.jsx password visibility toggle button. */
 .toggle-password {
   position: absolute;
   right: 0.75rem;
@@ -86,6 +96,7 @@
   border-radius: 0.4rem;
 }
 
+/* AuthForm.jsx submit button. */
 .btn-submit {
   background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
   color: white;
@@ -116,6 +127,7 @@
   transform: none;
 }
 
+/* AuthForm.jsx role dropdown selector. */
 .role-select {
   padding: 0.85rem 1rem;
   border: 2px solid var(--bg-lighter);
@@ -139,6 +151,7 @@
   background: white;
 }
 
+/* AuthForm.jsx multi-role checkbox group container. */
 .roles-container {
   display: flex;
   flex-direction: column;
@@ -155,6 +168,7 @@
   box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
 }
 
+/* AuthForm.jsx one role checkbox row. */
 .role-checkbox {
   display: flex;
   align-items: center;

@@ -1,8 +1,16 @@
+/* Search keyword: Page Ambulance CSS - ambulance listing page, filters, cards, request modal, status badges, and ambulance colors. */
+/* Section guide:
+   - Used by Ambulance.jsx public ambulance service page.
+   - Controls page header, search/filter section, ambulance cards, availability badges, fare/details rows, request modal, and form alerts.
+   - Ambulance admin dashboard responsive overrides may also appear in styles/Responsive.css.
+*/
+/* Ambulance.jsx page wrapper: full public ambulance listing page. */
 .ambulance-page {
   min-height: 100vh;
   background: #f6f8fb;
 }
 
+/* Ambulance.jsx page header: title/banner at top of ambulance page. */
 .ambulance-page .page-header {
   background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   color: white;
@@ -24,6 +32,7 @@
   opacity: 0.95;
 }
 
+/* Ambulance.jsx search/filter section: search box and vehicle type filters. */
 .search-filter-section {
   background: white;
   padding: clamp(18px, 3vw, 28px);
@@ -33,6 +42,7 @@
   border: 1px solid #eef2f7;
 }
 
+/* Ambulance.jsx search box: search by ambulance name, driver, or phone. */
 .search-box {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -73,6 +83,7 @@
   background: #c0392b;
 }
 
+/* Ambulance.jsx filter buttons area: vehicle type filters. */
 .filter-buttons {
   margin-top: 20px;
   display: grid;
@@ -126,6 +137,7 @@
   font-weight: 600;
 }
 
+/* Ambulance.jsx ambulance list: container for ambulance service cards. */
 .ambulance-list {
   display: grid;
   max-width: 1200px;
@@ -137,6 +149,7 @@
   padding: 0 0 40px;
 }
 
+/* Ambulance.jsx ambulance card: one ambulance service listing. */
 .ambulance-card {
   background: white;
   border-radius: 12px;
@@ -153,6 +166,7 @@
   transform: translateY(-2px);
 }
 
+/* Ambulance.jsx ambulance card image area. */
 .ambulance-image {
   position: relative;
   width: 100%;
@@ -186,6 +200,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Ambulance.jsx ambulance card header: name, type badge, availability. */
 .ambulance-header {
   display: flex;
   justify-content: space-between;
@@ -210,6 +225,7 @@
   overflow-wrap: anywhere;
 }
 
+/* Ambulance.jsx vehicle type badge: basic/advanced/ICU label. */
 .vehicle-type-badge {
   padding: 6px 12px;
   color: white;
@@ -219,6 +235,7 @@
   line-height: 1.25;
 }
 
+/* Ambulance.jsx availability status badge area. */
 .availability-status {
   text-align: right;
 }
@@ -241,6 +258,7 @@
   font-weight: 600;
 }
 
+/* Ambulance.jsx ambulance detail rows: driver, contact, service area, fare. */
 .ambulance-details {
   padding: 18px;
   flex: 1;
@@ -326,6 +344,7 @@
   font-size: 14px;
 }
 
+/* Ambulance.jsx action buttons: call/request ambulance. */
 .action-buttons {
   display: grid;
   grid-template-columns: 1fr;
@@ -396,6 +415,7 @@
   font-size: 14px;
 }
 
+/* Ambulance.jsx request modal: popup form after clicking Request Ambulance. */
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -466,6 +486,7 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Ambulance.jsx request modal selected ambulance summary. */
 .selected-ambulance-info {
   padding: 15px 20px;
   background: #f0f8ff;
@@ -515,6 +536,7 @@
   flex-shrink: 0;
 }
 
+/* Ambulance.jsx request modal form fields. */
 .ambulance-request-form {
   padding: 20px;
 }

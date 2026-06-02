@@ -1,13 +1,21 @@
+/* Search keyword: Page Appointments CSS - patient appointments/services page, stats, filters, cards, timeline, and cancel modal colors. */
+/* Section guide:
+   - Used by Appointments.jsx patient "My Care Services" page.
+   - Controls summary stats, service filter tabs, service cards, status/payment badges, action buttons, and cancel confirmation modal.
+*/
+/* Appointments.jsx page wrapper: patient care services list. */
 .appointments-page {
   width: 100%;
 }
 
+/* Appointments.jsx list container for appointment/service cards. */
 .appointments-list {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
+/* Appointments.jsx one appointment/service card. */
 .appointment-card {
   background: white;
   border-radius: 1rem;
@@ -22,6 +30,7 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* Appointments.jsx card header: service/doctor info and status. */
 .appointment-header {
   display: flex;
   justify-content: space-between;
@@ -58,6 +67,7 @@
   margin: 0;
 }
 
+/* Appointments.jsx status badge base style. */
 .status {
   padding: 0.65rem 1.5rem;
   border-radius: 0.6rem;
@@ -86,6 +96,7 @@
   border: 2px solid var(--danger-red);
 }
 
+/* Appointments.jsx details section: date, time, payment, location, etc. */
 .appointment-details {
   margin-bottom: 2rem;
 }
@@ -131,6 +142,7 @@
   font-weight: 600;
 }
 
+/* Appointments.jsx notes section on service card. */
 .notes-section {
   background: var(--bg-lighter);
   padding: 1.25rem;
@@ -154,6 +166,7 @@
   font-weight: 500;
 }
 
+/* Appointments.jsx action buttons: cancel, reschedule, review. */
 .appointment-actions {
   display: flex;
   gap: 1rem;
@@ -208,6 +221,7 @@
   box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
 }
 
+/* Appointments.jsx empty state when no services found. */
 .no-results {
   text-align: center;
   padding: 4rem 2rem;
@@ -227,6 +241,7 @@
   font-size: 1rem;
 }
 
+/* Appointments.jsx login required state. */
 .auth-required {
   background: white;
   padding: 3rem 2rem;

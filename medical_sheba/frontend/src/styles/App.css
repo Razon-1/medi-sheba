@@ -1,3 +1,9 @@
+/* Search keyword: Global App CSS - theme color variables, app layout, shared buttons, forms, typography, and alerts. */
+/* Section guide:
+   - Used globally by App.jsx and every page/component.
+   - Controls theme variables, body/app layout, main content width, headings, links, shared buttons, form fields, alerts, and utilities.
+   - Change app-wide colors in :root variables such as --primary-blue, --primary-dark, --accent-teal, and --bg-lighter.
+*/
 /* Global reset: applies to every page and component in the React app. */
 * {
   margin: 0;

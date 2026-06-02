@@ -1,3 +1,9 @@
+/* Search keyword: Component Footer CSS - footer layout, links, social icons, contact text, and bottom copyright colors. */
+/* Section guide:
+   - Used by Footer.jsx across the app.
+   - Controls footer columns, logo/about area, quick links, support/contact links, social icons, and copyright row.
+*/
+/* Footer.jsx wrapper: full footer background and padding. */
 .footer {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
   color: white;
@@ -5,6 +11,7 @@
   margin-top: 6rem;
 }
 
+/* Footer.jsx columns container: brand, quick links, support, contact. */
 .footer-content {
   max-width: 1400px;
   margin: 0 auto;
@@ -14,6 +21,7 @@
   padding: 3rem 2rem;
 }
 
+/* Footer.jsx section brand/title heading. */
 .footer-section h3 {
   font-size: 1.1rem;
   margin-bottom: 1.5rem;
@@ -36,6 +44,7 @@
   font-weight: 500;
 }
 
+/* Footer.jsx link list wrapper. */
 .footer-section ul {
   list-style: none;
   padding: 0;
@@ -65,6 +74,7 @@
   padding-left: 0.25rem;
 }
 
+/* Footer.jsx social link row. */
 .social-links {
   display: flex;
   gap: 1rem;
@@ -101,6 +111,7 @@
   box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
 }
 
+/* Footer.jsx contact row: icon plus phone/email/address. */
 .contact-item {
   display: flex;
   align-items: center;
@@ -130,6 +141,7 @@
   border-bottom-color: rgba(37, 211, 102, 0.6);
 }
 
+/* Footer.jsx copyright bottom strip. */
 .footer-bottom {
   background: rgba(0, 0, 0, 0.1);
   padding: 2rem;

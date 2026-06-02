@@ -1,3 +1,9 @@
+/* Search keyword: Component Review Form CSS - review rating form, textarea, submit button, and validation colors. */
+/* Section guide:
+   - Used by review form components on detail pages.
+   - Controls star/rating input area, textarea, validation/error state, and submit button.
+*/
+/* ReviewForm.jsx wrapper: review submission form card. */
 .review-form {
   background: #F5F5F5;
   border: 2px solid #0066CC;
@@ -6,6 +12,7 @@
   margin-bottom: 2rem;
 }
 
+/* ReviewForm.jsx form group: label plus input/textarea. */
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -18,12 +25,14 @@
   font-size: 0.95rem;
 }
 
+/* ReviewForm.jsx rating picker: star button row. */
 .rating-picker {
   display: flex;
   gap: 1rem;
   margin-bottom: 0.75rem;
 }
 
+/* ReviewForm.jsx one clickable star button. */
 .star-btn {
   background: none;
   border: none;
@@ -69,6 +78,7 @@
   min-height: 120px;
 }
 
+/* ReviewForm.jsx character counter under review text. */
 .char-count {
   margin: 0.5rem 0 0 0;
   font-size: 0.8rem;
@@ -76,6 +86,7 @@
   text-align: right;
 }
 
+/* ReviewForm.jsx validation/error message. */
 .error-message {
   background: #F8D7DA;
   border: 1px solid #F5C6CB;
@@ -89,6 +100,7 @@
   font-size: 0.9rem;
 }
 
+/* ReviewForm.jsx action row: cancel and submit buttons. */
 .form-actions {
   display: flex;
   gap: 1rem;

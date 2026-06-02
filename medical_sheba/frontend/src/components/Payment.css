@@ -1,4 +1,6 @@
-/* Payment Modal Styles */
+/* Search keyword: Component Payment CSS - payment modal colors, layout, methods, summary, and buttons. */
+/* Used by: components/Payment.jsx shared payment modal for appointment, e-doctor, ambulance, medicine, and other checkout flows. */
+/* Payment.jsx modal overlay: dark full-screen background behind the payment popup. */
 .payment-modal-overlay {
   position: fixed;
   top: 0;
@@ -13,6 +15,7 @@
   padding: 20px;
 }
 
+/* Payment.jsx modal container: white popup card, size, scroll area, shadow, and opening animation. */
 .payment-modal {
   background: white;
   border-radius: 22px;
@@ -25,6 +28,7 @@
   animation: slideUp 0.3s ease-out;
 }
 
+/* Payment.jsx modal animation: slides the popup upward when it opens. */
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -36,6 +40,7 @@
   }
 }
 
+/* Payment.jsx close button: top-right X button for closing the payment modal. */
 .close-btn {
   position: absolute;
   top: 16px;
@@ -53,11 +58,12 @@
   color: #333;
 }
 
+/* Payment.jsx modal inner spacing: wraps all payment content inside the popup. */
 .payment-modal-content {
   padding: 20px 28px 28px;
 }
 
-/* Payment Header */
+/* Payment.jsx header: payment title, subtitle, selected method text, and back button area. */
 .payment-header {
   text-align: center;
   margin-bottom: 22px;
@@ -78,6 +84,7 @@
   font-size: 16px;
 }
 
+/* Payment.jsx back button: returns from method details to method selection. */
 .btn-back {
   position: absolute;
   top: 20px;
@@ -94,13 +101,14 @@
   color: #0056b3;
 }
 
+/* Payment.jsx selected payment method label shown after choosing a gateway/method. */
 .selected-method {
   font-size: 18px;
   font-weight: 600;
   margin-top: 10px;
 }
 
-/* Amount Display */
+/* Payment.jsx amount display: gradient amount card showing price, service name, and patient name. */
 .payment-amount-display {
   text-align: center;
   margin: 18px 0 34px 0;
@@ -124,7 +132,7 @@
   opacity: 0.92;
 }
 
-/* Payment Methods Grid */
+/* Payment.jsx payment method selection grid: cards for SSLCommerz/mobile banking/payment methods. */
 .payment-methods-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -132,6 +140,7 @@
   margin: 30px 0;
 }
 
+/* Payment.jsx payment method button: one selectable payment method card. */
 .payment-method-btn {
   min-height: 138px;
   padding: 24px 16px 18px;
@@ -154,17 +163,20 @@
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
+/* Payment.jsx active payment method: selected method card styling. */
 .payment-method-btn.active {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
+/* Payment.jsx method icon wrapper. */
 .method-icon {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Payment.jsx method logo image, such as gateway or mobile banking image. */
 .method-img {
   width: 56px;
   height: 56px;
@@ -179,16 +191,18 @@
   margin-right: 8px;
 }
 
+/* Payment.jsx method name text under the icon. */
 .method-name {
   font-weight: 600;
   font-size: 16px;
 }
 
-/* Payment Form */
+/* Payment.jsx payment form: optional customer/payment details fields shown for selected methods. */
 .payment-form {
   margin: 30px 0;
 }
 
+/* Payment.jsx form field group. */
 .form-group {
   margin-bottom: 20px;
 }
@@ -201,6 +215,7 @@
   font-size: 14px;
 }
 
+/* Payment.jsx payment form input fields. */
 .form-group input {
   width: 100%;
   padding: 12px 15px;
@@ -224,7 +239,7 @@
   font-size: 12px;
 }
 
-/* Payment Instructions */
+/* Payment.jsx instructions panel: step-by-step payment instructions for manual/mobile methods. */
 .payment-instructions {
   background: #f0f7ff;
   border: 1px solid #d4e6f7;
@@ -251,6 +266,7 @@
   line-height: 1.5;
 }
 
+/* Payment.jsx informational note shown inside the payment form. */
 .form-info {
   background: #e6f9ed;
   border: 1px solid #a8d9b8;
@@ -261,7 +277,7 @@
   margin: 15px 0;
 }
 
-/* Payment Summary */
+/* Payment.jsx payment summary: amount/service rows before confirming payment. */
 .payment-summary {
   background: #f9f9f9;
   border: 1px solid #eee;
@@ -270,6 +286,7 @@
   margin: 20px 0;
 }
 
+/* Payment.jsx payment summary row: label and value pair. */
 .summary-row {
   display: flex;
   justify-content: space-between;
@@ -289,7 +306,7 @@
   color: #333;
 }
 
-/* Buttons */
+/* Payment.jsx action buttons: continue, verify, confirm, and submit payment buttons. */
 .btn-primary {
   width: 100%;
   padding: 14px;
@@ -314,17 +331,19 @@
   cursor: not-allowed;
 }
 
+/* Payment.jsx continue/verify buttons: spacing for gateway next-step buttons. */
 .payment-continue-btn,
 .payment-verify-btn {
   margin-top: 20px;
 }
 
-/* Success Message */
+/* Payment.jsx success state: confirmation screen after payment verification/completion. */
 .payment-success {
   text-align: center;
   padding: 20px 0;
 }
 
+/* Payment.jsx success icon circle. */
 .success-icon {
   width: 60px;
   height: 60px;
@@ -339,6 +358,7 @@
   animation: scaleIn 0.5s ease-out;
 }
 
+/* Payment.jsx success animation: grows success icon into view. */
 @keyframes scaleIn {
   from {
     transform: scale(0);
@@ -360,6 +380,7 @@
   font-size: 14px;
 }
 
+/* Payment.jsx success details card: transaction id, amount, method, and other receipt rows. */
 .success-details {
   background: #f9f9f9;
   border-radius: 8px;
@@ -368,6 +389,7 @@
   text-align: left;
 }
 
+/* Payment.jsx success detail row: receipt label and value pair. */
 .detail-row {
   display: flex;
   justify-content: space-between;
@@ -389,6 +411,7 @@
   word-break: break-all;
 }
 
+/* Payment.jsx transaction id formatting. */
 .transaction-id {
   font-family: 'Courier New', monospace;
   background: #f0f0f0;
@@ -396,6 +419,7 @@
   border-radius: 3px;
 }
 
+/* Payment.jsx confirmation note shown after successful payment. */
 .confirmation-note {
   background: #e6f9ed;
   border-left: 4px solid #4caf50;
@@ -407,7 +431,7 @@
   text-align: center;
 }
 
-/* Error Message */
+/* Payment.jsx error message: failed payment, validation error, or gateway error notice. */
 .error-message {
   background: #ffe6e6;
   border: 1px solid #ffcccc;
@@ -419,7 +443,7 @@
   text-align: center;
 }
 
-/* Responsive Design */
+/* Payment.jsx mobile responsive design: adjusts modal, method cards, logos, amount text, and buttons. */
 @media (max-width: 600px) {
   .payment-modal {
     max-width: 100%;
@@ -476,7 +500,7 @@
   }
 }
 
-/* Scrollbar Styling */
+/* Payment.jsx modal scrollbar styling for long payment forms/details. */
 .payment-modal::-webkit-scrollbar {
   width: 8px;
 }

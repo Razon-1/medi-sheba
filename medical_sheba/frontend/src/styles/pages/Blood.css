@@ -1,6 +1,14 @@
+/* Search keyword: Page Blood CSS - blood bank page additions, donor cards, blood filters, and blood-specific colors. */
+/* Section guide:
+   - Used by Blood.jsx blood bank page.
+   - Imports/reuses Doctors.css for shared listing layout.
+   - Adds blood donor form, blood type filters, donor cards, and blood-specific badge/color styles.
+*/
+/* Blood.jsx imports shared Doctors.css layout before adding blood-specific parts below. */
 /* Using same styles as Doctors page with additional blood-specific styles */
 @import 'Doctors.css';
 
+/* Blood.jsx top action/search area. */
 .blood-page .blood-actions {
   background: transparent;
   box-shadow: none;
@@ -34,6 +42,7 @@
   border-color: var(--accent-coral);
 }
 
+/* Blood.jsx donor/request action buttons wrapper. */
 .blood-action-buttons {
   display: flex;
   align-items: center;
@@ -42,6 +51,7 @@
   flex: 0 0 auto;
 }
 
+/* Blood.jsx one action button, such as donor form trigger. */
 .blood-action-btn {
   display: inline-flex;
   align-items: center;
@@ -83,6 +93,7 @@
   border-color: #fda4af;
 }
 
+/* Blood.jsx donor modal overlay. */
 .blood-modal-overlay {
   position: fixed;
   inset: 0;
@@ -94,6 +105,7 @@
   background: rgba(15, 23, 42, 0.52);
 }
 
+/* Blood.jsx donor modal card. */
 .blood-modal {
   width: min(100%, 720px);
   max-height: calc(100vh - 3rem);
@@ -141,6 +153,7 @@
   cursor: pointer;
 }
 
+/* Blood.jsx donor/request form. */
 .blood-form {
   padding: 1.5rem;
 }
@@ -265,6 +278,7 @@
   border: 1px solid #fecaca;
 }
 
+/* Blood.jsx blood group quick filter panel. */
 .blood-type-filter {
   background: white;
   padding: 2rem;
@@ -304,6 +318,7 @@
   transform: translateY(-2px);
 }
 
+/* Blood.jsx donors list container. */
 .donors-container {
   width: 100%;
 }
@@ -317,6 +332,7 @@
   align-items: stretch;
 }
 
+/* Blood.jsx one donor card. */
 .donor-card {
   /* Individual donor summary card: name/blood badge header plus contact and donation details. */
   background: white;
@@ -353,6 +369,7 @@
   overflow-wrap: anywhere;
 }
 
+/* Blood.jsx blood group badge on donor card. */
 .blood-badge {
   background: linear-gradient(135deg, var(--accent-coral), var(--danger-red));
   color: white;

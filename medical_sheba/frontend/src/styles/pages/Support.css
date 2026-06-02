@@ -1,7 +1,14 @@
+/* Search keyword: Page Support CSS - support/help page layout, contact blocks, FAQ sections, and support page colors. */
+/* Section guide:
+   - Used by support/help page.
+   - Controls support page header, help/contact cards, FAQ blocks, support actions, and responsive support layout.
+*/
+/* Support/About/Policy pages wrapper. */
 .support-page {
   width: 100%;
 }
 
+/* Support pages header: title and subtitle. */
 .page-header {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
   color: white;
@@ -22,12 +29,14 @@
   margin: 0;
 }
 
+/* Support pages main content wrapper. */
 .support-content {
   max-width: 1000px;
   margin: 0 auto;
   padding: 0 2rem 4rem 2rem;
 }
 
+/* Support pages content sections: about and policy blocks. */
 .about-section,
 .policy-section {
   margin-bottom: 3rem;
@@ -76,6 +85,7 @@
   font-weight: bold;
 }
 
+/* Support pages feature cards grid. */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -83,6 +93,7 @@
   margin: 2rem 0;
 }
 
+/* Support pages one feature card. */
 .feature-card {
   background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(0, 169, 145, 0.05));
   padding: 2rem;
@@ -119,6 +130,7 @@
   margin: 0;
 }
 
+/* Support pages service/policy bullet list. */
 .services-list {
   list-style: none;
   padding-left: 0;
@@ -163,7 +175,9 @@
   border-top: 1px solid #e5e7eb;
 }
 
+/* Contact.jsx specific styles: contact info and contact form layout. */
 /* Contact Page Specific Styles */
+/* Contact.jsx contact page two-column container. */
 .contact-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -188,6 +202,7 @@
   font-weight: 700;
 }
 
+/* Contact.jsx one contact information card. */
 .contact-card {
   padding: 1.5rem;
   background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(0, 169, 145, 0.05));
@@ -234,6 +249,7 @@
   font-weight: 500;
 }
 
+/* Contact.jsx contact form. */
 .contact-form {
   display: flex;
   flex-direction: column;
@@ -306,6 +322,7 @@
   font-weight: 600;
 }
 
+/* Contact/Support FAQ section. */
 .faq-section {
   background: white;
   padding: 2rem;

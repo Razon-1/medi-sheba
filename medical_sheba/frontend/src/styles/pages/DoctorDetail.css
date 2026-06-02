@@ -1,9 +1,17 @@
+/* Search keyword: Page Doctor Detail CSS - doctor profile detail page, hero, info cards, reviews, and appointment button colors. */
+/* Section guide:
+   - Used by DoctorDetail.jsx.
+   - Controls doctor detail hero/profile area, specialty/rating/availability info, contact details, review section, and appointment CTA.
+   - Shared review components use styles/components/ReviewForm.css and ReviewList.css.
+*/
+/* DoctorDetail.jsx page wrapper. */
 .doctor-detail {
   min-height: 100vh;
   background: #f8f9fa;
   padding: 2rem 0;
 }
 
+/* DoctorDetail.jsx back button. */
 .btn-back {
   display: flex;
   align-items: center;
@@ -23,6 +31,7 @@
   color: #0052A3;
 }
 
+/* DoctorDetail.jsx profile header: doctor title, specialty, ratings, badges. */
 .detail-header {
   background: white;
   padding: 2rem;
@@ -50,6 +59,7 @@
   margin: 0 0 1rem 0;
 }
 
+/* DoctorDetail.jsx rating display area. */
 .rating-section {
   display: flex;
   align-items: center;
@@ -67,6 +77,7 @@
   color: #666;
 }
 
+/* DoctorDetail.jsx verified/available badge row. */
 .badges {
   display: flex;
   gap: 1rem;
@@ -94,12 +105,14 @@
   color: #0066CC;
 }
 
+/* DoctorDetail.jsx main content layout below profile header. */
 .detail-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
+/* DoctorDetail.jsx quick info card grid. */
 .quick-info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -107,6 +120,7 @@
   margin-bottom: 2rem;
 }
 
+/* DoctorDetail.jsx one quick info card. */
 .info-card {
   background: white;
   padding: 1.5rem;
@@ -151,6 +165,7 @@
   margin-top: 0.25rem;
 }
 
+/* DoctorDetail.jsx detail sections: bio, qualifications, chamber, languages. */
 .bio-section,
 .qualifications-section,
 .chamber-section,
@@ -190,6 +205,7 @@
   margin-top: 0.25rem;
 }
 
+/* DoctorDetail.jsx reviews section wrapper. */
 .reviews-section {
   background: white;
   padding: 2rem;
@@ -250,6 +266,7 @@
   font-style: italic;
 }
 
+/* DoctorDetail.jsx bottom CTA section for booking appointment. */
 .cta-section {
   background: linear-gradient(135deg, #0066CC 0%, #004499 100%);
   color: white;

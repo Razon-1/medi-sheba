@@ -1,3 +1,10 @@
+/* Search keyword: Page Pharmacy Admin Dashboard CSS - pharmacy admin tables, medicine/order cards, status badges, revenue review, and colors. */
+/* Section guide:
+   - Used by PharmacyAdminDashboard.jsx.
+   - Controls pharmacy admin page layout, tabs, medicine management, order tables/cards, status controls, modals, and revenue review.
+   - Revenue card colors: search .review-summary, .revenue-card, .revenue-pie-chart.
+*/
+/* PharmacyAdminDashboard.jsx page wrapper. */
 .pharmacy-admin-dashboard {
   max-width: 1200px;
   margin: 0 auto;
@@ -5,6 +12,7 @@
   min-height: 100vh;
 }
 
+/* PharmacyAdminDashboard.jsx header: title and pharmacy name. */
 .dashboard-header {
   margin-bottom: 2rem;
 }
@@ -22,6 +30,7 @@
   font-weight: 600;
 }
 
+/* PharmacyAdminDashboard.jsx tab row: medicines, orders, revenue, pharmacy info. */
 .dashboard-tabs {
   display: flex;
   gap: 1rem;
@@ -29,6 +38,7 @@
   border-bottom: 2px solid var(--bg-lighter);
 }
 
+/* PharmacyAdminDashboard.jsx one tab button. */
 .tab-button {
   padding: 0.75rem 1.5rem;
   background: none;
@@ -52,6 +62,7 @@
   border-bottom-color: var(--primary-blue);
 }
 
+/* PharmacyAdminDashboard.jsx selected tab content panel. */
 .dashboard-content {
   animation: fadeIn 0.3s ease;
 }
@@ -67,6 +78,7 @@
   }
 }
 
+/* PharmacyAdminDashboard.jsx medicines tab: medicine table and add/edit controls. */
 /* Medicines Tab */
 .medicines-tab {
   background: white;
@@ -110,6 +122,7 @@
   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
 }
 
+/* PharmacyAdminDashboard.jsx medicine/admin table styles. */
 /* Table Styles */
 .table-responsive {
   overflow-x: auto;
@@ -147,6 +160,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
+/* PharmacyAdminDashboard.jsx status badge base: available/unavailable/verified/unverified. */
 .status-badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
@@ -177,6 +191,7 @@
   color: #856404;
 }
 
+/* PharmacyAdminDashboard.jsx table action buttons area. */
 .actions {
   display: flex;
   gap: 0.75rem;
@@ -224,6 +239,7 @@
   border-color: #e74c3c;
 }
 
+/* PharmacyAdminDashboard.jsx medicine/pharmacy add-edit forms. */
 /* Forms */
 .medicine-form-container,
 .pharmacy-form-container {
@@ -392,6 +408,7 @@
   cursor: not-allowed;
 }
 
+/* PharmacyAdminDashboard.jsx pharmacy info tab/details display. */
 /* Pharmacy Info Tab */
 .pharmacy-info-tab {
   background: white;
@@ -462,6 +479,7 @@
   color: #721c24;
 }
 
+/* PharmacyAdminDashboard.jsx orders tab: filters, order cards, order actions. */
 /* Orders Tab Styles */
 .orders-tab {
   background: white;
@@ -514,12 +532,14 @@
   box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
 }
 
+/* PharmacyAdminDashboard.jsx orders card grid. */
 .orders-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 1.5rem;
 }
 
+/* PharmacyAdminDashboard.jsx one order card. */
 .order-card {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   border: 2px solid var(--bg-lighter);
@@ -557,6 +577,7 @@
   color: var(--text-light);
 }
 
+/* PharmacyAdminDashboard.jsx order status badge area. */
 .order-status {
   display: flex;
   flex-direction: column;
@@ -628,6 +649,7 @@
   border-top: 1px solid var(--bg-lighter);
 }
 
+/* PharmacyAdminDashboard.jsx quick status/action buttons. */
 .quick-actions {
   display: flex;
   flex: 2;
@@ -687,6 +709,7 @@
   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
 }
 
+/* PharmacyAdminDashboard.jsx order details modal content. */
 .order-details-modal {
   background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%);
   border-radius: 0.8rem;
@@ -750,6 +773,7 @@
   font-weight: 600;
 }
 
+/* PharmacyAdminDashboard.jsx delivery tracking checklist for ordered medicines. */
 /* Delivery Tracking Styles */
 .medicines-delivery-list {
   background: white;
@@ -828,6 +852,7 @@
   white-space: nowrap;
 }
 
+/* PharmacyAdminDashboard.jsx order status update controls. */
 .status-section {
   margin-bottom: 1.5rem;
   padding: 1rem;
@@ -967,11 +992,13 @@
   background: var(--bg-light);
 }
 
+/* PharmacyAdminDashboard.jsx revenue review tab wrapper. */
 .review-tab {
   display: grid;
   gap: 1.5rem;
 }
 
+/* PharmacyAdminDashboard.jsx revenue review header and period controls. */
 .review-header {
   display: flex;
   flex-wrap: wrap;
@@ -1014,6 +1041,7 @@
   border-color: #1d72b8;
 }
 
+/* PharmacyAdminDashboard.jsx revenue review layout: summary cards plus chart. */
 .review-grid {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -1025,6 +1053,7 @@
   gap: 1rem;
 }
 
+/* PharmacyAdminDashboard.jsx revenue card: edit revenue background/text colors here. */
 .revenue-card {
   background: white;
   padding: 1.25rem;
@@ -1050,6 +1079,7 @@
   color: #666;
 }
 
+/* PharmacyAdminDashboard.jsx revenue chart card. */
 .review-chart-card {
   background: white;
   padding: 1.5rem;
@@ -1067,6 +1097,7 @@
   color: #222;
 }
 
+/* PharmacyAdminDashboard.jsx revenue pie chart SVG; slice colors come from JSX. */
 .revenue-pie-chart {
   display: block;
   max-width: 220px;

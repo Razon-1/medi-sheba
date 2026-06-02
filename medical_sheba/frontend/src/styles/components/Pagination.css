@@ -1,3 +1,9 @@
+/* Search keyword: Component Pagination CSS - pagination controls, page buttons, active state, and mobile pagination layout. */
+/* Section guide:
+   - Used by reusable pagination component on listing pages.
+   - Controls page buttons, previous/next buttons, active page color, disabled state, and mobile pagination wrapping.
+*/
+/* Pagination.jsx wrapper: contains pagination info and controls. */
 .pagination-container {
   display: flex;
   justify-content: space-between;
@@ -10,6 +16,7 @@
   flex-wrap: wrap;
 }
 
+/* Pagination.jsx count text: current page/item range. */
 .pagination-info {
   display: flex;
   gap: 20px;
@@ -31,12 +38,14 @@
   color: #666 !important;
 }
 
+/* Pagination.jsx controls row: previous, page numbers, next. */
 .pagination-controls {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* Pagination.jsx previous/next button. */
 .pagination-btn {
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -72,11 +81,13 @@
   transform: translateY(0);
 }
 
+/* Pagination.jsx numbered page buttons wrapper. */
 .page-numbers {
   display: flex;
   gap: 5px;
 }
 
+/* Pagination.jsx one numbered page button. */
 .page-number {
   padding: 8px 12px;
   border: 1px solid #ddd;
