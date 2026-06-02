@@ -2,7 +2,9 @@
   width: 100%;
 }
 
-/* Hero Section */
+/* Home.jsx page wrapper: all sections on the landing/home page live inside .home. */
+
+/* Home.jsx Hero Section: top banner with headline, description, two buttons, and medical icon. */
 .hero {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 50%, var(--accent-teal) 100%);
   color: white;
@@ -13,6 +15,7 @@
   overflow: hidden;
 }
 
+/* Home.jsx Hero decoration: pale circle shape behind the hero content. */
 .hero::before {
   content: '';
   position: absolute;
@@ -24,6 +27,7 @@
   border-radius: 50%;
 }
 
+/* Home.jsx Hero layout: splits text and icon/illustration into two columns on desktop. */
 .hero-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -33,6 +37,7 @@
   z-index: 2;
 }
 
+/* Home.jsx Hero title text. */
 .hero-text h1 {
   font-size: 3.25rem;
   font-weight: 800;
@@ -42,6 +47,7 @@
   line-height: 1.1;
 }
 
+/* Home.jsx Hero subtitle/description text. */
 .hero-text p {
   font-size: 1.2rem;
   margin-bottom: 2.5rem;
@@ -50,6 +56,7 @@
   font-weight: 400;
 }
 
+/* Home.jsx Hero buttons container: Book Appointment and Find Hospital links. */
 .hero-buttons {
   display: flex;
   gap: 1rem;
@@ -57,6 +64,7 @@
   flex-wrap: nowrap;
 }
 
+/* Home.jsx Hero button shared sizing. */
 .hero-buttons .btn-primary,
 .hero-buttons .btn-secondary {
   box-sizing: border-box;
@@ -66,6 +74,7 @@
   justify-content: center;
 }
 
+/* Home.jsx Hero primary button: Book Appointment Now. */
 .hero-buttons .btn-primary {
   background: white;
   color: var(--primary-blue);
@@ -88,6 +97,7 @@
   background: #e0f2ff;
 }
 
+/* Home.jsx Hero secondary button: Find Hospital. */
 .hero-buttons .btn-secondary {
   background: rgba(255, 255, 255, 0.15);
   border: 2px solid white;
@@ -106,12 +116,14 @@
   transform: translateY(-3px);
 }
 
+/* Home.jsx Hero right-side icon area. */
 .hero-image {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Home.jsx Hero icon card: wraps the Stethoscope icon. */
 .medical-illustration {
   width: 250px;
   height: 250px;
@@ -125,18 +137,20 @@
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Stats Section */
+/* Home.jsx Stats Section: "Trusted by Millions" counter cards. */
 .stats {
   margin-bottom: 5rem;
   text-align: center;
 }
 
+/* Home.jsx Stats grid: lays out Active Users, Hospitals, and Doctors cards. */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 2rem;
 }
 
+/* Home.jsx Stats card: one counter card in the Trusted by Millions section. */
 .stat-card {
   background: white;
   padding: 2.5rem 2rem;
@@ -155,6 +169,7 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* Home.jsx Stats icon color and spacing. */
 .stat-icon {
   color: var(--primary-blue);
   margin-bottom: 1rem;
@@ -163,6 +178,7 @@
   justify-content: center;
 }
 
+/* Home.jsx Stats number text, for example 345+. */
 .stat-card h3 {
   font-size: 2.5rem;
   font-weight: 800;
@@ -171,21 +187,24 @@
   letter-spacing: -0.5px;
 }
 
+/* Home.jsx Stats label text, for example Active Users. */
 .stat-card p {
   color: var(--text-gray);
   font-weight: 600;
 }
 
-/* Services Section */
+/* Home.jsx Services Section: "Our Services" cards with Explore Now links. */
 .services {
   margin-bottom: 5rem;
 }
 
+/* Home.jsx Services heading area. */
 .services-header {
   text-align: center;
   margin-bottom: 3.5rem;
 }
 
+/* Home.jsx shared section heading style used by multiple Home sections. */
 .section-title {
   font-size: 2.5rem;
   font-weight: 800;
@@ -194,18 +213,21 @@
   letter-spacing: -0.3px;
 }
 
+/* Home.jsx shared section subtitle style. */
 .section-subtitle {
   font-size: 1.15rem;
   color: var(--text-gray);
   font-weight: 400;
 }
 
+/* Home.jsx Services grid: lays out service cards like Doctors, Hospitals, Blood Bank. */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2.5rem;
 }
 
+/* Home.jsx Service card: clickable Link card controlled by the features array in Home.jsx. */
 .feature-card {
   background: white;
   padding: 2.5rem 2rem;
@@ -227,6 +249,7 @@
   border-color: var(--primary-blue);
 }
 
+/* Home.jsx Service card icon background square. */
 .feature-icon-wrapper {
   width: 70px;
   height: 70px;
@@ -239,15 +262,18 @@
   flex-shrink: 0;
 }
 
+/* Home.jsx Service card icon color. */
 .feature-icon {
   color: var(--primary-blue);
 }
 
+/* Home.jsx Service card title. */
 .feature-card h3 {
   font-size: 1.35rem;
   margin-bottom: 0.75rem;
 }
 
+/* Home.jsx Service card description. */
 .feature-card p {
   color: var(--text-gray);
   margin-bottom: 1.5rem;
@@ -255,6 +281,7 @@
   line-height: 1.6;
 }
 
+/* Home.jsx Service card "Explore Now" text. */
 .feature-link {
   color: var(--primary-blue);
   font-weight: 700;
@@ -266,7 +293,7 @@
   transform: translateX(5px);
 }
 
-/* Why Us Section */
+/* Home.jsx Why Us Section: "Why Choose Medi Sheba?" benefit cards. */
 .why-us {
   background: white;
   padding: 3.5rem 2rem;
@@ -276,6 +303,7 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Home.jsx Why Us grid: lays out availability, verified, top-rated, and community cards. */
 .benefits-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -283,6 +311,7 @@
   margin-top: 2.5rem;
 }
 
+/* Home.jsx Why Us benefit card. */
 .benefit-item {
   display: flex;
   flex-direction: column;
@@ -299,19 +328,21 @@
   transform: translateY(-5px);
 }
 
+/* Home.jsx Why Us benefit icon. */
 .benefit-icon {
   color: var(--primary-blue);
   width: 50px;
   height: 50px;
 }
 
+/* Home.jsx Why Us benefit label text. */
 .benefit-item p {
   font-weight: 700;
   color: var(--text-dark);
   font-size: 1rem;
 }
 
-/* CTA Section */
+/* Home.jsx CTA Section: bottom "Ready to Get Started?" call-to-action banner. */
 .cta-section {
   background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
   padding: 4rem 2rem;
@@ -322,6 +353,7 @@
   overflow: hidden;
 }
 
+/* Home.jsx CTA decoration: pale circle shape behind the CTA content. */
 .cta-section::before {
   content: '';
   position: absolute;
@@ -333,6 +365,7 @@
   border-radius: 50%;
 }
 
+/* Home.jsx CTA content layout. */
 .cta-content {
   position: relative;
   z-index: 2;
@@ -342,6 +375,7 @@
   justify-content: center;
 }
 
+/* Home.jsx CTA title. */
 .cta-section h2 {
   font-size: 2.5rem;
   font-weight: 800;
@@ -350,6 +384,7 @@
   letter-spacing: -0.3px;
 }
 
+/* Home.jsx CTA description. */
 .cta-section p {
   font-size: 1.2rem;
   margin-bottom: 2.5rem;
@@ -357,6 +392,7 @@
   font-weight: 400;
 }
 
+/* Home.jsx CTA button: Get Started Today link. */
 .cta-section .btn-primary {
   background: white;
   color: var(--primary-blue);
@@ -382,15 +418,17 @@
   background: #e0f2ff;
 }
 
-/* Subscription Section */
+/* Home.jsx Subscription Section: pricing tabs and subscription plan cards. */
 .subscription {
   margin-bottom: 5rem;
 }
 
+/* Home.jsx Subscription heading area. */
 .subscription-header {
   text-align: center;
   margin-bottom: 3.5rem;
 }
+/* Home.jsx Subscription admin toggle: Pharmacy, Hospital, Ambulance buttons. */
 .admin-type-toggle {
   display: flex;
   justify-content: center;
@@ -398,6 +436,7 @@
   margin-top: 2rem;
 }
 
+/* Home.jsx Subscription toggle button. */
 .toggle-btn {
   display: flex;
   align-items: center;
@@ -418,6 +457,7 @@
   color: var(--primary-blue);
 }
 
+/* Home.jsx active subscription toggle button. */
 .toggle-btn.active {
   background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
   border-color: transparent;
@@ -429,6 +469,7 @@
   width: 20px;
   height: 20px;
 }
+/* Home.jsx Subscription small description below subtitle. */
 .section-description {
   font-size: 1rem;
   color: var(--text-gray);
@@ -436,6 +477,7 @@
   margin-top: 0.5rem;
 }
 
+/* Home.jsx Subscription card grid. */
 .subscription-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -443,6 +485,7 @@
   position: relative;
 }
 
+/* Home.jsx Subscription card: one plan such as Monthly Plan or Yearly Plan. */
 .subscription-card {
   background: white;
   padding: 2.5rem 2rem;
@@ -461,6 +504,7 @@
   border-color: var(--primary-blue);
 }
 
+/* Home.jsx highlighted subscription card marked popular in the plan data. */
 .subscription-card.popular {
   border: 2px solid var(--primary-blue);
   transform: scale(1.05);
@@ -471,6 +515,7 @@
   transform: scale(1.05) translateY(-10px);
 }
 
+/* Home.jsx "Most Popular" badge on subscription card. */
 .popular-badge {
   position: absolute;
   top: -12px;
@@ -488,6 +533,7 @@
   box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
 }
 
+/* Home.jsx subscription plan name. */
 .plan-name {
   font-size: 1.5rem;
   font-weight: 800;
@@ -496,12 +542,14 @@
   margin-bottom: 0.5rem;
 }
 
+/* Home.jsx subscription duration text. */
 .plan-duration {
   color: var(--text-gray);
   font-size: 0.9rem;
   margin-bottom: 1rem;
 }
 
+/* Home.jsx subscription price wrapper. */
 .plan-price {
   margin: 1.5rem 0 1rem;
   width: 100%;
@@ -509,6 +557,7 @@
   overflow: hidden;
 }
 
+/* Home.jsx subscription price text. */
 .plan-price .price {
   display: block;
   max-width: 100%;
@@ -520,6 +569,7 @@
   word-break: break-word;
 }
 
+/* Home.jsx subscription plan description. */
 .plan-description {
   font-size: 0.95rem;
   color: var(--text-gray);
@@ -527,6 +577,7 @@
   min-height: 2.5rem;
 }
 
+/* Home.jsx subscription CTA button: trial, checkout, or contact sales. */
 .btn-plan {
   width: 100%;
   padding: 0.75rem 1.5rem;
@@ -546,6 +597,7 @@
   transform: translateY(-2px);
 }
 
+/* Home.jsx popular subscription CTA button. */
 .btn-plan.btn-popular {
   background: linear-gradient(135deg, var(--primary-blue), var(--accent-teal));
   border: none;
@@ -557,12 +609,14 @@
   opacity: 0.9;
 }
 
+/* Home.jsx subscription divider line between CTA and feature list. */
 .plan-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
   margin: 1.5rem 0;
 }
 
+/* Home.jsx subscription feature list. */
 .features-list {
   list-style: none;
   padding: 0;
@@ -570,6 +624,7 @@
   flex-grow: 1;
 }
 
+/* Home.jsx subscription feature list item. */
 .features-list li {
   display: flex;
   align-items: flex-start;
@@ -584,6 +639,7 @@
   margin-bottom: 0;
 }
 
+/* Home.jsx subscription feature check icon. */
 .check-icon {
   color: var(--accent-teal);
   flex-shrink: 0;
@@ -592,7 +648,7 @@
   height: 18px;
 }
 
-/* Responsive */
+/* Home.jsx responsive styles for tablet and mobile screens. */
 @media (max-width: 1024px) {
   .hero-content {
     grid-template-columns: 1fr;
@@ -608,12 +664,14 @@
 }
 
 @media (max-width: 1200px) {
+  /* Home.jsx Services grid switches from auto-fit to two columns on medium screens. */
   .features-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  /* Home.jsx mobile layout: stacks hero buttons, cards, toggles, and pricing cards. */
   .hero {
     padding: 3rem 1.5rem;
     margin-bottom: 3rem;

@@ -362,6 +362,7 @@ export default function Home() {
     ambulance: ambulancePlans,
   };
 
+  // Why Choose Us cards: controls the icon and text shown in the benefit cards.
   const benefits = [
     { icon: Clock, text: '24/7 Availability' },
     { icon: CheckCircle, text: 'Verified Professionals' },
@@ -544,7 +545,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* Why Choose Us Section: renders the benefit cards from the benefits array above. */}
       <section className="why-us">
         <h2 className="section-title">Why Choose Medi Sheba?</h2>
         <div className="benefits-grid">

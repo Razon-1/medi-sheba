@@ -1,9 +1,11 @@
+/* Global reset: applies to every page and component in the React app. */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* Global theme colors: Home.css, Navbar, buttons, forms, and many pages use these variables. */
 :root {
   --primary-blue: #0066cc;
   --primary-dark: #003d7a;
@@ -26,11 +28,12 @@
   --shadow-lg: 0 8px 24px rgba(0, 102, 204, 0.15);
 }
 
+/* Global page behavior: smooth scrolling for anchor links. */
 html {
   scroll-behavior: smooth;
 }
 
-/* Subscription prompt (used on create pages) */
+/* Shared subscription prompt: used on create/admin pages when a subscription is required. */
 .subscription-required {
   display: flex;
   justify-content: center;
@@ -38,6 +41,7 @@ html {
   padding: 2rem 1rem;
 }
 
+/* Shared subscription prompt card/container. */
 .subscription-box {
   width: 100%;
   max-width: 980px;
@@ -48,6 +52,7 @@ html {
   box-shadow: 0 18px 50px rgba(31, 41, 55, 0.15);
 }
 
+/* Shared subscription prompt title. */
 .subscription-box h2 {
   margin: 0 0 8px 0;
   font-size: 2rem;
@@ -55,19 +60,21 @@ html {
   color: #fff;
 }
 
+/* Shared subscription prompt description. */
 .subscription-box p {
   margin: 0 0 16px 0;
   color: rgba(255,255,255,0.9);
   font-size: 1.05rem;
 }
 
+/* Shared subscription prompt action buttons row. */
 .subscription-actions {
   display: flex;
   gap: 12px;
   margin-top: 12px;
 }
 
-/* Prevent other global button rules from forcing full width inside this box */
+/* Shared subscription prompt: prevents global button styles from forcing full width. */
 .subscription-actions > button {
   flex: 0 0 auto;
   display: inline-flex;
@@ -75,8 +82,9 @@ html {
   justify-content: center;
 }
 
-/* Force proper sizing inside the subscription box to override other global button rules */
+/* Shared subscription prompt: keeps primary and outline buttons correctly sized. */
 .subscription-actions .btn-primary,
+/* Shared subscription prompt outline button. */
 .subscription-actions .btn-outline {
   width: auto !important;
   min-width: 140px;
@@ -95,6 +103,7 @@ html {
   background: rgba(255,255,255,0.06);
 }
 
+/* Shared subscription prompt primary button. */
 .subscription-actions .btn-primary {
   background: #ffffff;
   color: #3b2bd8;
@@ -104,6 +113,7 @@ html {
   box-shadow: 0 8px 20px rgba(59,43,216,0.18);
 }
 
+/* Shared subscription prompt error message styles. */
 .subscription-required .error-message,
 .subscription-required .error-banner {
   margin-top: 12px;
@@ -114,6 +124,7 @@ html {
 }
 
 @media (max-width: 768px) {
+  /* Shared subscription prompt mobile layout. */
   .subscription-box {
     padding: 1.25rem;
     border-radius: 10px;
@@ -129,6 +140,7 @@ html {
   }
 }
 
+/* Global body style: font, text color, and app background for all pages. */
 body {
   font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -138,6 +150,7 @@ body {
   line-height: 1.6;
 }
 
+/* App.jsx root layout: wraps Navbar, page content, and Footer. */
 .app {
   display: flex;
   flex-direction: column;
@@ -145,6 +158,7 @@ body {
   background-color: var(--bg-lighter);
 }
 
+/* App.jsx main content container: controls max-width and page padding. */
 .main-content {
   flex: 1;
   max-width: 1400px;
@@ -153,7 +167,7 @@ body {
   padding: 3rem 2rem;
 }
 
-/* Typography */
+/* Global typography: default heading styles for all pages. */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-dark);
   font-weight: 700;
@@ -193,12 +207,14 @@ h6 {
   font-weight: 600;
 }
 
+/* Global paragraph style used across pages. */
 p {
   color: var(--text-gray);
   line-height: 1.7;
   margin-bottom: 0.5rem;
 }
 
+/* Global link color and hover behavior. */
 a {
   color: var(--primary-blue);
   text-decoration: none;
@@ -209,7 +225,7 @@ a:hover {
   color: var(--primary-dark);
 }
 
-/* Buttons */
+/* Global button base style used across all pages unless overridden. */
 button {
   cursor: pointer;
   border: none;
@@ -221,6 +237,7 @@ button {
   letter-spacing: 0.3px;
 }
 
+/* Shared primary button: used by Home hero/CTA and other pages. */
 .btn-primary {
   background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
   color: white;
@@ -232,6 +249,7 @@ button {
   box-shadow: 0 8px 20px rgba(0, 102, 204, 0.4);
 }
 
+/* Shared secondary button. */
 .btn-secondary {
   background-color: var(--bg-light);
   color: var(--primary-blue);
@@ -242,6 +260,7 @@ button {
   background-color: var(--primary-light);
 }
 
+/* Shared success/action button. */
 .btn-success {
   background-color: var(--success-green);
   color: white;
@@ -252,18 +271,20 @@ button {
   transform: translateY(-2px);
 }
 
+/* Shared danger/delete button. */
 .btn-danger {
   background-color: var(--danger-red);
   color: white;
 }
 
+/* Shared outline button. */
 .btn-outline {
   background-color: transparent;
   border: 2px solid var(--primary-blue);
   color: var(--primary-blue);
 }
 
-/* Form Elements */
+/* Global form fields: inputs, textareas, and selects across forms. */
 input, textarea, select {
   width: 100%;
   padding: 0.85rem 1rem;
@@ -275,6 +296,7 @@ input, textarea, select {
   background-color: var(--bg-white);
 }
 
+/* Global focused form field state. */
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--primary-blue);
@@ -282,11 +304,12 @@ input:focus, textarea:focus, select:focus {
   background-color: var(--bg-white);
 }
 
+/* Global input placeholder color. */
 input::placeholder {
   color: var(--text-light);
 }
 
-/* Utility Classes */
+/* Shared utility classes used across pages/components. */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -334,6 +357,7 @@ input::placeholder {
   display: grid;
 }
 
+/* Shared section title style. Home.css also has a Home-specific .section-title override. */
 .section-title {
   font-size: 2.25rem;
   font-weight: 800;
@@ -342,6 +366,7 @@ input::placeholder {
   letter-spacing: -0.3px;
 }
 
+/* Shared section subtitle style. Home.css also has a Home-specific .section-subtitle override. */
 .section-subtitle {
   font-size: 1.1rem;
   color: var(--text-gray);
@@ -349,6 +374,7 @@ input::placeholder {
   font-weight: 400;
 }
 
+/* Shared error alert message. */
 .error-message {
   background-color: #ffebee;
   color: #c62828;
@@ -358,6 +384,7 @@ input::placeholder {
   border-left: 4px solid var(--danger-red);
 }
 
+/* Shared success alert message. */
 .success-message {
   background-color: #e8f5e9;
   color: #2e7d32;
@@ -367,7 +394,7 @@ input::placeholder {
   border-left: 4px solid var(--success-green);
 }
 
-/* Responsive */
+/* Global responsive styles for mobile screens. */
 @media (max-width: 768px) {
   h1 {
     font-size: 2rem;
