@@ -54,6 +54,7 @@ export default function Home() {
     { icon: Stethoscope, label: 'Doctors', value: formatStatValue(homeStats.doctors) },
   ];
 
+    // Service cards: each `link` controls where the matching homepage card navigates.
   const features = [
     {
       icon: Stethoscope,
@@ -93,6 +94,7 @@ export default function Home() {
     },
   ];
 
+  // Subscription plans: pharmacy admin pricing, trial route, paid checkout amount, and feature list.
   const pharmacyPlans = [
     {
       name: '3 Days Trial',
@@ -186,6 +188,7 @@ export default function Home() {
     },
   ];
 
+  // Subscription plans: hospital admin pricing, creation route, paid checkout amount, and feature list.
   const hospitalPlans = [
     {
       name: '3 Days Trial',
@@ -270,6 +273,7 @@ export default function Home() {
     },
   ];
 
+  // Subscription plans: ambulance driver admin pricing, admin route, paid checkout amount, and feature list.
   const ambulancePlans = [
     {
       name: '3 Days Trial',
@@ -351,6 +355,7 @@ export default function Home() {
     },
   ];
 
+  // Subscription toggle uses this map to show the correct plan cards for the selected admin type.
   const plansByAdminType = {
     pharmacy: pharmacyPlans,
     hospital: hospitalPlans,
@@ -364,6 +369,7 @@ export default function Home() {
     { icon: Users, text: 'Expert Community' },
   ];
 
+  // Subscription CTA flow: contact plans go to sales, trials go to admin pages, and paid plans open SSLCommerz.
   const handlePlanClick = async (plan, planKey) => {
     if (plan.cta === 'Contact Sales') {
       navigate('/contact-sales');
@@ -464,14 +470,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Subscription Plans Section */}
+      {/* Subscription Plans Section: renders admin-type toggle and subscription cards from plansByAdminType. */}
       <section className="subscription" id="subscription-plans">
         <div className="subscription-header">
           <h2 className="section-title">Subscription Plans</h2>
           <p className="section-subtitle">Choose Your Admin Type</p>
           <p className="section-description">Select tailored plans for your healthcare business</p>
           
-          {/* Toggle Between Pharmacy and Hospital Admin */}
+          {/* Subscription admin-type toggle: switches between pharmacy, hospital, and ambulance plan data. */}
           <div className="admin-type-toggle">
             <button 
               className={`toggle-btn ${adminType === 'pharmacy' ? 'active' : ''}`}
@@ -497,6 +503,7 @@ export default function Home() {
           </div>
         </div>
         
+        {/* Subscription card list: each button calls handlePlanClick with the selected plan. */}
         <div className="subscription-grid">
           {plansByAdminType[adminType].map((plan, idx) => {
             const planKey = `${adminType}-${idx}`;
